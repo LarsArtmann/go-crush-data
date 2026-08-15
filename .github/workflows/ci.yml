@@ -52,6 +52,18 @@ jobs:
           echo "Total coverage: ${total}%"
           awk -v c="$total" 'BEGIN { exit (c < 85) ? 1 : 0 }'
 
+      - name: Upload coverage HTML report
+        if: matrix.os == 'ubuntu-latest'
+        run: go tool cover -html=coverage.out -o=coverage.html
+
+      - name: Upload coverage artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-html
+          path: coverage.html
+          retention-days: 30
+
       - name: golangci-lint
         run: go tool golangci-lint run --timeout=5m ./...
 
