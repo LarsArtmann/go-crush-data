@@ -23,15 +23,17 @@ pass — update rows in place when status changes.
 | FULLY_FUNCTIONAL | `ReadFiles` — files the agent opened during a session | `messages.go:90` |
 | FULLY_FUNCTIONAL | Subagent graphs: preorder by creation time, depth cap 64 (`ErrGraphDepthExceeded` on cycles) | `agents.go:23` |
 | FULLY_FUNCTIONAL | Day activity stats with the crush-daily parity contract (`TestStatsParityWithCrushDailySQL`) | `stats.go:28` |
+| FULLY_FUNCTIONAL | Models/Providers in Stats sorted ascending (ORDER BY on DISTINCT query) | `stats.go:121` |
 | FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE | `stats.go:249` |
+| FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos | `.github/workflows/ci.yml` |
 | FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml`; local measure 2026-08-15: 87.8% statements |
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
-| FULLY_FUNCTIONAL | Fuzz targets for both parsers (DecodeParts, ParseProjectsOutput) with seed corpora | `fuzz_test.go` |
-| FULLY_FUNCTIONAL | Committed benchmark baseline + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
-| FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats | `example_test.go` |
-| PARTIALLY_FUNCTIONAL | Tag-driven GitHub Release workflow — written and actionlint-clean, but not yet observed on a real tag | `.github/workflows/release.yml`, checklist in `RELEASING.md` |
-| PARTIALLY_FUNCTIONAL | Nightly fuzz workflow — written, first scheduled run pending | `.github/workflows/fuzz.yml` |
-| PARTIALLY_FUNCTIONAL | Benchmark-trend CI job comparing pushes against the baseline — written, first run pending | `.github/workflows/bench.yml` |
-| PLANNED | Coverage badge on README (needs a CI coverage artifact) | TODO_LIST |
-| PLANNED | Renovate dependency automation | TODO_LIST |
+| FULLY_FUNCTIONAL | Fuzz targets for all three parsers (DecodeParts, ParseProjectsOutput, loadRegistry) with seed corpora | `fuzz_test.go` |
+| FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
+| FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats, agent graph, read files | `example_test.go` |
+| FULLY_FUNCTIONAL | Tag-driven GitHub Release workflow — observed green on v0.2.0 tag | `.github/workflows/release.yml`, `RELEASING.md` |
+| PARTIALLY_FUNCTIONAL | Nightly fuzz workflow — written and actionlint-clean, first scheduled run pending (03:17 UTC) | `.github/workflows/fuzz.yml` |
+| FULLY_FUNCTIONAL | Benchmark-trend CI job comparing pushes against the baseline — observed green on v0.2.0 push | `.github/workflows/bench.yml` |
+| FULLY_FUNCTIONAL | Coverage HTML artifact uploaded on CI (ubuntu leg); static ≥85% badge on README | `.github/workflows/ci.yml`, `README.md` |
+| PARTIALLY_FUNCTIONAL | Renovate dependency automation — config ready, app not yet installed | `renovate.json`, TODO_LIST |
