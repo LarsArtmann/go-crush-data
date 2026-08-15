@@ -4,6 +4,16 @@ How this repository cuts a version. Read fully before tagging; module-proxy
 poisoning from a botched tag is the one mistake that cannot be undone
 cheaply.
 
+## Git history is not the source of truth
+
+Some commits on `master` are produced by an auto-commit daemon whose
+messages routinely misdescribe their diffs (example: `9b4d346` claims
+"No library API surface changed" over the breaking `Session.Todos`
+change). When reconstructing what shipped in a version, diff the tag
+range (for example `git diff v0.1.1..v0.2.0 -- '*.go' go.mod`) instead
+of trusting commit subjects. `CHANGELOG.md` is the curated record of
+what consumers got; treat it, not `git log`, as the release ledger.
+
 ## Preconditions
 
 1. The full gate is green locally:

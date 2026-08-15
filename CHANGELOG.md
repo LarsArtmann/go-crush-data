@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Policy: only changes observable by consumers of the module get entries —
+API, behavior, packaging, and CI-visible contracts. Doc-only edits
+(comments, README/AGENTS/docs, plans, status reports) are not changelogged.
+
 ## [Unreleased]
 
 ### Added

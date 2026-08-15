@@ -72,6 +72,18 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmark-sessions.txt`
   the shared logic already lives in `dayArgs`, and unifying the two distinct
   queries would take more parameters than the duplicated lines.
 
+## Process rules (truth discipline)
+
+- **Verify-then-annotate**: never write "green"/"done" into any doc before
+  the verification command exited 0 in the same session. Annotations
+  record verification; they do not substitute for it.
+- **Diff daemon commits before trusting their messages**: parts of this
+  history are auto-generated commits whose subjects misdescribe their
+  diffs (example: `9b4d346` says "No library API surface changed" over the
+  breaking `Session.Todos` change). Run `git show <sha>` before repeating
+  any claim taken from a subject line. CHANGELOG.md, not `git log`, is the
+  record of what shipped.
+
 ## Tooling gotchas
 
 - **go.sum and flake.nix vendorHash are coupled**: refreshing dependencies

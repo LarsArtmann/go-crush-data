@@ -48,6 +48,8 @@ Thumbs.db
 /go-atomic-write
 # Sensitive files
 *.db
+# Real Crush session data for the opt-in smoke test; must never ship
+.crush/
 
 # >>> buildflow-managed (.gitignore) >>>
 # Auto-managed by buildflow. Edit outside these markers; this block is regenerated on `buildflow --fix`.
