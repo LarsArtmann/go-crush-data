@@ -42,11 +42,9 @@ jobs:
           awk -v c="$total" 'BEGIN { exit (c < 85) ? 1 : 0 }'
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6
-        with:
-          version: v2.12.2
-          install-mode: goinstall
-          args: --timeout=5m
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+          golangci-lint run --timeout=5m ./...
 
       - name: govulncheck
         uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1
