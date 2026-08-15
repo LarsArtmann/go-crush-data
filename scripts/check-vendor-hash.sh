@@ -28,21 +28,21 @@ cd "$repo_root"
 base_rev=${1:-HEAD}
 
 if ! git rev-parse --verify --quiet "$base_rev" >/dev/null; then
-  echo "check-vendor-hash: base revision '$base_rev' not found" >&2
-  echo "  hint: on CI, checkout with fetch-depth: 2 so HEAD~1 exists" >&2
-  exit 2
+	echo "check-vendor-hash: base revision '$base_rev' not found" >&2
+	echo "  hint: on CI, checkout with fetch-depth: 2 so HEAD~1 exists" >&2
+	exit 2
 fi
 
 go_files_changed=0
 if ! git diff --quiet "$base_rev" -- go.mod go.sum; then
-  go_files_changed=1
+	go_files_changed=1
 fi
 
 base_vendor_hash=$(git show "$base_rev:flake.nix" 2>/dev/null | grep -o 'vendorHash = "[^"]*"' || true)
 head_vendor_hash=$(grep -o 'vendorHash = "[^"]*"' flake.nix || true)
 
 if [[ $go_files_changed -eq 1 && "$base_vendor_hash" == "$head_vendor_hash" ]]; then
-  cat >&2 <<EOF
+	cat >&2 <<EOF
 check-vendor-hash: DRIFT DETECTED
 
 go.mod/go.sum changed since $base_rev but the vendorHash in flake.nix
@@ -53,12 +53,12 @@ Fix:
   # copy the "got:" sha256 into flake.nix's vendorHash
   nix build .#default       # now passes
 EOF
-  exit 1
+	exit 1
 fi
 
 if [[ $go_files_changed -eq 0 && "$base_vendor_hash" != "$head_vendor_hash" ]]; then
-  echo "check-vendor-hash: note — vendorHash changed without go.mod/go.sum changes"
-  echo "  (expected after a nixpkgs/flake.lock bump rehashes the vendor derivation)"
+	echo "check-vendor-hash: note — vendorHash changed without go.mod/go.sum changes"
+	echo "  (expected after a nixpkgs/flake.lock bump rehashes the vendor derivation)"
 fi
 
 echo "check-vendor-hash: OK (base=$base_rev)"
