@@ -71,6 +71,7 @@ func (db *DB) scanSessionStats(ctx context.Context, day string) (Stats, error) {
 
 	if day != "" {
 		query += " WHERE date(created_at, 'unixepoch') = ?"
+
 		args = append(args, day)
 	}
 
@@ -122,9 +123,11 @@ func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([
 
 	if day != "" {
 		dayFilter = " AND session_id IN (SELECT id FROM sessions WHERE date(created_at, 'unixepoch') = ?)"
+
 		args = append(args, day)
 	}
 
+	//nolint:gosec // column comes from hardcoded call sites and dayFilter is a fixed literal, not user input
 	query := fmt.Sprintf(
 		"SELECT DISTINCT %s FROM messages WHERE %s IS NOT NULL AND %s != ''%s",
 		column, column, column, dayFilter,
@@ -158,6 +161,7 @@ func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([
 func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Stats) error {
 	dayFilter, args := dayArgs(day)
 
+	//nolint:gosec // dayFilter is a fixed literal, not user input
 	rows, err := db.handle.QueryContext(ctx, `
 		SELECT title FROM sessions
 		WHERE title IS NOT NULL`+dayFilter+`
@@ -189,6 +193,7 @@ func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Sta
 func (db *DB) fillHourHistogram(ctx context.Context, day string, stats *Stats) error {
 	dayFilter, args := dayArgs(day)
 
+	//nolint:gosec // dayFilter is a fixed literal, not user input
 	rows, err := db.handle.QueryContext(ctx, `
 		SELECT CAST(strftime('%H', created_at, 'unixepoch') AS INTEGER) AS hour, COUNT(*) AS count
 		FROM sessions

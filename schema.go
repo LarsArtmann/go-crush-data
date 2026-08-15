@@ -67,6 +67,8 @@ func (s Schema) MissingColumns() []string {
 }
 
 // requiredTables are the tables this library cannot function without.
+//
+//nolint:gochecknoglobals // a slice cannot be a constant and this one is definitionally fixed
 var requiredTables = []string{"sessions", "messages"}
 
 // probeSchema inspects an open database and returns its capabilities. A
@@ -104,7 +106,7 @@ func tableExists(ctx context.Context, db *sql.DB, table string) bool {
 
 	defer func() { _ = rows.Close() }()
 
-	return rows.Next()
+	return rows.Next() && rows.Err() == nil
 }
 
 // columnExists reports whether the named column exists on the named table,
@@ -121,5 +123,5 @@ func columnExists(ctx context.Context, db *sql.DB, table, column string) bool {
 
 	defer func() { _ = rows.Close() }()
 
-	return rows.Next()
+	return rows.Next() && rows.Err() == nil
 }

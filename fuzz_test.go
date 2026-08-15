@@ -15,6 +15,6 @@ func FuzzDecodeParts(f *testing.F) {
 	f.Add(`[{"type":"`)
 
 	f.Fuzz(func(t *testing.T, raw string) {
-		_, _ = DecodeParts(raw) //nolint:errcheck // the invariant is: no panic
+		_, _ = DecodeParts(raw)
 	})
 }

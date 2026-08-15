@@ -47,7 +47,7 @@ type DB struct {
 // [ErrUnsupportedSchema].
 func Open(dataDir string) (*DB, error) {
 	if dataDir == "" {
-		return nil, fmt.Errorf("open crush database: dataDir is empty")
+		return nil, errEmptyDataDir
 	}
 
 	path := filepath.Join(dataDir, DBName)
@@ -61,8 +61,6 @@ func Open(dataDir string) (*DB, error) {
 		return nil, fmt.Errorf("open crush database at %s: %w", path, err)
 	}
 
-	db := &DB{path: path, handle: handle}
-
 	schema, err := probeSchema(context.Background(), handle, path)
 	if err != nil {
 		_ = handle.Close()
@@ -70,13 +68,12 @@ func Open(dataDir string) (*DB, error) {
 		return nil, err
 	}
 
-	db.schema = schema
-
-	return db, nil
+	return &DB{path: path, handle: handle, schema: schema}, nil
 }
 
 // checkDatabaseFile validates that path refers to a readable database file.
 func checkDatabaseFile(path string) error {
+	//nolint:gosec // path is caller-supplied by design: reading local files at arbitrary paths is this library's purpose
 	info, err := os.Stat(path)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrDatabaseNotFound, err)
@@ -104,20 +101,24 @@ func openSQLite(path string) (*sql.DB, error) {
 	params.Set("_txlock", "immediate")
 	dsn := fmt.Sprintf("file:%s?%s", path, params.Encode())
 
-	db, err := sql.Open("sqlite", dsn)
+	handle, err := sql.Open("sqlite", dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open sqlite handle for %s: %w", path, err)
 	}
 
-	db.SetMaxOpenConns(1)
+	handle.SetMaxOpenConns(1)
 
-	return db, nil
+	return handle, nil
 }
 
 // Close releases the database connection. Calling Close on an already-closed
 // DB is an error; a DB must not be used after Close.
 func (db *DB) Close() error {
-	return db.handle.Close()
+	if err := db.handle.Close(); err != nil {
+		return fmt.Errorf("close crush database at %s: %w", db.path, err)
+	}
+
+	return nil
 }
 
 // Schema returns the capabilities detected when the database was opened.

@@ -149,6 +149,7 @@ linters:
         - anon
         - stdlib
         - generic
+        - github.com/LarsArtmann/go-crush-data.Part
     makezero:
       always: true
     revive:
@@ -161,6 +162,12 @@ linters:
       disable:
         - go-require
       enable-all: true
+    tagliatelle:
+      case:
+        rules:
+          # json tags mirror Crush's on-disk snake_case schema, which these
+          # types decode; camelCase would break every read.
+          json: snake
     varnamelen:
       ignore-map-index-ok: true
       ignore-names:
@@ -175,6 +182,8 @@ linters:
         - a
         - b
         - v
+        - db
+        - id
       ignore-type-assert-ok: true
   exclusions:
     generated: lax

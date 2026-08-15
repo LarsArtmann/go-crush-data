@@ -25,8 +25,8 @@ func (db *DB) AgentGraph(ctx context.Context, rootID string) (*AgentGraph, error
 	}
 
 	graph := &AgentGraph{
-		Root:  AgentNode{Session: root},
-		Nodes: []AgentNode{{Session: root}},
+		Root:  AgentNode{Session: root, ParentID: "", Depth: 0},
+		Nodes: []AgentNode{{Session: root, ParentID: "", Depth: 0}},
 	}
 
 	if !db.schema.SessionsParentSessionID {
@@ -50,7 +50,7 @@ func (db *DB) AgentGraph(ctx context.Context, rootID string) (*AgentGraph, error
 // appendSubtree adds node and its descendants to the graph in preorder.
 func (db *DB) appendSubtree(ctx context.Context, graph *AgentGraph, session Session, depth int) error {
 	if depth > maxAgentDepth {
-		return fmt.Errorf("agent graph under %s exceeds depth %d in %s", session.ID, maxAgentDepth, db.path)
+		return fmt.Errorf("%w: under %s in %s", ErrGraphDepthExceeded, session.ID, db.path)
 	}
 
 	node := AgentNode{
@@ -78,6 +78,7 @@ func (db *DB) appendSubtree(ctx context.Context, graph *AgentGraph, session Sess
 // childSessions returns the direct children of parentID ordered by creation
 // time. The parent_session_id capability must be present.
 func (db *DB) childSessions(ctx context.Context, parentID string) ([]Session, error) {
+	//nolint:exhaustruct // the parent filter is the only relevant condition here
 	sessions, err := db.Sessions(ctx, SessionFilter{ParentID: parentID})
 	if err != nil {
 		return nil, err

@@ -22,4 +22,17 @@ var (
 	// ErrSessionNotFound is returned by [DB.Session] and [DB.AgentGraph] when
 	// the requested session ID does not exist in the database.
 	ErrSessionNotFound = errors.New("session not found")
+
+	// ErrGraphDepthExceeded is returned by [DB.AgentGraph] when the subagent
+	// tree exceeds the supported depth — in practice a parent-session cycle
+	// from a corrupted database.
+	ErrGraphDepthExceeded = errors.New("agent graph depth exceeded")
+)
+
+// errEmptyDataDir and errConflictingFilter are caller errors returned
+// unwrapped; they are not sentinel API because the message is the entire
+// diagnosis.
+var (
+	errEmptyDataDir      = errors.New("open crush database: dataDir is empty")
+	errConflictingFilter = errors.New("SessionFilter: ParentID and RootOnly are mutually exclusive")
 )

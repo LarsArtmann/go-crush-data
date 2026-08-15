@@ -28,6 +28,15 @@ func TestDecodePartsEveryKind(t *testing.T) {
 		t.Fatalf("parts = %d, want 8", len(parts))
 	}
 
+	verifyTextAndReasoning(t, parts)
+	verifyToolCalls(t, parts)
+	verifyFinishAndShell(t, parts)
+	verifyUnknowns(t, parts)
+}
+
+func verifyTextAndReasoning(t *testing.T, parts []Part) {
+	t.Helper()
+
 	text, ok := parts[0].(TextPart)
 	if !ok || text.Text != "hello" {
 		t.Fatalf("parts[0] = %#v, want TextPart{hello}", parts[0])
@@ -37,6 +46,10 @@ func TestDecodePartsEveryKind(t *testing.T) {
 	if !ok || reasoning.Thinking != "hm" || reasoning.StartedAt != 10 || reasoning.FinishedAt != 17 {
 		t.Fatalf("parts[1] = %#v, want ReasoningPart", parts[1])
 	}
+}
+
+func verifyToolCalls(t *testing.T, parts []Part) {
+	t.Helper()
 
 	call, ok := parts[2].(ToolCallPart)
 	if !ok || call.ID != "c1" || call.Name != "read" || !call.Finished || call.ProviderExecuted {
@@ -52,6 +65,10 @@ func TestDecodePartsEveryKind(t *testing.T) {
 		result.Metadata != "meta" || result.Data != "d" || result.Content != "ok" {
 		t.Fatalf("parts[3] = %#v, want ToolResultPart", parts[3])
 	}
+}
+
+func verifyFinishAndShell(t *testing.T, parts []Part) {
+	t.Helper()
 
 	finish, ok := parts[4].(FinishPart)
 	if !ok || finish.Reason != "stop" || finish.Message != "done" || finish.Details != "d" {
@@ -62,6 +79,10 @@ func TestDecodePartsEveryKind(t *testing.T) {
 	if !ok || shell.Command != "ls" || shell.Output != "files" || shell.ExitCode != 2 {
 		t.Fatalf("parts[5] = %#v, want ShellCommandPart", parts[5])
 	}
+}
+
+func verifyUnknowns(t *testing.T, parts []Part) {
+	t.Helper()
 
 	image, ok := parts[6].(UnknownPart)
 	if !ok || image.Type != "image_url" {

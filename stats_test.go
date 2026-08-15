@@ -126,7 +126,10 @@ func TestStatsModelBreakdownDoubleCountTrap(t *testing.T) {
 	}
 
 	if breakdown.MessageCount != 4 {
-		t.Fatalf("MessageCount = %d, want 4 (every message of the attributed session, matching the historical subquery)", breakdown.MessageCount)
+		t.Fatalf(
+			"MessageCount = %d, want 4 (every message of the attributed session, matching the historical subquery)",
+			breakdown.MessageCount,
+		)
 	}
 }
 

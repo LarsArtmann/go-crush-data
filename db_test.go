@@ -77,7 +77,7 @@ func TestOpenEmptyDatabaseFile(t *testing.T) {
 	t.Parallel()
 
 	dataDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dataDir, DBName), nil, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, DBName), nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -91,7 +91,7 @@ func TestOpenDatabaseIsDirectory(t *testing.T) {
 	t.Parallel()
 
 	dataDir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dataDir, DBName), 0o755); err != nil {
+	if err := os.Mkdir(filepath.Join(dataDir, DBName), 0o750); err != nil {
 		t.Fatal(err)
 	}
 
@@ -121,12 +121,16 @@ func TestOpenUnsupportedSchema(t *testing.T) {
 		{
 			name: "foreign database",
 			create: func(t *testing.T, dbPath string) {
+				t.Helper()
+
 				createRawDBAt(t, dbPath, "CREATE TABLE unrelated (id TEXT)")
 			},
 		},
 		{
 			name: "sessions only",
 			create: func(t *testing.T, dbPath string) {
+				t.Helper()
+
 				createRawDBAt(t, dbPath, `CREATE TABLE sessions (id TEXT PRIMARY KEY)`)
 			},
 		},
@@ -157,13 +161,13 @@ func createRawDBAt(t *testing.T, dbPath, ddl string) {
 	t.Helper()
 
 	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		t.Fatal(err)
 	}
 
 	db := openWritable(t, dbPath)
 
-	if _, err := db.Exec(ddl); err != nil {
+	if _, err := db.ExecContext(context.Background(), ddl); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -206,6 +210,7 @@ func hashTree(t *testing.T, dbPath string) string {
 	hash := sha256.New()
 
 	for _, suffix := range []string{"", "-wal", "-shm"} {
+		//nolint:gosec // reading the test's own fixture files
 		data, err := os.ReadFile(dbPath + suffix)
 		if err != nil {
 			continue

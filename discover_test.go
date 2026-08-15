@@ -14,11 +14,11 @@ import (
 func writeRegistry(t *testing.T, globalDir string, content string) {
 	t.Helper()
 
-	if err := os.MkdirAll(globalDir, 0o755); err != nil {
+	if err := os.MkdirAll(globalDir, 0o750); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := os.WriteFile(filepath.Join(globalDir, RegistryName), []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(globalDir, RegistryName), []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -173,6 +173,7 @@ func fakeCLI(t *testing.T, payload string) string {
 	path := filepath.Join(dir, "crush-fake")
 
 	script := "#!/bin/sh\ncat " + shellQuoteFile(t, payload, dir) + " >&2\n"
+	//nolint:gosec // the fake CLI script must be executable
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +185,7 @@ func shellQuoteFile(t *testing.T, payload, dir string) string {
 	t.Helper()
 
 	file := filepath.Join(dir, "payload.json")
-	if err := os.WriteFile(file, []byte(payload), 0o644); err != nil {
+	if err := os.WriteFile(file, []byte(payload), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -198,7 +199,9 @@ func TestDiscoverProjectsCLIFallback(t *testing.T) {
 	dataDir := t.TempDir()
 	makeProjectDB(t, dataDir)
 
-	payload := `{"projects":[{"path":"/repo/cli","data_dir":` + jsonString(dataDir) + `,"last_accessed":"2026-08-15T12:00:00Z"}]}`
+	payload := `{"projects":[{"path":"/repo/cli","data_dir":` + jsonString(
+		dataDir,
+	) + `,"last_accessed":"2026-08-15T12:00:00Z"}]}`
 
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: globalDir,

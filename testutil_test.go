@@ -1,6 +1,7 @@
 package crushdata
 
 import (
+	"context"
 	"database/sql"
 	"os"
 	"path/filepath"
@@ -92,7 +93,7 @@ func fixtureDB(t *testing.T, variant schemaVariant, seed func(db *sql.DB)) strin
 func createDBAt(tb testing.TB, dbPath string, variant schemaVariant, seed func(db *sql.DB)) {
 	tb.Helper()
 
-	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0o750); err != nil {
 		tb.Fatal(err)
 	}
 
@@ -108,7 +109,7 @@ func createDBAt(tb testing.TB, dbPath string, variant schemaVariant, seed func(d
 		ddl = legacySchemaDDL
 	}
 
-	if _, err := handle.Exec(ddl); err != nil {
+	if _, err := handle.ExecContext(context.Background(), ddl); err != nil {
 		_ = handle.Close()
 
 		tb.Fatal(err)
@@ -149,10 +150,19 @@ func insertSession(
 ) {
 	tb.Helper()
 
-	_, err := db.Exec(
+	_, err := db.ExecContext(
+		context.Background(),
 		`INSERT INTO sessions (id, parent_session_id, title, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, nullable(parentID), title, messageCount, 0, 0, 0.0, updatedAt, createdAt,
+		id,
+		nullable(parentID),
+		title,
+		messageCount,
+		0,
+		0,
+		0.0,
+		updatedAt,
+		createdAt,
 	)
 	if err != nil {
 		tb.Fatal(err)
@@ -169,7 +179,7 @@ func insertLegacySession(
 ) {
 	t.Helper()
 
-	_, err := db.Exec(
+	_, err := db.ExecContext(context.Background(),
 		`INSERT INTO sessions (id, title, message_count, prompt_tokens, completion_tokens, updated_at, created_at)
 		 VALUES (?, ?, ?, 0, 0, ?, ?)`,
 		id, title, messageCount, updatedAt, createdAt,
@@ -189,7 +199,7 @@ func insertMessage(
 ) {
 	tb.Helper()
 
-	_, err := db.Exec(
+	_, err := db.ExecContext(context.Background(),
 		`INSERT INTO messages (id, session_id, role, parts, model, provider, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		id, sessionID, role, parts, nullable(model), nullable(provider), createdAt, createdAt,
@@ -213,94 +223,148 @@ func nullable(value string) any {
 // child session. Timestamps are unix seconds.
 const fixtureBase = int64(1785585600) // 2026-08-04 ~12:00 UTC
 
+// fixtureModel is the model name stamped on assistant messages in the
+// standard fixture.
+const fixtureModel = "minimax/minimax-m3"
+
+// Fixture parts payloads, mirroring what Crush writes for each part kind.
+const (
+	fixturePartsUser = `[{"data":{"text":"Read internal/server/server.go."},"type":"text"},{"data":{"reason":"stop","time":0},"type":"finish"}]`
+
+	fixturePartsAgentCall = `[{"data":{"text":"Reading the server."},"type":"text"},{"data":{"finished":true,"id":"call_agent_1","input":"{\"task_title\":\"read server\",\"agent_type\":\"explore\",\"message\":\"look at server.go\"}","name":"agent","provider_executed":false},"type":"tool_call"}]`
+
+	fixturePartsAgentResult = `[{"data":{"content":"{\"agent_id\":\"m_assistant_1\",\"nickname\":\"explore\",\"task_name\":\"read server\"}","is_error":false,"name":"agent","tool_call_id":"call_agent_1"},"type":"tool_result"}]`
+
+	fixturePartsReadCall = `[{"data":{"thinking":"considering which file to read","started_at":100,"finished_at":107},"type":"reasoning"},{"data":{"finished":true,"id":"call_read_1","input":"{\"file_path\":\"/repo/main.go\"}","name":"read","provider_executed":false},"type":"tool_call"}]`
+
+	fixturePartsReadResult = `[{"data":{"content":"package main\n","is_error":false,"name":"read","tool_call_id":"call_read_1"},"type":"tool_result"}]`
+
+	fixturePartsWriteCall = `[{"data":{"text":"Now editing."},"type":"text"},{"data":{"finished":true,"id":"call_write_1","input":"{\"file_path\":\"/repo/server.go\"}","name":"write","provider_executed":false},"type":"tool_call"}]`
+
+	fixturePartsWriteResult = `[{"data":{"content":"File written.","is_error":true,"name":"write","tool_call_id":"call_write_1"},"type":"tool_result"}]`
+
+	fixturePartsBashCall = `[{"data":{"command":"go test ./...","output":"ok","exit_code":0},"type":"shell_command"},{"data":{"finished":true,"id":"call_bash_1","input":"{\"command\":\"go test ./...\"}","name":"bash","provider_executed":false},"type":"tool_call"}]`
+
+	fixturePartsBashResult = `[{"data":{"content":"ok\n","is_error":false,"name":"bash","tool_call_id":"call_bash_1"},"type":"tool_result"}]`
+
+	fixturePartsUser2 = `[{"data":{"text":"Looks good!"},"type":"text"},{"data":{"reason":"stop","time":0},"type":"finish"}]`
+
+	fixturePartsChild = `[{"data":{"text":"Reading the file."},"type":"text"}]`
+
+	fixturePartsFuture = `[{"data":{"blob":"base64"},"type":"image_url"},{"data":{"payload":"..."},"type":"brand_new_part"}]`
+)
+
+// fixtureMessages is the seeded message history of the standard fixture.
+var fixtureMessages = []struct {
+	id        string
+	sessionID string
+	role      string
+	parts     string
+	model     string
+	createdAt int64
+}{
+	{id: "m_user", sessionID: "fixture-root", role: "user", parts: fixturePartsUser, createdAt: fixtureBase},
+	{
+		id:        "m_assistant_1",
+		sessionID: "fixture-root",
+		role:      "assistant",
+		parts:     fixturePartsAgentCall,
+		model:     fixtureModel,
+		createdAt: fixtureBase + 1,
+	},
+	{
+		id:        "m_tool_agent",
+		sessionID: "fixture-root",
+		role:      "tool",
+		parts:     fixturePartsAgentResult,
+		createdAt: fixtureBase + 2,
+	},
+	{
+		id:        "m_assistant_2",
+		sessionID: "fixture-root",
+		role:      "assistant",
+		parts:     fixturePartsReadCall,
+		model:     fixtureModel,
+		createdAt: fixtureBase + 3,
+	},
+	{
+		id:        "m_tool_read",
+		sessionID: "fixture-root",
+		role:      "tool",
+		parts:     fixturePartsReadResult,
+		createdAt: fixtureBase + 4,
+	},
+	{
+		id:        "m_assistant_3",
+		sessionID: "fixture-root",
+		role:      "assistant",
+		parts:     fixturePartsWriteCall,
+		model:     fixtureModel,
+		createdAt: fixtureBase + 5,
+	},
+	{
+		id:        "m_tool_write",
+		sessionID: "fixture-root",
+		role:      "tool",
+		parts:     fixturePartsWriteResult,
+		createdAt: fixtureBase + 6,
+	},
+	{
+		id:        "m_assistant_4",
+		sessionID: "fixture-root",
+		role:      "assistant",
+		parts:     fixturePartsBashCall,
+		model:     fixtureModel,
+		createdAt: fixtureBase + 7,
+	},
+	{
+		id:        "m_tool_bash",
+		sessionID: "fixture-root",
+		role:      "tool",
+		parts:     fixturePartsBashResult,
+		createdAt: fixtureBase + 8,
+	},
+	{id: "m_user_2", sessionID: "fixture-root", role: "user", parts: fixturePartsUser2, createdAt: fixtureBase + 9},
+	{
+		id:        "m_child_1",
+		sessionID: "m_assistant_1$$call_agent_1",
+		role:      "assistant",
+		parts:     fixturePartsChild,
+		model:     fixtureModel,
+		createdAt: fixtureBase + 2,
+	},
+	{id: "m_future", sessionID: "fixture-root", role: "user", parts: fixturePartsFuture, createdAt: fixtureBase + 9},
+}
+
 func seedFixture(db *sql.DB) {
 	seedSessionWithEconomics(db, "fixture-root", "", "Fixture root session", 10, 5000, 1500, 0.0234,
 		fixtureBase, fixtureBase+9)
 	seedSessionWithEconomics(db, "m_assistant_1$$call_agent_1", "fixture-root", "Agent: read server", 1, 0, 0, 0.0,
 		fixtureBase+1, fixtureBase+3)
 
-	messages := []struct {
-		id, sessionID, role, parts, model string
-		createdAt                         int64
-	}{
-		{
-			"m_user", "fixture-root", "user",
-			`[{"data":{"text":"Read internal/server/server.go."},"type":"text"},{"data":{"reason":"stop","time":0},"type":"finish"}]`,
-			"", fixtureBase,
-		},
-		{
-			"m_assistant_1", "fixture-root", "assistant",
-			`[{"data":{"text":"Reading the server."},"type":"text"},{"data":{"finished":true,"id":"call_agent_1","input":"{\"task_title\":\"read server\",\"agent_type\":\"explore\",\"message\":\"look at server.go\"}","name":"agent","provider_executed":false},"type":"tool_call"}]`,
-			"minimax/minimax-m3", fixtureBase + 1,
-		},
-		{
-			"m_tool_agent", "fixture-root", "tool",
-			`[{"data":{"content":"{\"agent_id\":\"m_assistant_1\",\"nickname\":\"explore\",\"task_name\":\"read server\"}","is_error":false,"name":"agent","tool_call_id":"call_agent_1"},"type":"tool_result"}]`,
-			"", fixtureBase + 2,
-		},
-		{
-			"m_assistant_2", "fixture-root", "assistant",
-			`[{"data":{"thinking":"considering which file to read","started_at":100,"finished_at":107},"type":"reasoning"},{"data":{"finished":true,"id":"call_read_1","input":"{\"file_path\":\"/repo/main.go\"}","name":"read","provider_executed":false},"type":"tool_call"}]`,
-			"minimax/minimax-m3", fixtureBase + 3,
-		},
-		{
-			"m_tool_read", "fixture-root", "tool",
-			`[{"data":{"content":"package main\n","is_error":false,"name":"read","tool_call_id":"call_read_1"},"type":"tool_result"}]`,
-			"", fixtureBase + 4,
-		},
-		{
-			"m_assistant_3", "fixture-root", "assistant",
-			`[{"data":{"text":"Now editing."},"type":"text"},{"data":{"finished":true,"id":"call_write_1","input":"{\"file_path\":\"/repo/server.go\"}","name":"write","provider_executed":false},"type":"tool_call"}]`,
-			"minimax/minimax-m3", fixtureBase + 5,
-		},
-		{
-			"m_tool_write", "fixture-root", "tool",
-			`[{"data":{"content":"File written.","is_error":true,"name":"write","tool_call_id":"call_write_1"},"type":"tool_result"}]`,
-			"", fixtureBase + 6,
-		},
-		{
-			"m_assistant_4", "fixture-root", "assistant",
-			`[{"data":{"command":"go test ./...","output":"ok","exit_code":0},"type":"shell_command"},{"data":{"finished":true,"id":"call_bash_1","input":"{\"command\":\"go test ./...\"}","name":"bash","provider_executed":false},"type":"tool_call"}]`,
-			"minimax/minimax-m3", fixtureBase + 7,
-		},
-		{
-			"m_tool_bash", "fixture-root", "tool",
-			`[{"data":{"content":"ok\n","is_error":false,"name":"bash","tool_call_id":"call_bash_1"},"type":"tool_result"}]`,
-			"", fixtureBase + 8,
-		},
-		{
-			"m_user_2", "fixture-root", "user",
-			`[{"data":{"text":"Looks good!"},"type":"text"},{"data":{"reason":"stop","time":0},"type":"finish"}]`,
-			"", fixtureBase + 9,
-		},
-		{
-			"m_child_1", "m_assistant_1$$call_agent_1", "assistant",
-			`[{"data":{"text":"Reading the file."},"type":"text"}]`,
-			"minimax/minimax-m3", fixtureBase + 2,
-		},
-		{
-			"m_future", "fixture-root", "user",
-			`[{"data":{"blob":"base64"},"type":"image_url"},{"data":{"payload":"..."},"type":"brand_new_part"}]`,
-			"", fixtureBase + 9,
-		},
-	}
-
-	for _, msg := range messages {
+	for _, msg := range fixtureMessages {
 		var model any
 		if msg.model != "" {
 			model = msg.model
 		}
 
-		_, err := db.Exec(
+		_, err := db.ExecContext(
+			context.Background(),
 			`INSERT INTO messages (id, session_id, role, parts, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			msg.id, msg.sessionID, msg.role, msg.parts, model, msg.createdAt, msg.createdAt,
+			msg.id,
+			msg.sessionID,
+			msg.role,
+			msg.parts,
+			model,
+			msg.createdAt,
+			msg.createdAt,
 		)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	if _, err := db.Exec(
+	if _, err := db.ExecContext(context.Background(),
 		`INSERT INTO read_files (session_id, path, read_at) VALUES ('fixture-root', '/repo/main.go', ?)`,
 		fixtureBase+4,
 	); err != nil {
@@ -323,10 +387,19 @@ func seedSessionWithEconomics(
 		parent = parentID
 	}
 
-	_, err := db.Exec(
+	_, err := db.ExecContext(
+		context.Background(),
 		`INSERT INTO sessions (id, parent_session_id, title, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, parent, title, messageCount, promptTokens, completionTokens, cost, updatedAt, createdAt,
+		id,
+		parent,
+		title,
+		messageCount,
+		promptTokens,
+		completionTokens,
+		cost,
+		updatedAt,
+		createdAt,
 	)
 	if err != nil {
 		panic(err)
@@ -389,7 +462,7 @@ func seedLegacyFixture(db *sql.DB) {
 	}
 
 	for _, msg := range messages {
-		if _, err := db.Exec(
+		if _, err := db.ExecContext(context.Background(),
 			`INSERT INTO messages (id, session_id, role, parts, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
 			msg.id, msg.sessionID, msg.role, msg.parts, msg.createdAt, msg.createdAt,
 		); err != nil {
@@ -405,7 +478,7 @@ func seedLegacySessionFull(
 	promptTokens, completionTokens int64,
 	createdAt, updatedAt int64,
 ) {
-	_, err := db.Exec(
+	_, err := db.ExecContext(context.Background(),
 		`INSERT INTO sessions (id, title, message_count, prompt_tokens, completion_tokens, updated_at, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		id, title, messageCount, promptTokens, completionTokens, updatedAt, createdAt,

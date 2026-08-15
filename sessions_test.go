@@ -152,6 +152,7 @@ func TestSessionsDayFilter(t *testing.T) {
 	}
 
 	otherDay := fixtureDay().AddDate(0, 0, 1)
+
 	offDay, err := db.Sessions(context.Background(), SessionFilter{Day: otherDay})
 	if err != nil {
 		t.Fatal(err)

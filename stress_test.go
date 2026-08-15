@@ -55,19 +55,32 @@ func TestMessagesLargeHistory(t *testing.T) {
 
 		for i := range messageCount {
 			role := "tool"
+
 			parts := fmt.Sprintf(
 				`[{"data":{"content":"ok","is_error":false,"name":"read","tool_call_id":"call_%04d"},"type":"tool_result"}]`,
 				i-1,
 			)
 			if i%2 == 0 {
 				role = "assistant"
+
 				parts = fmt.Sprintf(
 					`[{"data":{"text":"step %d"},"type":"text"},{"data":{"finished":true,"id":"call_%04d","input":"{\"file_path\":\"/repo/file.go\"}","name":"read"},"type":"tool_call"}]`,
-					i, i,
+					i,
+					i,
 				)
 			}
 
-			insertMessage(t, db, fmt.Sprintf("msg-%04d", i), "sess-many-msgs", role, parts, "test-model", "", fixtureBase+int64(i))
+			insertMessage(
+				t,
+				db,
+				fmt.Sprintf("msg-%04d", i),
+				"sess-many-msgs",
+				role,
+				parts,
+				"test-model",
+				"",
+				fixtureBase+int64(i),
+			)
 		}
 	})
 
@@ -102,7 +115,16 @@ func BenchmarkSessionsList(b *testing.B) {
 	dataDir := b.TempDir()
 	createDBAt(b, dataDir+"/"+DBName, schemaCurrent, func(db *sql.DB) {
 		for i := range 2000 {
-			insertSession(b, db, fmt.Sprintf("bench-sess-%04d", i), "", "bench", 0, fixtureBase+int64(i), fixtureBase+int64(i))
+			insertSession(
+				b,
+				db,
+				fmt.Sprintf("bench-sess-%04d", i),
+				"",
+				"bench",
+				0,
+				fixtureBase+int64(i),
+				fixtureBase+int64(i),
+			)
 		}
 	})
 

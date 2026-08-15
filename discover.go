@@ -135,6 +135,7 @@ func loadRegistry(globalDir string) ([]Project, error) {
 
 	path := filepath.Join(globalDir, RegistryName)
 
+	//nolint:gosec // the registry path is caller-supplied by design: reading local files at arbitrary paths is this library's purpose
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("%w: read %s: %w", ErrRegistryNotFound, path, err)
@@ -165,6 +166,7 @@ func queryProjectsCLI(ctx context.Context, binary string) ([]Project, error) {
 		name = "crush"
 	}
 
+	//nolint:gosec // running the configured crush binary is the documented CLI fallback, not an injection vector
 	out, err := exec.CommandContext(ctx, name, "projects", "--json").CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("run %s projects --json: %w", name, err)

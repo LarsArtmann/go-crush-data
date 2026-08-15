@@ -62,6 +62,7 @@ func (db *DB) Sessions(ctx context.Context, filter SessionFilter) ([]Session, er
 // Session returns the session with the given ID, or [ErrSessionNotFound]
 // wrapped with the ID when it does not exist.
 func (db *DB) Session(ctx context.Context, id string) (Session, error) {
+	//nolint:exhaustruct // the ID is the only relevant filter here
 	rows, err := db.handle.QueryContext(ctx, db.buildSessionsQuery(SessionFilter{ByID: id}), id)
 	if err != nil {
 		return Session{}, fmt.Errorf("get session %s from %s: %w", id, db.path, err)
@@ -83,7 +84,7 @@ func (db *DB) Session(ctx context.Context, id string) (Session, error) {
 
 func (f SessionFilter) validate() error {
 	if f.ParentID != "" && f.RootOnly {
-		return fmt.Errorf("SessionFilter: ParentID and RootOnly are mutually exclusive")
+		return errConflictingFilter
 	}
 
 	return nil
@@ -124,7 +125,8 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) string {
 
 	query := fmt.Sprintf(
 		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, todos FROM sessions",
-		parentExpr, costExpr,
+		parentExpr,
+		costExpr,
 	)
 
 	var conditions []string

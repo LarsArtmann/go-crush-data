@@ -121,27 +121,26 @@ func DecodeParts(raw string) ([]Part, error) {
 
 	parts := make([]Part, 0, len(rawParts))
 	for _, entry := range rawParts {
+		// Entries with no type or a null payload carry no information —
+		// Crush has been observed to write such rows.
+		if entry.Type == "" || len(entry.Data) == 0 || string(entry.Data) == "null" {
+			continue
+		}
+
 		part, err := decodePart(entry)
 		if err != nil {
 			return nil, err
 		}
 
-		if part != nil {
-			parts = append(parts, part)
-		}
+		parts = append(parts, part)
 	}
 
 	return parts, nil
 }
 
-// decodePart converts one raw entry into its typed variant. Entries with no
-// type or a null payload decode to nil — Crush has been observed to write
-// such rows and they carry no information.
+// decodePart converts one raw entry into its typed variant. The entry must
+// carry a type and a non-null payload (see DecodeParts).
 func decodePart(entry rawPart) (Part, error) {
-	if entry.Type == "" || len(entry.Data) == 0 || string(entry.Data) == "null" {
-		return nil, nil
-	}
-
 	var (
 		part Part
 		err  error
@@ -164,9 +163,9 @@ func decodePart(entry rawPart) (Part, error) {
 		// Attachments pass through as UnknownPart: the payloads are base64
 		// previews that generic readers have no use for, but keeping the
 		// cases explicit makes a future discriminator change loud here.
-		return UnknownPart{Type: entry.Type, Data: json.RawMessage(entry.Data)}, nil
+		return UnknownPart(entry), nil
 	default:
-		return UnknownPart{Type: entry.Type, Data: json.RawMessage(entry.Data)}, nil
+		return UnknownPart(entry), nil
 	}
 
 	return part, err
