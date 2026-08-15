@@ -77,23 +77,11 @@ reports/
 
 ## Go
 go.work.sum
+/go-crush-data
 
 ## Nix
 result
 result-*
 .envrc
 .direnv/
-
-## Javascript and typescript
-*.tsbuildinfo
-.next/
-.nuxt/
-.docusaurus/
-.eslintcache
-.cache/
-.parcel-cache/
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
 # <<< buildflow-managed (.gitignore) <<<
