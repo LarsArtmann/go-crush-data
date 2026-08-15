@@ -7,7 +7,7 @@
     "schedule": ["before 4am on Monday"]
   },
   "nix": {
-    "enabled": true
+    "enabled": false
   },
   "prBodyNotes": [
     ":warning: If the `Nix flake check` job fails with a hash mismatch, the flake's `vendorHash` needs re-derivation: run `nix build .#default`, copy the `got:` sha256 into `flake.nix`, and push. See CONTRIBUTING.md (`go.sum ↔ vendorHash coupling`)."
