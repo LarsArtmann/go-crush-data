@@ -11,9 +11,9 @@ parts), subagent graphs, and daily usage statistics.
 
 ## Why
 
-Crush ships **no SDK and no documented schema**. It stores sessions in
-`~/.local/share/crush/projects.json` (a project registry) and one SQLite
-database (`crush.db`) per project data directory. The same reading logic has
+Crush ships **no SDK and no documented schema**. It stores sessions in the global project registry
+(`~/.local/share/crush/projects.json` on Unix, `%LOCALAPPDATA%\crush\projects.json`
+on Windows) and one SQLite database (`crush.db`) per project data directory. The same reading logic has
 been reverse-engineered independently three times — and the schema
 **drifts across Crush versions** (columns like `sessions.cost`,
 `messages.model`, and `sessions.parent_session_id` were added in later
@@ -116,7 +116,9 @@ Databases without the required `sessions`/`messages` tables fail `Open` with
   through with their raw payload.
 - **Zero dependencies** beyond `modernc.org/sqlite` (pure Go, no CGO).
 - **Timestamps**: Crush stores Unix seconds; this library returns
-  `time.Time` in UTC.
+  `time.Time` in UTC. Day filters (`SessionFilter.Day`, `StatsFilter.Day`)
+  match the calendar day in the filter value's own location; pass local
+  midnight to bucket sessions by your local day.
 
 ## Install
 
@@ -130,6 +132,7 @@ Requires Go 1.26 or newer.
 
 ```
 nix develop       # dev shell with Go, golangci-lint, govulncheck
+nix run .#lint    # golangci-lint (~90 linters, see .golangci.yml)
 go test ./...     # full suite (fixture databases are generated per-test)
 nix flake check   # build + format checks
 ```

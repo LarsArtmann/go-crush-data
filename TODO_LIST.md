@@ -1,27 +1,55 @@
 # TODO List
 
-Short- and mid-term improvement tasks, harvested from the 2026-08-15 full
-code review (`docs/reviews/2026-08-15_21-30_full-code-review.html`). Status
-changes as items are done; new review findings land here.
+Short- and mid-term improvement tasks. Consolidated 2026-08-15 from the full
+code review and both status reports; the full Pareto-ranked execution plan
+with fine-grained breakdown lives at
+`docs/planning/2026-08-15_22-00-consolidated-roadmap-execution.md` (snapshot).
+Tier 1 = highest leverage.
 
-## Open
+## Open — Tier 1 (1% → 51%)
 
-- [ ] **Add a context-aware Open variant** — `Open(dataDir string)` cannot be
-  cancelled; `probeSchema` runs on `context.Background()`. Add
-  `OpenContext(ctx, dataDir)` (and keep `Open` delegating to it) so callers
-  can bound startup on slow filesystems. ~30 min.
-- [ ] **Batch AgentGraph traversal** — `AgentGraph` issues one query per node
-  (N+1). Fine for realistic graphs (depth cap 64, small fan-out), but a
-  recursive CTE over `parent_session_id` would make it a single query if any
-  consumer ever reports it hot. Measure first. ~2 h.
-- [ ] **Type `Session.Todos` as JSON** — it is an opaque JSON blob stored as
-  a plain `string`. Exposing `json.RawMessage` (or a decoded `[]Todo`) would
-  make "this is structured data" explicit. Breaking-ish API change; bundle
-  with the next minor. ~1 h.
-- [ ] **Distinguish "column missing" from "probe failed"** —
-  `tableExists`/`columnExists` return false on query errors, so a broken
-  database can masquerade as a legacy schema. Consider surfacing probe errors
-  from `Open`. Needs a design decision on strictness. ~1 h.
+- [ ] **CI nix job + shuffle** — add `nix flake check` and
+  `go test -shuffle=on` to CI; the vendorHash rot class is currently
+  invisible to CI. ~60 min.
+- [ ] **go.sum↔vendorHash drift guard** — CI step that fails when go.sum
+  changes without the flake hash. ~45 min.
+- [ ] **CLI-fallback stderr robustness** — verify (then fix) that
+  `CombinedOutput` parsing survives log noise around the JSON payload;
+  suspected live defect. ~60 min.
+
+## Open — Tier 2 (4% → 64%)
+
+- [ ] **Test sweep A (row paths)** — FinishedAt populated, collectRows
+  rows.Err, hour-guard, zero-table open. ~90 min.
+- [ ] **Test sweep B (filter/graph paths)** — non-UTC stats day, depth cap,
+  dedupe tie-break, 100-child fan-out, read-vs-WAL-writer. ~100 min.
+- [ ] **Registry pins** — `ParseProjectsOutput("null")`, chmod-000 registry
+  fallback. ~40 min.
+- [ ] **GitHub Release workflow** — tag-driven, notes from CHANGELOG.
+  (~Release-integrity memo: origin v0.1.1 verified = 74dd031, no retag,
+  v0.1.2 not needed.) ~60 min.
+
+## Open — Tier 3 (20% → 80%)
+
+- [ ] **API bundle v0.2.0** — `OpenContext(ctx, dir)`; `Session.Todos` →
+  `json.RawMessage`; schema-probe strictness. ~4 h total.
+- [ ] **Runnable examples** — `example_test.go` (Discover, parts
+  type-switch, Stats). ~60 min.
+- [ ] **Docs batch** — README Quick start timezone note, CONTRIBUTING
+  parity-contract warning, link check. ~45 min.
+- [ ] **FEATURES.md + ROADMAP.md** via docs-health BUILD. ~90 min.
+- [ ] **Nightly fuzz + benchstat trend** — make fuzz/bench load-bearing.
+  ~95 min.
+
+## Open — Tier 4 (rest → 100%)
+
+- [ ] Coverage badge + pkg.go.dev verification. ~30 min.
+- [ ] HTML artifact validation (2 files). ~20 min.
+- [ ] Dependency automation (Renovate, monthly flake update). ~60 min.
+- [ ] Tidiness — `_test.go` unused exclusion re-eval, windowsLocalAppData
+  GOOS test, exhaustruct audit. ~45 min.
+- [ ] Record non-decisions in ROADMAP (DOMAIN_LANGUAGE skip, AgentGraph CTE
+  only-if-hot). ~12 min.
 
 ## Done
 
@@ -35,3 +63,7 @@ changes as items are done; new review findings land here.
   fixed 2026-08-15 during the review.
 - [x] Delete dead test helpers `fixtureDB`, `insertLegacySession` — done
   2026-08-15 during the review.
+- [x] README/AGENTS audit fixes (timezone semantics, `nix run .#lint`,
+  Windows path, tooling gotchas) — done 2026-08-15.
+- [x] Verify remote tag integrity (origin v0.1.1 = 74dd031, no retag) —
+  done 2026-08-15 22:00.

@@ -52,6 +52,16 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
   the shared logic already lives in `dayArgs`, and unifying the two distinct
   queries would take more parameters than the duplicated lines.
 
+## Tooling gotchas
+
+- **go.sum and flake.nix vendorHash are coupled**: refreshing dependencies
+  without updating `vendorHash` breaks `nix flake check` (happened in
+  16260fe). After `go get` / `go mod tidy`, update the hash from the
+  mismatch error's "got:" value.
+- **`nix flake check` only sees git-tracked files**: untracked `.go` files
+  are invisible to the flake's source filter, producing misleading
+  "undefined: ..." build errors. Commit new files before judging flake health.
+
 ## Storage facts (reverse-engineered, upstream has no docs)
 
 - Registry: `<global>/projects.json` — `{path, data_dir, last_accessed}`;
