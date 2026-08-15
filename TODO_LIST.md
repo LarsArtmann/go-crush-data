@@ -15,6 +15,24 @@ Harvested from that report's "next things" list; Pareto-ordered.
   states the invariant but shows no number (codecov/artifact-backed
   alternative ~30 min).
 
+## High — truth & safety (2026-08-15 23:04 audit findings)
+
+- [ ] Add `.crush/` to the **repo** `.gitignore` — currently ignored only by
+  the maintainer's global gitignore; real session DB could leak on other
+  machines. 2m
+- [ ] RELEASING.md: note that git log messages may be daemon-generated and
+  unreliable (e.g. `9b4d346` claims "no API surface changed" over a breaking
+  diff); CHANGELOG is source of truth. 5m
+- [ ] AGENTS.md: add "verify-then-annotate" rule (never write "green/done"
+  into docs before the command exits 0) and "diff daemon commits before
+  trusting their messages". 5m
+- [ ] Full LSP ghost clearance (`golangci_lint_ls` still echoes deleted
+  `repro_test.go`; CLI lint is authoritative at 0 issues). 5m
+- [ ] CHANGELOG policy: decide + document whether doc-only changes get
+  changelogged. 5m
+- [ ] CI: upload `go tool cover -html` artifact next to the 85% gate. 10m
+- [ ] Audit remaining daemon-generated commit messages against their diffs. 15m
+
 ## High — release & automation observability (contingent on v0.2.0)
 
 - [ ] Observe release workflow on the v0.2.0 tag; tick RELEASING checklist. 10m
