@@ -1,58 +1,85 @@
 # TODO List
 
-Short- and mid-term improvement tasks. Consolidated 2026-08-15 from the full
-code review and both status reports; the full Pareto-ranked execution plan
-with fine-grained breakdown lives at
-`docs/planning/2026-08-15_22-00-consolidated-roadmap-execution.md` (snapshot).
-Tier 1 = highest leverage.
+Short- and mid-term improvement tasks. Rewritten 2026-08-15 after the
+consolidated roadmap execution (C1–C21, all tiers done and gate-verified —
+see CHANGELOG `[Unreleased]` and
+`docs/status/2026-08-15_22-44_roadmap-t1-t4-execution-status.md`).
+Harvested from that report's "next things" list; Pareto-ordered.
 
-## Open — Tier 1 (1% → 51%)
+## Pending user decisions
 
-- [ ] **CI nix job + shuffle** — add `nix flake check` and
-  `go test -shuffle=on` to CI; the vendorHash rot class is currently
-  invisible to CI. ~60 min.
-- [ ] **go.sum↔vendorHash drift guard** — CI step that fails when go.sum
-  changes without the flake hash. ~45 min.
-- [ ] **CLI-fallback stderr robustness** — verify (then fix) that
-  `CombinedOutput` parsing survives log noise around the JSON payload;
-  suspected live defect. ~60 min.
+- [ ] **Cut v0.2.0?** `[Unreleased]` holds the breaking `Todos` change plus
+  `OpenContext` and probe strictness; tag per RELEASING.md also gives the
+  release workflow its first real run.
+- [ ] **Coverage badge: live or static?** Current static "≥85% enforced" badge
+  states the invariant but shows no number (codecov/artifact-backed
+  alternative ~30 min).
 
-## Open — Tier 2 (4% → 64%)
+## High — release & automation observability (contingent on v0.2.0)
 
-- [ ] **Test sweep A (row paths)** — FinishedAt populated, collectRows
-  rows.Err, hour-guard, zero-table open. ~90 min.
-- [ ] **Test sweep B (filter/graph paths)** — non-UTC stats day, depth cap,
-  dedupe tie-break, 100-child fan-out, read-vs-WAL-writer. ~100 min.
-- [ ] **Registry pins** — `ParseProjectsOutput("null")`, chmod-000 registry
-  fallback. ~40 min.
-- [ ] **GitHub Release workflow** — tag-driven, notes from CHANGELOG.
-  (~Release-integrity memo: origin v0.1.1 verified = 74dd031, no retag,
-  v0.1.2 not needed.) ~60 min.
+- [ ] Observe release workflow on the v0.2.0 tag; tick RELEASING checklist. 10m
+- [ ] Observe first nightly fuzz run (03:17 UTC). 5m
+- [ ] Observe first bench-trend run; sanity-check the summary render. 5m
+- [ ] Install/enable the Renovate app on the repo (config validates; inert
+  until enabled). 5m
+- [ ] Observe first monthly flake-lock PR. 5m
 
-## Open — Tier 3 (20% → 80%)
+## Medium — hardening the new surfaces
 
-- [ ] **API bundle v0.2.0** — `OpenContext(ctx, dir)`; `Session.Todos` →
-  `json.RawMessage`; schema-probe strictness. ~4 h total.
-- [ ] **Runnable examples** — `example_test.go` (Discover, parts
-  type-switch, Stats). ~60 min.
-- [ ] **Docs batch** — README Quick start timezone note, CONTRIBUTING
-  parity-contract warning, link check. ~45 min.
-- [ ] **FEATURES.md + ROADMAP.md** via docs-health BUILD. ~90 min.
-- [ ] **Nightly fuzz + benchstat trend** — make fuzz/bench load-bearing.
-  ~95 min.
+- [ ] Pin bench.yml's benchstat version (currently `@latest`). 10m
+- [ ] Release workflow `workflow_dispatch` dry-run support. 10m
+- [ ] CI: pin golangci-lint via go.mod `tool` directive instead of
+  `go install @v2.12.2`. 15m
+- [ ] CI: add windows + macos matrix legs (also gives `windowsLocalAppData`
+  a real-Windows run). 30m
+- [ ] Benchmarks: add `BenchmarkMessages`, `BenchmarkAgentGraph` to the
+  trend. 20m
+- [ ] Live coverage badge via codecov/artifact (replaces static). 30m
+- [ ] pkg.go.dev re-verification after the v0.2.0 crawl. 5m
 
-## Open — Tier 4 (rest → 100%)
+## Medium — test pins for documented-but-unproven behavior
 
-- [ ] Coverage badge + pkg.go.dev verification. ~30 min.
-- [ ] HTML artifact validation (2 files). ~20 min.
-- [ ] Dependency automation (Renovate, monthly flake update). ~60 min.
-- [ ] Tidiness — `_test.go` unused exclusion re-eval, windowsLocalAppData
-  GOOS test, exhaustruct audit. ~45 min.
-- [ ] Record non-decisions in ROADMAP (DOMAIN_LANGUAGE skip, AgentGraph CTE
-  only-if-hot). ~12 min.
+- [ ] README: mention `OpenContext` + `Todos` raw JSON in Design bullets. 10m
+- [ ] Examples: `AgentGraph` + `ReadFiles` examples. 20m
+- [ ] Pin `dedupeProjects` zero-timestamp "sorts last" doc claim with a test. 10m
+- [ ] Pin `Session(byID)` → `ErrSessionNotFound` if not already covered. 5m
+- [ ] Pin `ReadFiles` empty-path filtering. 10m
+- [ ] Pin combined `Day + Limit` filter composition. 10m
+- [ ] Pin messages legacy-schema NULL substitution (model/provider/finished). 10m
+- [ ] WAL concurrency: exercise `Messages` concurrently, not just `Sessions`. 15m
+- [ ] Document/pin `Models`/`Providers` DISTINCT ordering (undefined today). 10m
+- [ ] Stats day filter on legacy schema combo test. 10m
+- [ ] `TestSessionsOnRealDatabase`: assert schema capabilities explicitly. 10m
+- [ ] CLI-fallback: fake CLI emitting exit-nonzero + partial JSON → error path
+  pin. 10m
+- [ ] `DiscoverProjects` result ordering pin (sorted by DataDir). 5m
+- [ ] `extractJSONObject`: handle brace-inside-string noise edge explicitly
+  (documented limit). 15m
+- [ ] Fuzz `loadRegistry` JSON shape (registryFile). 15m
+- [ ] Fuzz: mine nightly artifacts for corpus seeds. ongoing
+
+## Low — polish
+
+- [ ] CODEOWNERS file. 5m
+- [ ] SECURITY.md (reporting policy; read-only lib, tiny surface). 15m
+- [ ] CONTRIBUTING: document `go run benchstat@latest` fallback next to nix
+  absence. 5m
+- [ ] Add `-count=2` to documented local race command. 2m
+- [ ] Consider darwin global-dir handling audit (upstream parity). 20m
+- [ ] Sweep `//nolint` directives for staleness quarterly. 15m
+- [ ] gosec G701 taint false positive: upstream minimal repro + issue. 30m
+- [ ] Evaluate `nix flake update` cadence vs Renovate nix manager overlap. 10m
+
+(Raw ideas — `DecodeTodos`, streaming iterator, registry watching — live in
+ROADMAP.md, not here.)
 
 ## Done
 
+- [x] Consolidated roadmap C1–C21 (all four tiers), gates 1–3 + final gate
+  green — 2026-08-15; details in CHANGELOG `[Unreleased]` and the status
+  report above.
+- [x] TODO_LIST sync, AGENTS.md update, final gate re-run, real-DB smoke
+  test, coverage measurement — 2026-08-15 (this session's closure pass).
 - [x] Fix `SessionFilter` condition/argument order drift (`sessions.go`) —
   fixed 2026-08-15 during the review; regression test
   `TestSessionsByIDComposesWithOtherFilters`.

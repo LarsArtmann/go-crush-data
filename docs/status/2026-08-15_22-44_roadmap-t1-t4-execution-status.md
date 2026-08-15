@@ -1,5 +1,11 @@
 # Status Update — Roadmap Execution (Tiers 1–4), 2026-08-15 22:44
 
+> **[ARCHIVED 2026-08-15]** Closure pass done: TODO_LIST.md synced (section f
+> items 6–50 live there now), AGENTS.md updated, final full gate green
+> (build+vet+race/shuffle+lint+flake+actionlint), real-DB smoke re-run,
+> coverage measured. The session's diff was committed by the auto-daemon as
+> `9b4d346`. Questions in section g still await user decisions.
+
 **Session start point:** `bcc0a50` (clean tree), plan
 `docs/planning/2026-08-15_22-00-consolidated-roadmap-execution.md`.
 **Scope executed:** C1–C21 across all four Pareto tiers, with verification
