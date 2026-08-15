@@ -60,9 +60,9 @@ what consumers got; treat it, not `git log`, as the release ledger.
 
 ## Checklist for the next real release
 
-- [ ] Confirm the `Release` workflow published the GitHub Release with the
-      correct CHANGELOG section (first run of the workflow; verified 2026
-      tooling, not yet observed on a real tag).
+- [x] Confirm the `Release` workflow published the GitHub Release with the
+      correct CHANGELOG section (first run: v0.2.0, observed 2026-08-16
+      tooling).
 
 ## Decision log
 

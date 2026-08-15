@@ -13,6 +13,16 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.2.0] - 2026-08-16
+
+### Added
+
 - `OpenContext(ctx, dataDir)`: [Open] with a caller-supplied context. The
   schema probes at open honor context cancellation; `Open` now delegates
   with `context.Background` and is behaviorally unchanged.
@@ -24,6 +34,12 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   being re-derived; wired into CI before the build.
 - Tag-driven `Release` workflow: pushes of `v*` tags publish a GitHub
   Release whose notes are the matching CHANGELOG section.
+- `ExampleDB_AgentGraph` and `ExampleDB_ReadFiles` runnable examples for
+  pkg.go.dev.
+- `BenchmarkMessages` and `BenchmarkAgentGraph` added to the bench trend.
+- CI matrix now runs on windows-latest and macos-latest alongside ubuntu.
+- Coverage HTML report uploaded as a CI artifact.
+- `FuzzLoadRegistry` fuzz target for the registry file parser.
 
 ### Changed
 
@@ -31,6 +47,10 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   `string`. The column holds JSON Crush writes; the library now hands it
   through byte-identical (nil for NULL) instead of pretending it is
   plain text. Decode it into whatever shape your Crush version writes.
+- `Models` and `Providers` in `Stats` are now sorted ascending (added
+  `ORDER BY` to the `DISTINCT` query); previously the order was undefined.
+- golangci-lint and benchstat pinned via go.mod `tool` directives instead
+  of `go install @version`.
 
 ### Fixed
 
