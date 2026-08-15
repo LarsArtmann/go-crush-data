@@ -4,16 +4,17 @@ import "time"
 
 // Project is one entry from the Crush project registry: a working directory
 // (Path), the data directory that holds its sessions (DataDir), and when
-// Crush last used it (LastAccessed).
+// Crush last used it (LastAccessed). The JSON tags mirror the registry's
+// on-disk shape so a []Project decodes projects.json directly.
 //
 // The registry can map many working directories to the same DataDir (for
 // example, a parent directory and all its subprojects can share one data
 // directory). [DiscoverProjects] de-duplicates such entries down to one
 // Project per DataDir, keeping the most recently accessed Path.
 type Project struct {
-	Path         string
-	DataDir      string
-	LastAccessed time.Time
+	Path         string    `json:"path"`
+	DataDir      string    `json:"data_dir"`
+	LastAccessed time.Time `json:"last_accessed"`
 }
 
 // Session is one row of the sessions table: a conversation with an agent,
