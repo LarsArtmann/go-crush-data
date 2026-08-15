@@ -11,14 +11,19 @@ permissions:
 
 jobs:
   test:
-    name: Vet + Build + Test + Coverage
-    runs-on: ubuntu-latest
+    name: Vet + Build + Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 2
 
       - name: Vendor-hash drift guard (go.sum ↔ flake.nix)
+        if: matrix.os == 'ubuntu-latest'
         run: scripts/check-vendor-hash.sh HEAD~1
 
       - name: Set up Go
@@ -40,6 +45,7 @@ jobs:
         run: go test -race -shuffle=on -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Coverage gate (≥85%)
+        shell: bash
         run: |
           go tool cover -func=coverage.out -o=coverage.func
           total=$(go tool cover -func=coverage.out | grep '^total' | awk '{print substr($3, 1, length($3)-1)}')
