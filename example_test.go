@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite" // the driver the examples use to build throwaway fixtures
@@ -78,9 +79,10 @@ func setupExampleData() string {
 	return globalDir
 }
 
-// quoteJSON renders s as a JSON string literal.
+// quoteJSON renders s as a JSON string literal, escaping backslashes
+// (Windows paths contain them).
 func quoteJSON(s string) string {
-	return `"` + s + `"`
+	return `"` + strings.ReplaceAll(s, `\`, `\\`) + `"`
 }
 
 // ExampleDiscoverProjects lists every project Crush knows about.

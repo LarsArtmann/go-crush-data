@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -198,6 +199,10 @@ func TestDiscoverProjectsRegistryMalformed(t *testing.T) {
 func fakeCLI(t *testing.T, payload string) string {
 	t.Helper()
 
+	if runtime.GOOS == "windows" {
+		t.Skip("fakeCLI creates a /bin/sh script; not applicable on Windows")
+	}
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "crush-fake")
 
@@ -332,6 +337,10 @@ func TestDiscoverProjectsCLIFailure(t *testing.T) {
 // as an error, not silently return the partial payload's projects.
 func TestDiscoverProjectsCLIExitNonzeroWithPartialJSON(t *testing.T) {
 	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("creates a /bin/sh script; not applicable on Windows")
+	}
 
 	globalDir := t.TempDir()
 
