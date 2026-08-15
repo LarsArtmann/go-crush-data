@@ -21,9 +21,6 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Install benchstat
-        run: go install golang.org/x/perf/cmd/benchstat@latest
-
       - name: Run benchmarks
         run: go test -run '^$' -bench . -count 6 . > current.txt
 
@@ -33,7 +30,7 @@ jobs:
             echo "## Benchmark comparison"
             echo
             echo '```'
-            benchstat docs/benchmarks/baseline-benchmark-sessions.txt current.txt
+            go tool benchstat docs/benchmarks/baseline-benchmark-sessions.txt current.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
