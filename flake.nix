@@ -72,7 +72,7 @@
             test = {
               type = "app";
               meta.description = "Run the Go test suite with the race detector";
-              program = toString (
+              program = "${
                 pkgs.writeShellApplication {
                   name = "test";
                   runtimeInputs = [ goPkg ];
@@ -81,13 +81,13 @@
                     exec go test -race "$@" ./...
                   '';
                 }
-              );
+              }/bin/test";
             };
 
             lint = {
               type = "app";
               meta.description = "Run golangci-lint";
-              program = toString (
+              program = "${
                 pkgs.writeShellApplication {
                   name = "lint";
                   runtimeInputs = [
@@ -99,7 +99,7 @@
                     exec golangci-lint run ./...
                   '';
                 }
-              );
+              }/bin/lint";
             };
           };
 

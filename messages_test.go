@@ -72,6 +72,54 @@ func TestMessagesFields(t *testing.T) {
 	}
 }
 
+// TestMessagesFinishedAtPopulated pins the finished_at scan path: a non-NULL
+// column yields the completion time, NULL yields the zero time.
+func TestMessagesFinishedAtPopulated(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "s", "", "Session", 2, fixtureBase, fixtureBase+10)
+		insertMessage(t, db, "m-done", "s", "assistant", "[]", fixtureModel, "", fixtureBase+1)
+		insertMessage(t, db, "m-open", "s", "assistant", "[]", fixtureModel, "", fixtureBase+2)
+
+		if _, err := db.ExecContext(
+			context.Background(),
+			"UPDATE messages SET finished_at = ? WHERE id = 'm-done'",
+			fixtureBase+7,
+		); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	messages, err := db.Messages(context.Background(), "s")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	byID := map[string]Message{}
+	for _, message := range messages {
+		byID[message.ID] = message
+	}
+
+	done := byID["m-done"]
+	if done.FinishedAt.Unix() != fixtureBase+7 {
+		t.Fatalf("FinishedAt = %v, want %d", done.FinishedAt, fixtureBase+7)
+	}
+
+	if open := byID["m-open"]; !open.FinishedAt.IsZero() {
+		t.Fatalf("FinishedAt = %v, want zero time for NULL column", open.FinishedAt)
+	}
+}
+
 // partOf returns the first part of type T.
 func partOf[T Part](parts []Part) (T, bool) {
 	for _, part := range parts {

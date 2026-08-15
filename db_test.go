@@ -156,6 +156,96 @@ func TestOpenUnsupportedSchema(t *testing.T) {
 	}
 }
 
+// TestOpenContextCanceled proves a canceled context surfaces as
+// context.Canceled from the probes — not as a misleading
+// ErrUnsupportedSchema for a perfectly valid database.
+func TestOpenContextCanceled(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := OpenContext(ctx, dataDir)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v, want context.Canceled", err)
+	}
+}
+
+// TestOpenContextParityWithOpen pins the delegation contract: OpenContext
+// with a live context behaves exactly like Open.
+func TestOpenContextParityWithOpen(t *testing.T) {
+	t.Parallel()
+
+	dataDir := fixtureDataDir(t)
+
+	viaOpen, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = viaOpen.Close() }()
+
+	viaContext, err := OpenContext(context.Background(), dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = viaContext.Close() }()
+
+	if viaContext.Path() != viaOpen.Path() {
+		t.Fatalf("Path = %q, want %q", viaContext.Path(), viaOpen.Path())
+	}
+
+	if viaContext.Schema() != viaOpen.Schema() {
+		t.Fatalf("Schema = %+v, want %+v", viaContext.Schema(), viaOpen.Schema())
+	}
+}
+
+// TestOpenCorruptDatabaseIsNotUnsupportedSchema pins the strictness contract:
+// a file that passes the existence checks but is not a SQLite database fails
+// with a probe error, distinct from both ErrDatabaseNotFound and
+// ErrUnsupportedSchema (which is reserved for genuine, readable schemas that
+// predate the required tables).
+func TestOpenCorruptDatabaseIsNotUnsupportedSchema(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+	if err := os.WriteFile(
+		filepath.Join(dataDir, DBName),
+		[]byte("this is definitely not a sqlite database, not even close"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Open(dataDir)
+	if err == nil {
+		t.Fatal("err = nil, want probe failure")
+	}
+
+	if errors.Is(err, ErrDatabaseNotFound) {
+		t.Fatalf("err = %v, want a probe error, not ErrDatabaseNotFound", err)
+	}
+
+	if errors.Is(err, ErrUnsupportedSchema) {
+		t.Fatalf("err = %v, want a probe error, not ErrUnsupportedSchema", err)
+	}
+}
+
+// fixtureDataDir creates a current-schema database and returns its data
+// directory.
+func fixtureDataDir(t *testing.T) string {
+	t.Helper()
+
+	dataDir := t.TempDir()
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, nil)
+
+	return dataDir
+}
+
 // createRawDBAt creates a SQLite database with arbitrary DDL.
 func createRawDBAt(t *testing.T, dbPath, ddl string) {
 	t.Helper()

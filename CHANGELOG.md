@@ -9,11 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- `OpenContext(ctx, dataDir)`: [Open] with a caller-supplied context. The
+  schema probes at open honor context cancellation; `Open` now delegates
+  with `context.Background` and is behaviorally unchanged.
+- CI now runs `nix flake check` in a dedicated job and shuffles test order
+  (`go test -shuffle=on`), so vendorHash rot and order-dependent tests fail
+  before they ship.
+- `scripts/check-vendor-hash.sh`: a fast guard that fails with an actionable
+  message when `go.mod`/`go.sum` changed without the flake's `vendorHash`
+  being re-derived; wired into CI before the build.
+- Tag-driven `Release` workflow: pushes of `v*` tags publish a GitHub
+  Release whose notes are the matching CHANGELOG section.
+
+### Changed
+
+- **Breaking:** `Session.Todos` is now `json.RawMessage` instead of
+  `string`. The column holds JSON Crush writes; the library now hands it
+  through byte-identical (nil for NULL) instead of pretending it is
+  plain text. Decode it into whatever shape your Crush version writes.
 
 ### Fixed
 
-- Nothing yet.
+- Schema probes no longer swallow query failures: a corrupt database or a
+  canceled context now surfaces its real error from `Open` instead of
+  masquerading as `ErrUnsupportedSchema`. That sentinel is reserved for
+  readable schemas that genuinely predate the required tables.
+- The `crush projects --json` CLI fallback broke when the CLI printed any
+  log or warning line around its JSON payload (the whole combined output was
+  parsed as pure JSON). `ParseProjectsOutput` now extracts the outermost
+  JSON object before decoding; pure-JSON and noisy payloads both parse, and
+  input without a decodable object still errors.
+- `nix run .#lint` / `nix run .#test` failed with "Permission denied": the
+  flake app programs pointed at the wrapper derivation directory instead
+  of the executable inside `bin/`.
 
 ## [0.1.1] - 2026-08-15
 

@@ -16,7 +16,11 @@
 // adapts to what it finds: absent columns are reported as zero values instead
 // of failing, and [DB.Schema] exposes the detected capabilities so callers can
 // warn their users about reduced coverage. Databases that lack the required
-// sessions or messages tables fail [DB.Open] with [ErrUnsupportedSchema].
+// sessions or messages tables fail [DB.Open] with [ErrUnsupportedSchema];
+// databases whose schema cannot be probed at all (a canceled context, a file
+// that is not a SQLite database) fail with the underlying probe error —
+// "unreadable" and "too old" are different diagnoses. [DB.OpenContext] runs
+// the same probes under a caller-supplied context.
 //
 // # Read-only access
 //

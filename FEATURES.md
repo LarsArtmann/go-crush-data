@@ -1,0 +1,37 @@
+# Features
+
+Honest inventory of what this library does, by status. Code is the source of
+truth; every row cites its evidence. Generated 2026-08-15 by a docs BUILD
+pass — update rows in place when status changes.
+
+| Status | Feature | Evidence |
+|---|---|---|
+| FULLY_FUNCTIONAL | Project discovery from the projects.json registry, deduplicated to one project per data directory (newest access wins, ties keep the first entry) | `discover.go:109` `dedupeProjects` |
+| FULLY_FUNCTIONAL | `crush projects --json` CLI fallback; tolerates log noise around the JSON payload | `discover.go:164` `queryProjectsCLI`, `discover.go:215` `extractJSONObject` |
+| FULLY_FUNCTIONAL | `ParseProjectsOutput` — public parser for raw CLI output | `discover.go:190` |
+| FULLY_FUNCTIONAL | Read-only open (`mode=ro`, single connection, `_txlock=immediate`); byte-identical after reads | `db.go:108` `openSQLite`, `db_test.go` `TestOpenIsReadOnly` |
+| FULLY_FUNCTIONAL | `OpenContext` — open with a caller context bounding the schema probes | `db.go:58` |
+| FULLY_FUNCTIONAL | Schema capability probing (cost, parent_session_id, model, provider, finished_at, read_files) with strict error surfacing | `schema.go:82` `probeSchema` |
+| FULLY_FUNCTIONAL | `Schema.MissingColumns` — user-facing drift warning list | `schema.go:44` |
+| FULLY_FUNCTIONAL | Session listing with filters: ByID, Day (filter-location semantics), ParentID, RootOnly, Limit | `sessions.go:45` |
+| FULLY_FUNCTIONAL | Session fetch by ID (`ErrSessionNotFound`) | `sessions.go:66` |
+| FULLY_FUNCTIONAL | `Session.Todos` as raw JSON (`json.RawMessage`, nil for NULL) | `types.go:38`, `sessions.go:187` |
+| FULLY_FUNCTIONAL | Message listing ordered by `created_at, id` | `messages.go:18` |
+| FULLY_FUNCTIONAL | Tolerant parts decoding: malformed rows yield nil Parts instead of failing the read | `messages.go:52` |
+| FULLY_FUNCTIONAL | Sealed `Part` set: Text, Reasoning, ToolCall, ToolResult, Finish, ShellCommand, Unknown (forward-compatible passthrough) | `parts.go:9`–`78` |
+| FULLY_FUNCTIONAL | `DecodeParts` — strict public parts decoder | `parts.go` |
+| FULLY_FUNCTIONAL | `ReadFiles` — files the agent opened during a session | `messages.go:90` |
+| FULLY_FUNCTIONAL | Subagent graphs: preorder by creation time, depth cap 64 (`ErrGraphDepthExceeded` on cycles) | `agents.go:23` |
+| FULLY_FUNCTIONAL | Day activity stats with the crush-daily parity contract (`TestStatsParityWithCrushDailySQL`) | `stats.go:28` |
+| FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE | `stats.go:249` |
+| FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml` |
+| FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
+| FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
+| FULLY_FUNCTIONAL | Fuzz targets for both parsers (DecodeParts, ParseProjectsOutput) with seed corpora | `fuzz_test.go` |
+| FULLY_FUNCTIONAL | Committed benchmark baseline + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
+| FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats | `example_test.go` |
+| PARTIALLY_FUNCTIONAL | Tag-driven GitHub Release workflow — written and actionlint-clean, but not yet observed on a real tag | `.github/workflows/release.yml`, checklist in `RELEASING.md` |
+| PARTIALLY_FUNCTIONAL | Nightly fuzz workflow — written, first scheduled run pending | `.github/workflows/fuzz.yml` |
+| PARTIALLY_FUNCTIONAL | Benchmark-trend CI job comparing pushes against the baseline — written, first run pending | `.github/workflows/bench.yml` |
+| PLANNED | Coverage badge on README (needs a CI coverage artifact) | TODO_LIST |
+| PLANNED | Renovate dependency automation | TODO_LIST |

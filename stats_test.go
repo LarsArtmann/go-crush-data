@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestStatsDay(t *testing.T) {
@@ -321,5 +322,86 @@ func TestStatsOnLegacySchema(t *testing.T) {
 
 	if len(stats.ModelBreakdown) != 0 {
 		t.Fatalf("ModelBreakdown = %+v, want none (model column absent)", stats.ModelBreakdown)
+	}
+}
+
+// TestStatsDayFilterUsesFilterLocation pins the day-filter semantics: the
+// day string is rendered in the filter value's own location and compared as
+// text against the UTC-stored created_at date. A zone whose calendar date
+// differs from the UTC date near midnight therefore matches differently —
+// the historical crush-daily semantics this library preserves.
+func TestStatsDayFilterUsesFilterLocation(t *testing.T) {
+	t.Parallel()
+
+	// 2026-08-04T23:30:00Z: UTC calendar day 08-04, but 08-05 in UTC+2.
+	lateUnix := fixtureBase + 11*3600 + 30*60
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "late", "", "Late session", 1, lateUnix, lateUnix)
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	utcDay := time.Unix(lateUnix, 0).UTC()
+
+	utcStats, err := db.Stats(context.Background(), StatsFilter{Day: utcDay})
+	if err != nil {
+		t.Fatalf("Stats (UTC day): %v", err)
+	}
+
+	if utcStats.SessionCount != 1 {
+		t.Fatalf("SessionCount (UTC day) = %d, want 1", utcStats.SessionCount)
+	}
+
+	plusTwo := time.Unix(lateUnix, 0).In(time.FixedZone("UTC+2", 2*3600))
+	if plusTwo.Format(time.DateOnly) == utcDay.Format(time.DateOnly) {
+		t.Fatal("fixture error: zone shift must change the calendar date")
+	}
+
+	zoneStats, err := db.Stats(context.Background(), StatsFilter{Day: plusTwo})
+	if err != nil {
+		t.Fatalf("Stats (UTC+2 day): %v", err)
+	}
+
+	if zoneStats.SessionCount != 0 {
+		t.Fatalf(
+			"SessionCount (UTC+2 day) = %d, want 0: the day string is the zone's calendar date, compared against the UTC date",
+			zoneStats.SessionCount,
+		)
+	}
+}
+
+// TestApplyHourBucketsDropsOutOfRangeHours pins the histogram guard: hours
+// outside [0, 24) must be ignored rather than panic, since a corrupted
+// aggregate cannot be allowed to take down a whole Stats read.
+func TestApplyHourBucketsDropsOutOfRangeHours(t *testing.T) {
+	t.Parallel()
+
+	var histogram [24]int
+
+	applyHourBuckets(&histogram, []hourBucket{
+		{hour: 0, count: 3},
+		{hour: 12, count: 5},
+		{hour: 23, count: 7},
+		{hour: -1, count: 99},
+		{hour: 24, count: 99},
+		{hour: 100, count: 99},
+	})
+
+	if histogram[0] != 3 || histogram[12] != 5 || histogram[23] != 7 {
+		t.Fatalf("histogram = %v, want in-range buckets written", histogram)
+	}
+
+	for _, hour := range []int{1, 11, 13, 22} {
+		if histogram[hour] != 0 {
+			t.Fatalf("histogram[%d] = %d, want 0", hour, histogram[hour])
+		}
 	}
 }

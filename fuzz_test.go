@@ -18,3 +18,21 @@ func FuzzDecodeParts(f *testing.F) {
 		_, _ = DecodeParts(raw)
 	})
 }
+
+// FuzzParseProjectsOutput verifies the CLI-output parser never panics on
+// arbitrary input, including payloads with log noise around the JSON (the
+// extraction path must stay robust, not just the clean-JSON path).
+func FuzzParseProjectsOutput(f *testing.F) {
+	f.Add(`{"projects":[]}`)
+	f.Add(`INFO noise {"projects":[{"path":"/p","data_dir":"/d","last_accessed":"x"}]} WARN`)
+	f.Add(`null`)
+	f.Add(`no braces here`)
+	f.Add(`{"projects":`)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		projects, err := ParseProjectsOutput([]byte(raw))
+		if err == nil && projects == nil && len(raw) > 0 {
+			t.Fatalf("ParseProjectsOutput(%q) = nil slice with nil error on non-empty input", raw)
+		}
+	})
+}

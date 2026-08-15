@@ -6,6 +6,7 @@ parts), subagent graphs, and daily usage statistics.
 
 [![CI](https://github.com/LarsArtmann/go-crush-data/actions/workflows/ci.yml/badge.svg)](https://github.com/LarsArtmann/go-crush-data/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/LarsArtmann/go-crush-data.svg)](https://pkg.go.dev/github.com/LarsArtmann/go-crush-data)
+![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25%20enforced-success)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LarsArtmann/go-crush-data)](https://goreportcard.com/report/github.com/LarsArtmann/go-crush-data)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -53,6 +54,8 @@ func main() {
 			continue
 		}
 
+		// Day filters use the filter value's own location: time.Now()
+		// draws the day boundary in local time (see Timestamps below).
 		yesterday := time.Now().AddDate(0, 0, -1)
 
 		sessions, _ := db.Sessions(ctx, crushdata.SessionFilter{Day: yesterday, RootOnly: true})
@@ -136,6 +139,11 @@ nix run .#lint    # golangci-lint (~90 linters, see .golangci.yml)
 go test ./...     # full suite (fixture databases are generated per-test)
 nix flake check   # build + format checks
 ```
+
+See also: [FEATURES.md](FEATURES.md) (honest feature inventory),
+[ROADMAP.md](ROADMAP.md) (direction and recorded non-decisions),
+[CONTRIBUTING.md](CONTRIBUTING.md) (parity contract, benchmarks),
+[RELEASING.md](RELEASING.md) (release procedure and tag integrity).
 
 ## License
 

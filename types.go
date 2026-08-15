@@ -1,6 +1,9 @@
 package crushdata
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Project is one entry from the Crush project registry: a working directory
 // (Path), the data directory that holds its sessions (DataDir), and when
@@ -19,7 +22,10 @@ type Project struct {
 
 // Session is one row of the sessions table: a conversation with an agent,
 // either a root session started by a user or an auxiliary session spawned by
-// the agent tool (ParentSessionID != "").
+// the agent tool (ParentSessionID != ""). The Todos field carries the raw
+// JSON of the Todos column (json.RawMessage) so callers decode it into
+// whatever shape their Crush version writes; it is nil when the column is
+// NULL.
 type Session struct {
 	ID               string
 	Title            string
@@ -30,7 +36,7 @@ type Session struct {
 	CostUSD          float64
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
-	Todos            string
+	Todos            json.RawMessage
 }
 
 // Role is the author of a message. Crush currently writes "user",

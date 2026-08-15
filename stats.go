@@ -199,13 +199,21 @@ func (db *DB) fillHourHistogram(ctx context.Context, day string, stats *Stats) e
 		return err
 	}
 
-	for _, bucket := range buckets {
-		if bucket.hour >= 0 && bucket.hour < len(stats.HourHistogram) {
-			stats.HourHistogram[bucket.hour] = bucket.count
-		}
-	}
+	applyHourBuckets(&stats.HourHistogram, buckets)
 
 	return nil
+}
+
+// applyHourBuckets writes each bucket into the histogram. Hours outside
+// [0, 24) are dropped instead of panicking: SQLite's strftime cannot produce
+// them for valid timestamps, so this only guards against corrupted
+// aggregates.
+func applyHourBuckets(histogram *[24]int, buckets []hourBucket) {
+	for _, bucket := range buckets {
+		if bucket.hour >= 0 && bucket.hour < len(histogram) {
+			histogram[bucket.hour] = bucket.count
+		}
+	}
 }
 
 // hourBucket is one hour-of-day aggregate of the session histogram.

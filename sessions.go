@@ -3,6 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -52,6 +53,7 @@ func (db *DB) Sessions(ctx context.Context, filter SessionFilter) ([]Session, er
 
 	query, args := db.buildSessionsQuery(filter)
 
+	//nolint:gosec // query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args
 	rows, err := db.handle.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list sessions in %s: %w", db.path, err)
@@ -182,7 +184,10 @@ func scanSession(rows *sql.Rows) (Session, error) {
 	session.ParentSessionID = parent.String
 	session.CreatedAt = unixTime(createdAtUnix)
 	session.UpdatedAt = unixTime(updatedAtUnix)
-	session.Todos = todos.String
+
+	if todos.Valid {
+		session.Todos = json.RawMessage(todos.String)
+	}
 
 	return session, nil
 }

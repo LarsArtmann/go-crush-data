@@ -3,6 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -372,4 +373,60 @@ func TestSessionsOnRealDatabase(t *testing.T) {
 	}
 
 	t.Logf("real database schema: %+v, sessions read: %d", db.Schema(), len(sessions))
+}
+
+// TestSessionTodosRawPassThrough pins the Todos contract: the column's JSON
+// arrives as raw bytes, byte-identical to what Crush wrote, and NULL yields
+// nil. The library does not interpret the payload — callers decode it into
+// the shape their Crush version writes.
+func TestSessionTodosRawPassThrough(t *testing.T) {
+	t.Parallel()
+
+	rawTodos := `[{"content":"ship it","status":"completed","priority":"high"},{"content":"?","status":"in_progress"}]`
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "with-todos", "", "With todos", 0, fixtureBase, fixtureBase)
+
+		if _, err := db.ExecContext(
+			context.Background(),
+			"UPDATE sessions SET todos = ? WHERE id = 'with-todos'",
+			rawTodos,
+		); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	withTodos, err := db.Session(context.Background(), "with-todos")
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	if string(withTodos.Todos) != rawTodos {
+		t.Fatalf("Todos = %q, want byte-identical %q", withTodos.Todos, rawTodos)
+	}
+
+	var decoded []map[string]any
+	if err := json.Unmarshal(withTodos.Todos, &decoded); err != nil || len(decoded) != 2 {
+		t.Fatalf("Todos does not decode as the written JSON: %v (%d items)", err, len(decoded))
+	}
+
+	fixture := openFixture(t, schemaCurrent)
+
+	root, err := fixture.Session(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Session (fixture, NULL todos): %v", err)
+	}
+
+	if root.Todos != nil {
+		t.Fatalf("Todos = %q, want nil for NULL column", root.Todos)
+	}
 }

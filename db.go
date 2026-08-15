@@ -44,8 +44,18 @@ type DB struct {
 //
 // A missing crush.db fails with [ErrDatabaseNotFound]. A database without
 // the required sessions and messages tables fails with
-// [ErrUnsupportedSchema].
+// [ErrUnsupportedSchema]. Open is [OpenContext] with
+// [context.Background].
 func Open(dataDir string) (*DB, error) {
+	return OpenContext(context.Background(), dataDir)
+}
+
+// OpenContext is [Open] with a caller-supplied context. The context bounds
+// the schema probes run at open time, so a caller can bail out of opening a
+// slow or unreachable database instead of blocking; a canceled context
+// surfaces as a wrapped [context.Canceled] error. No queries run after the
+// probes succeed.
+func OpenContext(ctx context.Context, dataDir string) (*DB, error) {
 	if dataDir == "" {
 		return nil, errEmptyDataDir
 	}
@@ -61,7 +71,7 @@ func Open(dataDir string) (*DB, error) {
 		return nil, fmt.Errorf("open crush database at %s: %w", path, err)
 	}
 
-	schema, err := probeSchema(context.Background(), handle, path)
+	schema, err := probeSchema(ctx, handle, path)
 	if err != nil {
 		_ = handle.Close()
 

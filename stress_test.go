@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // TestSessionsLargeDatabase is a correctness smoke test under volume: 500
@@ -108,6 +109,109 @@ func TestMessagesLargeHistory(t *testing.T) {
 
 	if decoded < messageCount {
 		t.Fatalf("decoded parts = %d, want at least one per message", decoded)
+	}
+}
+
+// TestSessionsConcurrentWithWALWriter pins the live-database contract: a
+// read-only handle keeps listing sessions without error while a separate
+// WAL-mode writer commits new rows into the same file — the situation this
+// library exists for (reading while Crush runs).
+func TestSessionsConcurrentWithWALWriter(t *testing.T) {
+	t.Parallel()
+
+	const written = 50
+
+	dataDir := t.TempDir()
+	dbPath := filepath.Join(dataDir, DBName)
+
+	createDBAt(t, dataDir+"/"+DBName, schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "seed", "", "Seed", 0, fixtureBase, fixtureBase)
+	})
+
+	writer := openWritable(t, dbPath)
+
+	if _, err := writer.ExecContext(context.Background(), "PRAGMA journal_mode=WAL"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := writer.ExecContext(context.Background(), "PRAGMA busy_timeout=5000"); err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	writeDone := make(chan error, 1)
+
+	go func() {
+		var writeErr error
+
+		for i := range written {
+			_, writeErr = writer.ExecContext(
+				context.Background(),
+				`INSERT INTO sessions (id, parent_session_id, title, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				fmt.Sprintf("wal-%04d", i),
+				nil,
+				"WAL session",
+				0,
+				0,
+				0,
+				0.0,
+				fixtureBase+int64(i)+1,
+				fixtureBase+int64(i)+1,
+			)
+			if writeErr != nil {
+				break
+			}
+
+			// Guarantee reader/writer overlap regardless of machine speed.
+			time.Sleep(200 * time.Microsecond)
+		}
+
+		writeDone <- writeErr
+	}()
+
+	reads := 0
+
+	for {
+		sessions, err := db.Sessions(context.Background(), SessionFilter{})
+		if err != nil {
+			t.Fatalf("concurrent read failed after %d successful reads: %v", reads, err)
+		}
+
+		reads++
+
+		if len(sessions) == 0 {
+			t.Fatal("reader saw zero sessions mid-write; snapshot must at least contain the seed row")
+		}
+
+		select {
+		case writeErr := <-writeDone:
+			if writeErr != nil {
+				t.Fatalf("writer failed: %v", writeErr)
+			}
+
+			sessions, err := db.Sessions(context.Background(), SessionFilter{})
+			if err != nil {
+				t.Fatalf("final read: %v", err)
+			}
+
+			if len(sessions) != written+1 {
+				t.Fatalf("sessions = %d, want %d after writer finished", len(sessions), written+1)
+			}
+
+			if reads < 2 {
+				t.Fatalf("reads = %d, want overlap between reader and writer", reads)
+			}
+
+			return
+		default:
+		}
 	}
 }
 

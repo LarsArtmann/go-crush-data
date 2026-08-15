@@ -105,6 +105,35 @@ func TestDiscoverProjectsDedupeSharedDataDir(t *testing.T) {
 	}
 }
 
+// TestDiscoverProjectsDedupeEqualLastAccessedKeepsFirst pins the tie-break:
+// when two registry paths share a data_dir AND a last_accessed timestamp,
+// the first registry entry wins (no reorder based on path).
+func TestDiscoverProjectsDedupeEqualLastAccessedKeepsFirst(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	sharedDir := t.TempDir()
+	makeProjectDB(t, sharedDir)
+
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/home/lars/projects/first","data_dir":`+jsonString(sharedDir)+`,"last_accessed":"2026-08-15T10:00:00Z"},
+		{"path":"/home/lars/projects/second","data_dir":`+jsonString(sharedDir)+`,"last_accessed":"2026-08-15T10:00:00Z"}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 {
+		t.Fatalf("projects = %d, want 1", len(projects))
+	}
+
+	if projects[0].Path != "/home/lars/projects/first" {
+		t.Fatalf("Path = %q, want the first registry entry on ties", projects[0].Path)
+	}
+}
+
 func TestDiscoverProjectsSkipsMissingDatabases(t *testing.T) {
 	t.Parallel()
 
@@ -217,6 +246,74 @@ func TestDiscoverProjectsCLIFallback(t *testing.T) {
 	}
 }
 
+// TestDiscoverProjectsCLIFallbackToleratesLogNoise pins the real-world CLI
+// contract: the crush CLI may print log or warning lines around its JSON
+// payload on stderr; discovery must still decode the payload.
+func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	dataDir := t.TempDir()
+	makeProjectDB(t, dataDir)
+
+	payload := "INFO crush v0.9.0 starting\n" +
+		`{"projects":[{"path":"/repo/cli","data_dir":` + jsonString(dataDir) + `,"last_accessed":"2026-08-15T12:00:00Z"}]}` +
+		"\nWARN deprecated flag --json\n"
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: globalDir,
+		CLIFallback:   true,
+		CLIBinary:     fakeCLI(t, payload),
+	})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 || projects[0].Path != "/repo/cli" {
+		t.Fatalf("projects = %+v, want the CLI-discovered project", projects)
+	}
+}
+
+// TestDiscoverProjectsUnreadableRegistryFallsBackToCLI pins the fallback
+// trigger: a registry that exists but cannot be read (permissions) falls
+// through to the CLI exactly like a missing one. Skipped when running as
+// root, which reads chmod-000 files regardless.
+func TestDiscoverProjectsUnreadableRegistryFallsBackToCLI(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: chmod-000 files are still readable")
+	}
+
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	dataDir := t.TempDir()
+	makeProjectDB(t, dataDir)
+
+	registryPath := filepath.Join(globalDir, RegistryName)
+	if err := os.WriteFile(registryPath, []byte(`{"projects":[]}`), 0o000); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = os.Chmod(registryPath, 0o600) })
+
+	dataDirJSON := jsonString(dataDir)
+	payload := `{"projects":[{"path":"/repo/cli","data_dir":` + dataDirJSON +
+		`,"last_accessed":"2026-08-15T12:00:00Z"}]}`
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: globalDir,
+		CLIFallback:   true,
+		CLIBinary:     fakeCLI(t, payload),
+	})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 || projects[0].Path != "/repo/cli" {
+		t.Fatalf("projects = %+v, want the CLI-discovered project", projects)
+	}
+}
+
 func TestDiscoverProjectsCLIFailure(t *testing.T) {
 	t.Parallel()
 
@@ -240,6 +337,7 @@ func TestParseProjectsOutput(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "nil input", raw: "", want: 0},
+		{name: "json null", raw: `null`, want: 0},
 		{name: "empty projects", raw: `{"projects":[]}`, want: 0},
 		{
 			name: "valid",
@@ -248,6 +346,13 @@ func TestParseProjectsOutput(t *testing.T) {
 		},
 		{name: "malformed", raw: `{"projects":`, wantErr: true},
 		{name: "wrong shape", raw: `[]`, wantErr: true},
+		{
+			name: "log noise around payload",
+			raw:  "INFO starting\n" + `{"projects":[]}` + "\nWARN done\n",
+			want: 0,
+		},
+		{name: "noise without any object", raw: "no json here at all\n", wantErr: true},
+		{name: "noise with stray braces only", raw: "loaded {config} from disk\n", wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -295,6 +400,31 @@ func TestParseTimeTolerance(t *testing.T) {
 				t.Fatalf("parseTime(%q).IsZero() = %v, want %v", tt.raw, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestWindowsLocalAppData pins the Windows fallback resolution: LOCALAPPDATA
+// wins when set; otherwise it is derived from USERPROFILE. The function only
+// reads environment variables, so the pin runs on every platform.
+func TestWindowsLocalAppData(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", `C:\Users\me\AppData\Local`)
+
+	if got := windowsLocalAppData(); got != `C:\Users\me\AppData\Local` {
+		t.Fatalf("windowsLocalAppData = %q, want LOCALAPPDATA verbatim", got)
+	}
+
+	t.Setenv("LOCALAPPDATA", "")
+	t.Setenv("USERPROFILE", `C:\Users\me`)
+
+	want := `C:\Users\me` + string(filepath.Separator) + "AppData" + string(filepath.Separator) + "Local"
+	if got := windowsLocalAppData(); got != want {
+		t.Fatalf("windowsLocalAppData = %q, want %q derived from USERPROFILE", got, want)
+	}
+
+	t.Setenv("USERPROFILE", "")
+
+	if got := windowsLocalAppData(); got != "" {
+		t.Fatalf("windowsLocalAppData = %q, want empty when nothing resolves", got)
 	}
 }
 

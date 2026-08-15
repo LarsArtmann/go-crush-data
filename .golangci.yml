@@ -196,10 +196,6 @@ linters:
           - funlen
           - cyclop
           - goconst
-      - path: _test\.go
-        text: unused
-        linters:
-          - unused
     paths:
       - _templ\.go$
       - \.gen\.go$

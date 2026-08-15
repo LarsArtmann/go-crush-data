@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -117,6 +118,92 @@ func TestAgentGraphSiblingsOrderedByCreatedNotUpdated(t *testing.T) {
 				"node[%d] = %q, want %q (siblings by created_at, not updated_at)",
 				i, graph.Nodes[i].Session.ID, id,
 			)
+		}
+	}
+}
+
+// TestAgentGraphDepthCapExceeded pins the recursion bound: a chain one link
+// deeper than maxAgentDepth fails with ErrGraphDepthExceeded instead of
+// exhausting the stack.
+func TestAgentGraphDepthCapExceeded(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "root", "", "Root", 0, fixtureBase, fixtureBase)
+
+		// root is depth 0; child i sits at depth i. The child at depth
+		// maxAgentDepth + 1 trips the cap.
+
+		parent := "root"
+
+		for i := 1; i <= maxAgentDepth+1; i++ {
+			id := fmt.Sprintf("chain-%03d", i)
+			insertSession(t, db, id, parent, "Chain", 0, fixtureBase+int64(i), fixtureBase+int64(i))
+			parent = id
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	_, err = db.AgentGraph(context.Background(), "root")
+	if !errors.Is(err, ErrGraphDepthExceeded) {
+		t.Fatalf("err = %v, want ErrGraphDepthExceeded", err)
+	}
+}
+
+// TestAgentGraphWideFanOut stress-checks preorder traversal breadth: 100
+// children of one root arrive in created_at order with no reordering or
+// truncation.
+func TestAgentGraphWideFanOut(t *testing.T) {
+	t.Parallel()
+
+	const childCount = 100
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "root", "", "Root", 0, fixtureBase, fixtureBase)
+
+		for i := range childCount {
+			id := fmt.Sprintf("fan-%03d", i)
+			createdAt := fixtureBase + int64(i) + 1
+			insertSession(t, db, id, "root", "Fan child", 0, createdAt, createdAt)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	graph, err := db.AgentGraph(context.Background(), "root")
+	if err != nil {
+		t.Fatalf("AgentGraph: %v", err)
+	}
+
+	if len(graph.Nodes) != childCount+1 {
+		t.Fatalf("nodes = %d, want %d", len(graph.Nodes), childCount+1)
+	}
+
+	if graph.Nodes[1].Session.ID != "fan-000" || graph.Nodes[childCount].Session.ID != "fan-099" {
+		t.Fatalf(
+			"children out of created_at order: first=%s last=%s",
+			graph.Nodes[1].Session.ID, graph.Nodes[childCount].Session.ID,
+		)
+	}
+
+	for i, node := range graph.Nodes[1:] {
+		if node.Depth != 1 || node.ParentID != "root" {
+			t.Fatalf("node[%d] = %+v, want depth 1 under root", i+1, node)
 		}
 	}
 }

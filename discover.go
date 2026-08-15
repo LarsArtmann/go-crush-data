@@ -1,6 +1,7 @@
 package crushdata
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -183,14 +184,16 @@ func queryProjectsCLI(ctx context.Context, binary string) ([]Project, error) {
 // ParseProjectsOutput decodes the JSON payload emitted by
 // `crush projects --json` (the same shape as projects.json). Empty input
 // yields an empty slice without error, mirroring Crush's behaviour when the
-// registry is absent.
+// registry is absent. Log or warning lines the CLI prints around the payload
+// are tolerated: the outermost JSON object is extracted before decoding, and
+// input from which no decodable object can be extracted fails.
 func ParseProjectsOutput(raw []byte) ([]Project, error) {
 	if len(raw) == 0 {
 		return nil, nil
 	}
 
 	var file registryFile
-	if err := json.Unmarshal(raw, &file); err != nil {
+	if err := json.Unmarshal(extractJSONObject(raw), &file); err != nil {
 		return nil, fmt.Errorf("parse crush projects output: %w", err)
 	}
 
@@ -204,6 +207,20 @@ func ParseProjectsOutput(raw []byte) ([]Project, error) {
 	}
 
 	return projects, nil
+}
+
+// extractJSONObject returns the substring from the first '{' to the last '}'
+// in raw, or raw itself when either delimiter is missing so that the caller
+// reports the original input in its parse error.
+func extractJSONObject(raw []byte) []byte {
+	start := bytes.IndexByte(raw, '{')
+
+	end := bytes.LastIndexByte(raw, '}')
+	if start < 0 || end <= start {
+		return raw
+	}
+
+	return raw[start : end+1]
 }
 
 // dedupeProjects collapses discovered projects to one per existing crush.db.
