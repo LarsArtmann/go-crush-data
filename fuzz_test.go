@@ -1,6 +1,10 @@
 package crushdata
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 // FuzzDecodeParts verifies the parts decoder never panics on arbitrary
 // input: malformed, truncated, and adversarial JSON must all return normally.
@@ -34,5 +38,27 @@ func FuzzParseProjectsOutput(f *testing.F) {
 		if err == nil && projects == nil && len(raw) > 0 {
 			t.Fatalf("ParseProjectsOutput(%q) = nil slice with nil error on non-empty input", raw)
 		}
+	})
+}
+
+// FuzzLoadRegistry verifies the registry parser never panics on arbitrary
+// file contents: the projects.json shape must be tolerated for any byte
+// sequence without crashing.
+func FuzzLoadRegistry(f *testing.F) {
+	f.Add(`{"projects":[]}`)
+	f.Add(`{"projects":[{"path":"/p","data_dir":"/d","last_accessed":"2026-01-01T00:00:00Z"}]}`)
+	f.Add(`null`)
+	f.Add(`malformed`)
+	f.Add(`{"projects":[{"path":"","data_dir":"","last_accessed":""}]}`)
+	f.Add(`{"projects":[null]}`)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		dir := t.TempDir()
+
+		if err := os.WriteFile(filepath.Join(dir, RegistryName), []byte(raw), 0o600); err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = loadRegistry(dir)
 	})
 }

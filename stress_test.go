@@ -247,3 +247,111 @@ func BenchmarkSessionsList(b *testing.B) {
 		}
 	}
 }
+
+// TestMessagesConcurrentWithWALWriter pins the same live-database contract
+// as TestSessionsConcurrentWithWALWriter but for Messages: a read-only
+// handle keeps reading messages without error while a WAL-mode writer
+// inserts new message rows into the same file.
+func TestMessagesConcurrentWithWALWriter(t *testing.T) {
+	t.Parallel()
+
+	const written = 30
+
+	dataDir := t.TempDir()
+	dbPath := filepath.Join(dataDir, DBName)
+
+	createDBAt(t, dbPath, schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "seed-session", "", "Seed", 2, fixtureBase, fixtureBase)
+		insertMessage(
+			t, db, "seed-msg-1", "seed-session", "user",
+			fixturePartsUser, "", "", fixtureBase,
+		)
+		insertMessage(
+			t, db, "seed-msg-2", "seed-session", "assistant",
+			fixturePartsAgentCall, fixtureModel, "", fixtureBase+1,
+		)
+	})
+
+	writer := openWritable(t, dbPath)
+
+	if _, err := writer.ExecContext(context.Background(), "PRAGMA journal_mode=WAL"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := writer.ExecContext(context.Background(), "PRAGMA busy_timeout=5000"); err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	writeDone := make(chan error, 1)
+
+	go func() {
+		var writeErr error
+
+		for i := range written {
+			_, writeErr = writer.ExecContext(
+				context.Background(),
+				`INSERT INTO messages (id, session_id, role, parts, model, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+				fmt.Sprintf("wal-msg-%04d", i),
+				"seed-session",
+				"assistant",
+				`[{"data":{"text":"step"},"type":"text"}]`,
+				fixtureModel,
+				fixtureBase+int64(i)+2,
+				fixtureBase+int64(i)+2,
+			)
+			if writeErr != nil {
+				break
+			}
+
+			time.Sleep(200 * time.Microsecond)
+		}
+
+		writeDone <- writeErr
+	}()
+
+	reads := 0
+
+	for {
+		messages, err := db.Messages(context.Background(), "seed-session")
+		if err != nil {
+			t.Fatalf("concurrent Messages read failed after %d reads: %v", reads, err)
+		}
+
+		reads++
+
+		if len(messages) < 2 {
+			t.Fatal("reader saw fewer than seed messages mid-write")
+		}
+
+		select {
+		case writeErr := <-writeDone:
+			if writeErr != nil {
+				t.Fatalf("writer failed: %v", writeErr)
+			}
+
+			messages, err := db.Messages(context.Background(), "seed-session")
+			if err != nil {
+				t.Fatalf("final Messages read: %v", err)
+			}
+
+			if len(messages) != written+2 {
+				t.Fatalf("messages = %d, want %d after writer finished", len(messages), written+2)
+			}
+
+			if reads < 2 {
+				t.Fatalf("reads = %d, want overlap between reader and writer", reads)
+			}
+
+			return
+		default:
+		}
+	}
+}
