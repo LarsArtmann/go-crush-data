@@ -55,6 +55,7 @@ go test -run '^$' -bench BenchmarkSessionsList -count 6 . \
 ```
 
 To compare locally: `go run golang.org/x/perf/cmd/benchstat@latest old.txt new.txt`.
+(benchstat is not in nixpkgs; the `go run` fallback is the documented path.)
 
 ## Conventions
 
