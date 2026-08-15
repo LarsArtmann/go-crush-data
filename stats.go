@@ -117,7 +117,8 @@ func (db *DB) fillModelsAndProviders(ctx context.Context, day string, stats *Sta
 }
 
 // distinctMessageColumns collects the non-empty distinct values of one
-// messages column across the day's sessions.
+// messages column across the day's sessions, sorted ascending for
+// deterministic output.
 func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([]string, error) {
 	dayFilter := ""
 	args := []any{}
@@ -130,8 +131,8 @@ func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([
 
 	//nolint:gosec // column comes from hardcoded call sites and dayFilter is a fixed literal, not user input
 	query := fmt.Sprintf(
-		"SELECT DISTINCT %s FROM messages WHERE %s IS NOT NULL AND %s != ''%s",
-		column, column, column, dayFilter,
+		"SELECT DISTINCT %s FROM messages WHERE %s IS NOT NULL AND %s != ''%s ORDER BY %s",
+		column, column, column, dayFilter, column,
 	)
 
 	rows, err := db.handle.QueryContext(ctx, query, args...)

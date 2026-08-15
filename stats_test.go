@@ -405,3 +405,58 @@ func TestApplyHourBucketsDropsOutOfRangeHours(t *testing.T) {
 		}
 	}
 }
+
+// TestStatsModelsProvidersOrderedAscending pins that Models and Providers
+// are returned in ascending alphabetical order (ORDER BY was added to make
+// the DISTINCT output deterministic; previously the order was undefined).
+func TestStatsModelsProvidersOrderedAscending(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "multi-model-session", "", "Multi-model", 5, fixtureBase, fixtureBase)
+
+		models := []string{"zeta/large", "alpha/small", "mid/medium", "alpha/small", "zeta/large"}
+		providers := []string{"openrouter", "anthropic", "openai", "anthropic", "openrouter"}
+
+		for i, msg := range fixtureMessages[:5] {
+			insertMessage(t, db, msg.id, "multi-model-session", msg.role, msg.parts,
+				models[i], providers[i], fixtureBase+int64(i))
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	stats, err := db.Stats(context.Background(), StatsFilter{Day: fixtureDay()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantModels := []string{"alpha/small", "mid/medium", "zeta/large"}
+	if len(stats.Models) != len(wantModels) {
+		t.Fatalf("Models = %v, want %v", stats.Models, wantModels)
+	}
+
+	for i, want := range wantModels {
+		if stats.Models[i] != want {
+			t.Fatalf("Models[%d] = %q, want %q (ascending)", i, stats.Models[i], want)
+		}
+	}
+
+	wantProviders := []string{"anthropic", "openai", "openrouter"}
+	if len(stats.Providers) != len(wantProviders) {
+		t.Fatalf("Providers = %v, want %v", stats.Providers, wantProviders)
+	}
+
+	for i, want := range wantProviders {
+		if stats.Providers[i] != want {
+			t.Fatalf("Providers[%d] = %q, want %q (ascending)", i, stats.Providers[i], want)
+		}
+	}
+}

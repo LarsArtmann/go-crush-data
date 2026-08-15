@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -428,5 +429,54 @@ func TestSessionTodosRawPassThrough(t *testing.T) {
 
 	if root.Todos != nil {
 		t.Fatalf("Todos = %q, want nil for NULL column", root.Todos)
+	}
+}
+
+// TestSessionsDayFilterComposesWithLimit pins that Day and Limit compose
+// correctly: the limit is applied to the day-filtered rows, not to all rows.
+func TestSessionsDayFilterComposesWithLimit(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		for i := range 5 {
+			insertSession(t, db, fmt.Sprintf("s-%d", i), "", "session", 1, fixtureBase+int64(i), fixtureBase+int64(i))
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	// All 5 sessions are on fixtureDay.
+	all, err := db.Sessions(context.Background(), SessionFilter{Day: fixtureDay()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(all) != 5 {
+		t.Fatalf("day filter = %d, want 5", len(all))
+	}
+
+	// Limit to 2 — must be a subset of the 5 day-filtered rows.
+	limited, err := db.Sessions(context.Background(), SessionFilter{Day: fixtureDay(), Limit: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(limited) != 2 {
+		t.Fatalf("day+limit = %d, want 2", len(limited))
+	}
+
+	// Every returned session must be on the filtered day.
+	dayStr := fixtureDay().Format("2006-01-02")
+	for _, s := range limited {
+		if s.CreatedAt.Format("2006-01-02") != dayStr {
+			t.Fatalf("session %s created %v is not on filter day %s", s.ID, s.CreatedAt, dayStr)
+		}
 	}
 }

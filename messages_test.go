@@ -246,3 +246,46 @@ func TestReadFilesAbsentOnLegacySchema(t *testing.T) {
 		t.Fatalf("paths = %v, want none (table absent)", paths)
 	}
 }
+
+// TestReadFilesFiltersEmptyPaths pins the documented behavior: ReadFiles
+// removes empty-string paths Go-side via slices.DeleteFunc, so rows with
+// an empty path column do not appear in the result.
+func TestReadFilesFiltersEmptyPaths(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "session-with-empty-paths", "", "Has empty paths", 1, fixtureBase, fixtureBase)
+
+		for _, path := range []string{"", "/repo/a.go", "", "/repo/b.go", ""} {
+			if _, err := db.ExecContext(
+				context.Background(),
+				`INSERT INTO read_files (session_id, path, read_at) VALUES (?, ?, ?)`,
+				"session-with-empty-paths", path, fixtureBase+4,
+			); err != nil {
+				t.Fatal(err)
+			}
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	paths, err := db.ReadFiles(context.Background(), "session-with-empty-paths")
+	if err != nil {
+		t.Fatalf("ReadFiles: %v", err)
+	}
+
+	if len(paths) != 2 {
+		t.Fatalf("paths = %v, want 2 (empty paths filtered)", paths)
+	}
+
+	if paths[0] != "/repo/a.go" || paths[1] != "/repo/b.go" {
+		t.Fatalf("paths = %v, want [/repo/a.go /repo/b.go]", paths)
+	}
+}

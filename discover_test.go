@@ -435,3 +435,95 @@ func TestGlobalDataDir(t *testing.T) {
 		t.Fatalf("GlobalDataDir = %q, want /custom/global", got)
 	}
 }
+
+// TestDiscoverProjectsDedupeZeroTimestampLoses pins the documented claim:
+// when two registry entries share a DataDir and one has a zero timestamp
+// (missing or unparseable last_accessed), the non-zero entry wins.
+func TestDiscoverProjectsDedupeZeroTimestampLoses(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	sharedDir := t.TempDir()
+	makeProjectDB(t, sharedDir)
+
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/repo/zero-ts","data_dir":`+jsonString(sharedDir)+`,"last_accessed":""},
+		{"path":"/repo/real-ts","data_dir":`+jsonString(sharedDir)+`,"last_accessed":"2026-08-15T10:00:00Z"}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 {
+		t.Fatalf("projects = %d, want 1 (deduped)", len(projects))
+	}
+
+	if projects[0].Path != "/repo/real-ts" {
+		t.Fatalf("Path = %q, want /repo/real-ts (non-zero timestamp wins)", projects[0].Path)
+	}
+}
+
+// TestDiscoverProjectsDedupeZeroTimestampOnlyEntryStillAppears pins that a
+// zero-timestamp entry is not silently dropped when it is the only entry for
+// its DataDir.
+func TestDiscoverProjectsDedupeZeroTimestampOnlyEntryStillAppears(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	dataDir := t.TempDir()
+	makeProjectDB(t, dataDir)
+
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/repo/zero-only","data_dir":`+jsonString(dataDir)+`,"last_accessed":""}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 {
+		t.Fatalf("projects = %d, want 1", len(projects))
+	}
+
+	if projects[0].Path != "/repo/zero-only" {
+		t.Fatalf("Path = %q, want /repo/zero-only", projects[0].Path)
+	}
+}
+
+// TestDiscoverProjectsOrderedByDataDir pins the documented ordering: results
+// are sorted by DataDir ascending across multiple projects.
+func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	dirA := t.TempDir()
+	dirB := t.TempDir()
+	dirC := t.TempDir()
+	makeProjectDB(t, dirA)
+	makeProjectDB(t, dirB)
+	makeProjectDB(t, dirC)
+
+	// Register in non-alphabetical order.
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/repo/charlie","data_dir":`+jsonString(dirC)+`,"last_accessed":"2026-08-15T10:00:00Z"},
+		{"path":"/repo/alpha","data_dir":`+jsonString(dirA)+`,"last_accessed":"2026-08-15T10:00:00Z"},
+		{"path":"/repo/bravo","data_dir":`+jsonString(dirB)+`,"last_accessed":"2026-08-15T10:00:00Z"}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 3 {
+		t.Fatalf("projects = %d, want 3", len(projects))
+	}
+
+	if projects[0].DataDir != dirA || projects[1].DataDir != dirB || projects[2].DataDir != dirC {
+		got := []string{projects[0].DataDir, projects[1].DataDir, projects[2].DataDir}
+		t.Fatalf("DataDirs not sorted ascending: %v", got)
+	}
+}
