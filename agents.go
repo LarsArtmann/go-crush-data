@@ -3,6 +3,8 @@ package crushdata
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 )
 
 // maxAgentDepth bounds the recursion of [DB.AgentGraph]. Session graphs are
@@ -76,7 +78,8 @@ func (db *DB) appendSubtree(ctx context.Context, graph *AgentGraph, session Sess
 }
 
 // childSessions returns the direct children of parentID ordered by creation
-// time. The parent_session_id capability must be present.
+// time, oldest first — the preorder traversal order. The parent_session_id
+// capability must be present.
 func (db *DB) childSessions(ctx context.Context, parentID string) ([]Session, error) {
 	//nolint:exhaustruct // the parent filter is the only relevant condition here
 	sessions, err := db.Sessions(ctx, SessionFilter{ParentID: parentID})
@@ -84,15 +87,22 @@ func (db *DB) childSessions(ctx context.Context, parentID string) ([]Session, er
 		return nil, err
 	}
 
-	reverseByCreated(sessions)
+	sortByCreated(sessions)
 
 	return sessions, nil
 }
 
-// reverseByCreated flips newest-first row order into oldest-first, the
-// preorder traversal order.
-func reverseByCreated(sessions []Session) {
-	for i, j := 0, len(sessions)-1; i < j; i, j = i+1, j-1 {
-		sessions[i], sessions[j] = sessions[j], sessions[i]
-	}
+// sortByCreated orders sessions oldest-first by creation time, with the ID as
+// a deterministic tiebreak. Rows arrive newest-updated-first from the sessions
+// query; updated_at anti-correlates with created_at whenever a parent touched
+// an older child after a newer one, so sibling order must be derived from
+// created_at itself, never from a reversal of the updated_at ordering.
+func sortByCreated(sessions []Session) {
+	slices.SortFunc(sessions, func(a, b Session) int {
+		if order := a.CreatedAt.Compare(b.CreatedAt); order != 0 {
+			return order
+		}
+
+		return strings.Compare(a.ID, b.ID)
+	})
 }

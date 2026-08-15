@@ -222,6 +222,57 @@ func TestSessionsLimit(t *testing.T) {
 	}
 }
 
+// TestSessionsByIDComposesWithOtherFilters pins the parameter-order fix:
+// args and conditions are built in the same branch, so ByID combined with
+// Day or ParentID must bind each value to its own placeholder.
+func TestSessionsByIDComposesWithOtherFilters(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	onDay, err := db.Sessions(context.Background(), SessionFilter{ByID: "fixture-root", Day: fixtureDay()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(onDay) != 1 || onDay[0].ID != "fixture-root" {
+		t.Fatalf("ByID+Day = %+v, want fixture-root (created on the fixture day)", onDay)
+	}
+
+	offDay, err := db.Sessions(
+		context.Background(),
+		SessionFilter{ByID: "fixture-root", Day: fixtureDay().AddDate(0, 0, 1)},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(offDay) != 0 {
+		t.Fatalf("ByID+other day = %+v, want none", offDay)
+	}
+
+	asChild, err := db.Sessions(context.Background(), SessionFilter{ByID: "fixture-root", ParentID: "no-such-parent"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(asChild) != 0 {
+		t.Fatalf("ByID+ParentID = %+v, want none (fixture-root is a root)", asChild)
+	}
+
+	child, err := db.Sessions(
+		context.Background(),
+		SessionFilter{ByID: "m_assistant_1$$call_agent_1", ParentID: "fixture-root"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(child) != 1 || child[0].ID != "m_assistant_1$$call_agent_1" {
+		t.Fatalf("ByID+ParentID = %+v, want the child of fixture-root", child)
+	}
+}
+
 func TestSessionByID(t *testing.T) {
 	t.Parallel()
 

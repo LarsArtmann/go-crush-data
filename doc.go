@@ -26,7 +26,9 @@
 //
 // # Timestamps
 //
-// Crush stores timestamps as Unix seconds in the UTC time zone. This library
-// converts them to time.Time in UTC. Day filters ([SessionFilter.Day] and
-// [StatsFilter.Day]) compare against the UTC calendar day of created_at.
+// Crush stores timestamps as Unix seconds. This library converts them to
+// time.Time in UTC. Day filters ([SessionFilter.Day] and [StatsFilter.Day])
+// match the UTC calendar day of created_at against the filter value formatted
+// in its own location: pass a time in the zone whose day boundary you want
+// (usually local midnight). See [SessionFilter.Day] for the exact semantics.
 package crushdata

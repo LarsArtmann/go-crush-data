@@ -2,6 +2,7 @@ package crushdata
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 )
@@ -138,24 +139,14 @@ func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([
 		return nil, fmt.Errorf("aggregate distinct %s in %s: %w", column, db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
-
-	var values []string
-
-	for rows.Next() {
+	return collectRows(rows, "distinct "+column, func(rows *sql.Rows) (string, error) {
 		var value string
 		if err := rows.Scan(&value); err != nil {
-			return nil, fmt.Errorf("scan distinct %s row: %w", column, err)
+			return "", fmt.Errorf("scan distinct %s row: %w", column, err)
 		}
 
-		values = append(values, value)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate distinct %s rows: %w", column, err)
-	}
-
-	return values, nil
+		return value, nil
+	})
 }
 
 func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Stats) error {
@@ -172,20 +163,19 @@ func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Sta
 		return fmt.Errorf("aggregate session titles in %s: %w", db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
+	titles, err := collectRows(rows, "session title", func(rows *sql.Rows) (string, error) {
 		var title string
 		if err := rows.Scan(&title); err != nil {
-			return fmt.Errorf("scan session title row: %w", err)
+			return "", fmt.Errorf("scan session title row: %w", err)
 		}
 
-		stats.SessionTitles = append(stats.SessionTitles, title)
+		return title, nil
+	})
+	if err != nil {
+		return err
 	}
 
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("iterate session title rows: %w", err)
-	}
+	stats.SessionTitles = titles
 
 	return db.fillHourHistogram(ctx, day, stats)
 }
@@ -204,24 +194,33 @@ func (db *DB) fillHourHistogram(ctx context.Context, day string, stats *Stats) e
 		return fmt.Errorf("aggregate hour histogram in %s: %w", db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		var hour, count int
-		if err := rows.Scan(&hour, &count); err != nil {
-			return fmt.Errorf("scan hour histogram row: %w", err)
-		}
-
-		if hour >= 0 && hour < len(stats.HourHistogram) {
-			stats.HourHistogram[hour] = count
-		}
+	buckets, err := collectRows(rows, "hour histogram", scanHourBucket)
+	if err != nil {
+		return err
 	}
 
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("iterate hour histogram rows: %w", err)
+	for _, bucket := range buckets {
+		if bucket.hour >= 0 && bucket.hour < len(stats.HourHistogram) {
+			stats.HourHistogram[bucket.hour] = bucket.count
+		}
 	}
 
 	return nil
+}
+
+// hourBucket is one hour-of-day aggregate of the session histogram.
+type hourBucket struct {
+	hour  int
+	count int
+}
+
+func scanHourBucket(rows *sql.Rows) (hourBucket, error) {
+	var bucket hourBucket
+	if err := rows.Scan(&bucket.hour, &bucket.count); err != nil {
+		return hourBucket{}, fmt.Errorf("scan hour histogram row: %w", err)
+	}
+
+	return bucket, nil
 }
 
 // dayArgs renders the shared created_at day filter. Empty day disables it.
@@ -254,33 +253,26 @@ func (db *DB) scanModelBreakdown(ctx context.Context, day string) ([]ModelStat, 
 		return nil, fmt.Errorf("aggregate model breakdown in %s: %w", db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
+	return collectRows(rows, "model breakdown", scanModelStat)
+}
 
-	var breakdown []ModelStat
+// scanModelStat lifts one breakdown row into a ModelStat.
+func scanModelStat(rows *sql.Rows) (ModelStat, error) {
+	var stat ModelStat
 
-	for rows.Next() {
-		var stat ModelStat
-
-		err := rows.Scan(
-			&stat.Model,
-			&stat.SessionCount,
-			&stat.MessageCount,
-			&stat.PromptTokens,
-			&stat.CompletionTokens,
-			&stat.CostUSD,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan model breakdown row: %w", err)
-		}
-
-		breakdown = append(breakdown, stat)
+	err := rows.Scan(
+		&stat.Model,
+		&stat.SessionCount,
+		&stat.MessageCount,
+		&stat.PromptTokens,
+		&stat.CompletionTokens,
+		&stat.CostUSD,
+	)
+	if err != nil {
+		return ModelStat{}, fmt.Errorf("scan model breakdown row: %w", err)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate model breakdown rows: %w", err)
-	}
-
-	return breakdown, nil
+	return stat, nil
 }
 
 func (db *DB) buildModelBreakdownQuery(day string) string {

@@ -228,9 +228,7 @@ func dedupeProjects(projects []Project) []Project {
 	}
 
 	unique := make([]Project, 0, len(best))
-	for dataDir, project := range best {
-		project.DataDir = dataDir
-
+	for _, project := range best {
 		unique = append(unique, project)
 	}
 

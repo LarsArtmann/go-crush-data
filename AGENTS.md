@@ -26,6 +26,7 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 | schema.go | capability probing via pragma_table_info — THE drift defense |
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL |
 | parts.go | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown |
+| rows.go | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses |
 | messages.go | Messages(sessionID) ordered `created_at, id`; malformed parts → nil Parts (tolerant); ReadFiles |
 | agents.go | AgentGraph via parent_session_id recursion (preorder, depth cap 64, flat fallback pre-column) |
 | stats.go | day aggregates; model-breakdown CTE has the double-count trap — see comment there |
@@ -43,6 +44,13 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 - **Timestamps are unix seconds** (crush migration comment lies about
   milliseconds). Zero/negative → zero time.Time.
 - Sessions dedupe keeps the most-recently-accessed Path per DataDir.
+- **Accepted art-dupl clones (do not "fix")**: (1) the `costExpr := "0…"`
+  capability-gating blocks in sessions.go/stats.go — three sites need three
+  different string pairs (aliased/plain/qualified), so a helper would just
+  restate the conditional; (2) the `dayFilter, args := dayArgs(day)` +
+  QueryContext shape shared by fillTitlesAndHistogram/fillHourHistogram —
+  the shared logic already lives in `dayArgs`, and unifying the two distinct
+  queries would take more parameters than the duplicated lines.
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 

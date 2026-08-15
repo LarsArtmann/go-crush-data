@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 )
 
 // Messages returns one session's messages ordered by creation time (and ID
@@ -20,11 +21,7 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 		return nil, fmt.Errorf("read messages of session %s from %s: %w", sessionID, db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
-
-	var messages []Message
-
-	for rows.Next() {
+	return collectRows(rows, "message", func(rows *sql.Rows) (Message, error) {
 		var (
 			message         Message
 			parts           string
@@ -43,7 +40,7 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 			&finishedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("scan message row: %w", err)
+			return Message{}, fmt.Errorf("scan message row: %w", err)
 		}
 
 		message.SessionID = sessionID
@@ -59,14 +56,8 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 
 		message.Parts = decoded
 
-		messages = append(messages, message)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate message rows: %w", err)
-	}
-
-	return messages, nil
+		return message, nil
+	})
 }
 
 // buildMessagesQuery constructs the messages SELECT, substituting NULL for
@@ -110,24 +101,17 @@ func (db *DB) ReadFiles(ctx context.Context, sessionID string) ([]string, error)
 		return nil, fmt.Errorf("read files of session %s from %s: %w", sessionID, db.path, err)
 	}
 
-	defer func() { _ = rows.Close() }()
-
-	var paths []string
-
-	for rows.Next() {
+	values, err := collectRows(rows, "read_files", func(rows *sql.Rows) (string, error) {
 		var path string
 		if err := rows.Scan(&path); err != nil {
-			return nil, fmt.Errorf("scan read_files row: %w", err)
+			return "", fmt.Errorf("scan read_files row: %w", err)
 		}
 
-		if path != "" {
-			paths = append(paths, path)
-		}
+		return path, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate read_files rows: %w", err)
-	}
-
-	return paths, nil
+	return slices.DeleteFunc(values, func(path string) bool { return path == "" }), nil
 }

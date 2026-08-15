@@ -11,8 +11,9 @@ import (
 // SessionFilter narrows [DB.Sessions]. The zero value returns every session,
 // newest first.
 type SessionFilter struct {
-	// ByID restricts results to the session with this exact ID. Combine it
-	// with nothing else; the zero value means no ID filter.
+	// ByID restricts results to the session with this exact ID. It composes
+	// with the other filters (all conditions AND together); the zero value
+	// means no ID filter.
 	ByID string
 
 	// Day restricts results to sessions whose created_at falls on this
@@ -49,12 +50,12 @@ func (db *DB) Sessions(ctx context.Context, filter SessionFilter) ([]Session, er
 		return []Session{}, nil
 	}
 
-	rows, err := db.handle.QueryContext(ctx, db.buildSessionsQuery(filter), filter.args()...)
+	query, args := db.buildSessionsQuery(filter)
+
+	rows, err := db.handle.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list sessions in %s: %w", db.path, err)
 	}
-
-	defer func() { _ = rows.Close() }()
 
 	return scanSessions(rows)
 }
@@ -63,12 +64,12 @@ func (db *DB) Sessions(ctx context.Context, filter SessionFilter) ([]Session, er
 // wrapped with the ID when it does not exist.
 func (db *DB) Session(ctx context.Context, id string) (Session, error) {
 	//nolint:exhaustruct // the ID is the only relevant filter here
-	rows, err := db.handle.QueryContext(ctx, db.buildSessionsQuery(SessionFilter{ByID: id}), id)
+	query, args := db.buildSessionsQuery(SessionFilter{ByID: id})
+
+	rows, err := db.handle.QueryContext(ctx, query, args...)
 	if err != nil {
 		return Session{}, fmt.Errorf("get session %s from %s: %w", id, db.path, err)
 	}
-
-	defer func() { _ = rows.Close() }()
 
 	sessions, err := scanSessions(rows)
 	if err != nil {
@@ -90,29 +91,13 @@ func (f SessionFilter) validate() error {
 	return nil
 }
 
-func (f SessionFilter) args() []any {
-	var args []any
-
-	if !f.Day.IsZero() {
-		args = append(args, f.Day.Format(time.DateOnly))
-	}
-
-	if f.ParentID != "" {
-		args = append(args, f.ParentID)
-	}
-
-	if f.ByID != "" {
-		args = append(args, f.ByID)
-	}
-
-	return args
-}
-
-// buildSessionsQuery constructs the sessions SELECT, substituting literal
-// defaults for columns the database predates. Stable identifiers come from
-// Crush's initial schema; cost and parent_session_id arrived in later
-// migrations.
-func (db *DB) buildSessionsQuery(filter SessionFilter) string {
+// buildSessionsQuery constructs the sessions SELECT together with its bind
+// arguments, so every condition and its placeholder are appended in the same
+// branch and can never drift apart. Column expressions substitute literal
+// defaults for capabilities the database predates; stable identifiers come
+// from Crush's initial schema, and cost and parent_session_id arrived in
+// later migrations.
+func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 	parentExpr := "NULL AS parent_session_id"
 	if db.schema.SessionsParentSessionID {
 		parentExpr = "parent_session_id"
@@ -129,18 +114,24 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) string {
 		costExpr,
 	)
 
-	var conditions []string
+	var (
+		conditions []string
+		args       []any
+	)
 
 	if filter.ByID != "" {
 		conditions = append(conditions, "id = ?")
+		args = append(args, filter.ByID)
 	}
 
 	if !filter.Day.IsZero() {
 		conditions = append(conditions, "date(created_at, 'unixepoch') = ?")
+		args = append(args, filter.Day.Format(time.DateOnly))
 	}
 
 	if filter.ParentID != "" {
 		conditions = append(conditions, "parent_session_id = ?")
+		args = append(args, filter.ParentID)
 	} else if filter.RootOnly && db.schema.SessionsParentSessionID {
 		conditions = append(conditions, "parent_session_id IS NULL")
 	}
@@ -155,50 +146,45 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) string {
 		query += fmt.Sprintf(" LIMIT %d", filter.Limit)
 	}
 
-	return query
+	return query, args
 }
 
 // scanSessions lifts every row into a []Session.
 func scanSessions(rows *sql.Rows) ([]Session, error) {
-	var sessions []Session
+	return collectRows(rows, "session", scanSession)
+}
 
-	for rows.Next() {
-		var (
-			session       Session
-			parent, todos sql.NullString
-			createdAtUnix int64
-			updatedAtUnix int64
-		)
+// scanSession lifts one row into a Session.
+func scanSession(rows *sql.Rows) (Session, error) {
+	var (
+		session       Session
+		parent, todos sql.NullString
+		createdAtUnix int64
+		updatedAtUnix int64
+	)
 
-		err := rows.Scan(
-			&session.ID,
-			&session.Title,
-			&parent,
-			&session.MessageCount,
-			&session.PromptTokens,
-			&session.CompletionTokens,
-			&session.CostUSD,
-			&updatedAtUnix,
-			&createdAtUnix,
-			&todos,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan session row: %w", err)
-		}
-
-		session.ParentSessionID = parent.String
-		session.CreatedAt = unixTime(createdAtUnix)
-		session.UpdatedAt = unixTime(updatedAtUnix)
-		session.Todos = todos.String
-
-		sessions = append(sessions, session)
+	err := rows.Scan(
+		&session.ID,
+		&session.Title,
+		&parent,
+		&session.MessageCount,
+		&session.PromptTokens,
+		&session.CompletionTokens,
+		&session.CostUSD,
+		&updatedAtUnix,
+		&createdAtUnix,
+		&todos,
+	)
+	if err != nil {
+		return Session{}, fmt.Errorf("scan session row: %w", err)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate session rows: %w", err)
-	}
+	session.ParentSessionID = parent.String
+	session.CreatedAt = unixTime(createdAtUnix)
+	session.UpdatedAt = unixTime(updatedAtUnix)
+	session.Todos = todos.String
 
-	return sessions, nil
+	return session, nil
 }
 
 // unixTime converts a Crush unix-seconds timestamp; non-positive values map

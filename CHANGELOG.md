@@ -15,6 +15,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet.
 
+## [0.1.1] - 2026-08-15
+
+### Added
+
+- JSON tags on `Project` (`path`, `data_dir`, `last_accessed`) mirroring
+  the registry's JSON shape, so marshaling a discovered project round-trips
+  losslessly (v0.1.0 silently dropped these fields when encoding).
+
+### Changed
+
+- Refreshed tooling configuration and transitive dependencies.
+
+### Fixed
+
+- `SessionFilter` combinations silently returned no rows: query conditions
+  and bind arguments were appended in different orders, so combining `ByID`
+  with `Day` or `ParentID` swapped the SQL parameters. The query builder now
+  emits each condition and its placeholder in the same branch, making the
+  drift structurally impossible.
+- `AgentGraph` sibling order followed `updated_at` (a reversal of the
+  sessions listing order) instead of the documented creation-time preorder
+  whenever the two anti-correlated. Siblings are now sorted by `created_at`
+  with the session ID as a deterministic tiebreak.
+- Package documentation for day filters now states the tested semantics
+  (the filter value's own location) instead of claiming a pure UTC
+  comparison.
+
 ## [0.1.0] - 2026-08-15
 
 Initial release: typed, read-only access to Crush local session data,
@@ -60,5 +87,6 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/LarsArtmann/go-crush-data/releases/tag/v0.1.0

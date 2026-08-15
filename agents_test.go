@@ -78,6 +78,49 @@ func TestAgentGraphNestedSubagents(t *testing.T) {
 	}
 }
 
+// TestAgentGraphSiblingsOrderedByCreatedNotUpdated pins the preorder
+// contract against updated_at anti-correlation: sessions arrive newest-
+// updated-first, and reversing that order is NOT created order. Siblings
+// must be sequenced by created_at itself.
+func TestAgentGraphSiblingsOrderedByCreatedNotUpdated(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		// child-a is created first but updated last; child-b the reverse.
+		insertSession(t, db, "root", "", "Root", 1, fixtureBase, fixtureBase+10)
+		insertSession(t, db, "child-a", "root", "Child A", 1, fixtureBase+1, fixtureBase+9)
+		insertSession(t, db, "child-b", "root", "Child B", 1, fixtureBase+2, fixtureBase+3)
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	graph, err := db.AgentGraph(context.Background(), "root")
+	if err != nil {
+		t.Fatalf("AgentGraph: %v", err)
+	}
+
+	want := []string{"root", "child-a", "child-b"}
+	if len(graph.Nodes) != len(want) {
+		t.Fatalf("nodes = %d, want %d: %+v", len(graph.Nodes), len(want), graph.Nodes)
+	}
+
+	for i, id := range want {
+		if graph.Nodes[i].Session.ID != id {
+			t.Fatalf(
+				"node[%d] = %q, want %q (siblings by created_at, not updated_at)",
+				i, graph.Nodes[i].Session.ID, id,
+			)
+		}
+	}
+}
+
 func TestAgentGraphMissingRoot(t *testing.T) {
 	t.Parallel()
 

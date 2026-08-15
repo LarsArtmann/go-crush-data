@@ -76,17 +76,6 @@ const legacySchemaDDL = `
 	);
 `
 
-// fixtureDB creates a crush.db of the requested variant in a new temporary
-// data directory, applies seed, and returns the data directory path.
-func fixtureDB(t *testing.T, variant schemaVariant, seed func(db *sql.DB)) string {
-	t.Helper()
-
-	dataDir := t.TempDir()
-	createDBAt(t, filepath.Join(dataDir, DBName), variant, seed)
-
-	return dataDir
-}
-
 // createDBAt creates a Crush database of the requested variant at an exact
 // path. The connection is closed before returning so read-only opens see a
 // quiescent file.
@@ -166,26 +155,6 @@ func insertSession(
 	)
 	if err != nil {
 		tb.Fatal(err)
-	}
-}
-
-// insertLegacySession inserts one session row on the legacy schema.
-func insertLegacySession(
-	t *testing.T,
-	db *sql.DB,
-	id, title string,
-	messageCount int,
-	createdAt, updatedAt int64,
-) {
-	t.Helper()
-
-	_, err := db.ExecContext(context.Background(),
-		`INSERT INTO sessions (id, title, message_count, prompt_tokens, completion_tokens, updated_at, created_at)
-		 VALUES (?, ?, ?, 0, 0, ?, ?)`,
-		id, title, messageCount, updatedAt, createdAt,
-	)
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 
