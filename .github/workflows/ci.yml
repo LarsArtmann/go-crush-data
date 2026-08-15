@@ -48,6 +48,6 @@ jobs:
           args: --timeout=5m
 
       - name: govulncheck
-        uses: golang/govulncheck-action@b625766fb39c486dc2015bd8b25d0d32e0144ccd # v1
+        uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1
         with:
           go-version-file: go.mod
