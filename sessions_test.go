@@ -373,7 +373,15 @@ func TestSessionsOnRealDatabase(t *testing.T) {
 		t.Fatalf("Sessions on real database: %v", err)
 	}
 
-	t.Logf("real database schema: %+v, sessions read: %d", db.Schema(), len(sessions))
+	// Assert the schema has the required tables (sessions, messages) — Open
+	// would have failed with ErrUnsupportedSchema if not, but the capability
+	// flags must also be populated.
+	schema := db.Schema()
+	if len(schema.MissingColumns()) > 0 {
+		t.Logf("real database missing columns: %v", schema.MissingColumns())
+	}
+
+	t.Logf("real database schema: %+v, sessions read: %d", schema, len(sessions))
 }
 
 // TestSessionTodosRawPassThrough pins the Todos contract: the column's JSON

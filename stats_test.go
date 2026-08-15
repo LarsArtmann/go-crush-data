@@ -325,6 +325,28 @@ func TestStatsOnLegacySchema(t *testing.T) {
 	}
 }
 
+// TestStatsOnLegacySchemaOtherDayIsEmpty pins that the day filter works on
+// legacy schema: a day with no sessions returns zero stats, not an error
+// or a fallback to all sessions.
+func TestStatsOnLegacySchemaOtherDayIsEmpty(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaLegacy)
+
+	stats, err := db.Stats(context.Background(), StatsFilter{Day: fixtureDay().AddDate(0, 0, 3)})
+	if err != nil {
+		t.Fatalf("Stats on legacy schema other day: %v", err)
+	}
+
+	if stats.SessionCount != 0 || stats.MessageCount != 0 || stats.CostUSD != 0 {
+		t.Fatalf("stats = %+v, want zero on empty day", stats)
+	}
+
+	if len(stats.SessionTitles) != 0 || len(stats.ModelBreakdown) != 0 {
+		t.Fatalf("titles/breakdown = %v/%v, want none on empty day", stats.SessionTitles, stats.ModelBreakdown)
+	}
+}
+
 // TestStatsDayFilterUsesFilterLocation pins the day-filter semantics: the
 // day string is rendered in the filter value's own location and compared as
 // text against the UTC-stored created_at date. A zone whose calendar date

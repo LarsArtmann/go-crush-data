@@ -327,6 +327,35 @@ func TestDiscoverProjectsCLIFailure(t *testing.T) {
 	}
 }
 
+// TestDiscoverProjectsCLIExitNonzeroWithPartialJSON pins the error path: a
+// CLI that exits nonzero after printing partial JSON to stderr must surface
+// as an error, not silently return the partial payload's projects.
+func TestDiscoverProjectsCLIExitNonzeroWithPartialJSON(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "crush-fake")
+	// Prints partial JSON to stderr then exits 1.
+	script := "#!/bin/sh\nprintf '%s' '" +
+		`{"projects":[{"path":"/repo/partial","data_dir":"/nonexistent","last_accessed":"x"}` +
+		"' >&2\nexit 1\n"
+	//nolint:gosec // the fake CLI script must be executable
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: globalDir,
+		CLIFallback:   true,
+		CLIBinary:     path,
+	})
+	if err == nil {
+		t.Fatal("err = nil, want exit-nonzero error (partial JSON must not silently succeed)")
+	}
+}
+
 func TestParseProjectsOutput(t *testing.T) {
 	t.Parallel()
 
@@ -353,6 +382,16 @@ func TestParseProjectsOutput(t *testing.T) {
 		},
 		{name: "noise without any object", raw: "no json here at all\n", wantErr: true},
 		{name: "noise with stray braces only", raw: "loaded {config} from disk\n", wantErr: true},
+		{
+			name: "brace inside JSON string value",
+			raw:  `{"projects":[{"path":"/repo/{name}","data_dir":"/d","last_accessed":"2026-01-01T00:00:00Z"}]}`,
+			want: 1,
+		},
+		{
+			name: "closing brace inside JSON string with noise",
+			raw:  "INFO starting\n" + `{"projects":[{"path":"test}","data_dir":"/d","last_accessed":"x"}]}` + "\n",
+			want: 1,
+		},
 	}
 
 	for _, tt := range tests {
