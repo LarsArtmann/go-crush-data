@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Vet + Build + Test + Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test (race + coverage)
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Coverage gate (≥85%)
+        run: |
+          go tool cover -func=coverage.out -o=coverage.func
+          total=$(go tool cover -func=coverage.out | grep '^total' | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Total coverage: ${total}%"
+          awk -v c="$total" 'BEGIN { exit (c < 85) ? 1 : 0 }'
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: govulncheck
+        uses: golang/govulncheck-action@b625766fb39c486dc2015bd8b25d0d32e0144ccd # v1
+        with:
+          go-version-file: go.mod
