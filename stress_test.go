@@ -355,3 +355,71 @@ func TestMessagesConcurrentWithWALWriter(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkMessages(b *testing.B) {
+	dataDir := b.TempDir()
+
+	createDBAt(b, dataDir+"/"+DBName, schemaCurrent, func(db *sql.DB) {
+		insertSession(b, db, "bench-msgs", "", "bench", 2000, fixtureBase, fixtureBase)
+
+		for i := range 2000 {
+			insertMessage(
+				b, db,
+				fmt.Sprintf("bench-msg-%04d", i),
+				"bench-msgs",
+				"assistant",
+				`[{"data":{"text":"step"},"type":"text"}]`,
+				fixtureModel, "",
+				fixtureBase+int64(i),
+			)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	b.ReportAllocs()
+
+	for b.Loop() {
+		if _, err := db.Messages(context.Background(), "bench-msgs"); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkAgentGraph(b *testing.B) {
+	dataDir := b.TempDir()
+
+	createDBAt(b, dataDir+"/"+DBName, schemaCurrent, func(db *sql.DB) {
+		insertSession(b, db, "root", "", "Root", 1, fixtureBase, fixtureBase)
+
+		for i := range 100 {
+			childID := fmt.Sprintf("child-%04d", i)
+			insertSession(
+				b, db,
+				childID, "root",
+				fmt.Sprintf("Child %d", i),
+				0, fixtureBase+int64(i)+1, fixtureBase+int64(i)+1,
+			)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	b.ReportAllocs()
+
+	for b.Loop() {
+		if _, err := db.AgentGraph(context.Background(), "root"); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
