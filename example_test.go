@@ -225,3 +225,129 @@ func ExampleDB_Stats() {
 	// 2 sessions, 1 messages, 120 prompt tokens
 	// 12:00 2 session(s)
 }
+
+// setupExampleDataCurrent creates a throwaway data directory with a current-
+// schema crush.db (all columns + read_files table) containing a root
+// session, one child subagent, and two read-file entries. It returns the
+// registry directory for DiscoverOptions.GlobalDataDir.
+func setupExampleDataCurrent() string {
+	root, err := os.MkdirTemp("", "crushdata-example")
+	if err != nil {
+		panic(err)
+	}
+
+	dataDir := filepath.Join(root, "data")
+	if err := os.MkdirAll(dataDir, 0o750); err != nil {
+		panic(err)
+	}
+
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(dataDir, DBName))
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	for _, statement := range []string{
+		`CREATE TABLE sessions (
+			id TEXT PRIMARY KEY, parent_session_id TEXT, title TEXT NOT NULL,
+			message_count INTEGER NOT NULL DEFAULT 0,
+			prompt_tokens INTEGER NOT NULL DEFAULT 0,
+			completion_tokens INTEGER NOT NULL DEFAULT 0,
+			cost REAL NOT NULL DEFAULT 0.0,
+			updated_at INTEGER NOT NULL, created_at INTEGER NOT NULL, todos TEXT)`,
+		`CREATE TABLE messages (
+			id TEXT PRIMARY KEY, session_id TEXT NOT NULL, role TEXT NOT NULL,
+			parts TEXT NOT NULL DEFAULT '[]', model TEXT, provider TEXT,
+			created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, finished_at INTEGER)`,
+		`CREATE TABLE read_files (
+			session_id TEXT NOT NULL, path TEXT NOT NULL, read_at INTEGER NOT NULL)`,
+		`INSERT INTO sessions VALUES
+			('root', NULL, 'Main conversation', 1, 100, 50, 0.01, 1785585700, 1785585600, NULL),
+			('child$$tool_1', 'root', 'Explore subagent', 1, 200, 100, 0.02, 1785585800, 1785585650, NULL)`,
+		`INSERT INTO read_files VALUES
+			('root', '/repo/main.go', 1785585600),
+			('root', '/repo/util.go', 1785585650)`,
+	} {
+		if _, err := db.ExecContext(context.Background(), statement); err != nil {
+			panic(err)
+		}
+	}
+
+	globalDir := filepath.Join(root, "global")
+	registry := `{"projects":[{` +
+		`"path":"/home/me/project",` +
+		`"data_dir":` + quoteJSON(dataDir) + `,` +
+		`"last_accessed":"2026-08-04T12:00:00Z"}]}`
+
+	if err := os.MkdirAll(globalDir, 0o750); err != nil {
+		panic(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(globalDir, RegistryName), []byte(registry), 0o600); err != nil {
+		panic(err)
+	}
+
+	return globalDir
+}
+
+// ExampleDB_AgentGraph builds the subagent tree below a root session and
+// walks it in preorder (root first, each subtree ordered by creation time).
+func ExampleDB_AgentGraph() {
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: setupExampleDataCurrent(),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := Open(projects[0].DataDir)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	graph, err := db.AgentGraph(context.Background(), "root")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, node := range graph.Nodes {
+		fmt.Printf("depth %d: %s\n", node.Depth, node.Session.Title)
+	}
+
+	// Output:
+	// depth 0: Main conversation
+	// depth 1: Explore subagent
+}
+
+// ExampleDB_ReadFiles lists the files a session read during its conversation.
+func ExampleDB_ReadFiles() {
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: setupExampleDataCurrent(),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := Open(projects[0].DataDir)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	paths, err := db.ReadFiles(context.Background(), "root")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, path := range paths {
+		fmt.Println(path)
+	}
+
+	// Output:
+	// /repo/main.go
+	// /repo/util.go
+}

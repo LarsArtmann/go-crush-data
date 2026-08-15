@@ -112,6 +112,12 @@ Databases without the required `sessions`/`messages` tables fail `Open` with
 
 - **Read-only by construction**: SQLite `mode=ro`, single connection, never
   writes — safe to run while Crush is open.
+- **Context-aware open**: `OpenContext(ctx, dataDir)` bounds the schema
+  probes at open time; `Open` delegates with `context.Background`.
+  A canceled context surfaces as `context.Canceled`.
+- **`Session.Todos` is raw JSON** (`json.RawMessage`): the column holds
+  JSON Crush writes; the library passes it through byte-identical (nil
+  for NULL). Decode it into whatever shape your Crush version writes.
 - **Errors as values**: sentinel errors (`ErrRegistryNotFound`,
   `ErrDatabaseNotFound`, `ErrUnsupportedSchema`, `ErrSessionNotFound`) testable
   with `errors.Is`.
