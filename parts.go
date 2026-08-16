@@ -69,8 +69,11 @@ type ShellCommandPart struct {
 	ExitCode int    `json:"exit_code"`
 }
 
-// UnknownPart passes through a part this library does not decode, keeping
-// the discriminator and raw payload for forward compatibility.
+// UnknownPart passes through a part this library does not decode: either a
+// discriminator Crush added after this release, or — in [DB.Messages]'
+// tolerant decode — a known part whose payload did not match its expected
+// shape. The discriminator and raw payload are kept for inspection and
+// forward compatibility.
 type UnknownPart struct {
 	Type string
 	Data json.RawMessage
@@ -104,11 +107,22 @@ type rawPart struct {
 }
 
 // DecodeParts parses one message's parts JSON, preserving declaration
-// order. Empty or "[]" input returns nil. Malformed JSON, or a known part
-// whose payload does not match its expected shape, returns an error naming
-// the part — a single corrupted message never needs to take down a whole
-// session read (see [Message]).
+// order, and is the strict all-or-nothing decode: empty or "[]" input
+// returns nil, while malformed JSON or a known part whose payload does not
+// match its expected shape returns an error naming the part. [DB.Messages]
+// instead keeps every well-formed sibling and degrades a single malformed
+// entry to [UnknownPart]; see decodeParts for that tolerant mode.
 func DecodeParts(raw string) ([]Part, error) {
+	return decodeParts(raw, true)
+}
+
+// decodeParts implements both decode modes. Strict mode fails the whole
+// message on the first malformed part. Tolerant mode — used by
+// [DB.Messages] — substitutes UnknownPart carrying the type discriminator
+// and raw payload, so one corrupted entry never hides its well-formed
+// siblings. Input that is not parseable as a whole (not a JSON array) fails
+// both modes: no entries can be recovered.
+func decodeParts(raw string, strict bool) ([]Part, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" || trimmed == "[]" {
 		return nil, nil
@@ -129,7 +143,11 @@ func DecodeParts(raw string) ([]Part, error) {
 
 		part, err := decodePart(entry)
 		if err != nil {
-			return nil, err
+			if strict {
+				return nil, err
+			}
+
+			part = UnknownPart(entry)
 		}
 
 		parts = append(parts, part)

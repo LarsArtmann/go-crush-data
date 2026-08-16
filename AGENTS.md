@@ -33,10 +33,10 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 | db.go | read-only open (`mode=ro&_txlock=immediate`, 1 conn) + ErrDatabaseNotFound/ErrUnsupportedSchema |
 | schema.go | capability probing via pragma_table_info — THE drift defense |
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL |
-| parts.go | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown |
+| parts.go | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart) |
 | rows.go | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses |
-| messages.go | Messages(sessionID) ordered `created_at, id`; malformed parts → nil Parts (tolerant); ReadFiles |
-| agents.go | AgentGraph via parent_session_id recursion (preorder, depth cap 64, flat fallback pre-column) |
+| messages.go | Messages(sessionID) ordered `created_at, id`; tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); ReadFiles |
+| agents.go | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column |
 | stats.go | day aggregates; model-breakdown CTE has the double-count trap — see comment there |
 
 Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
@@ -67,9 +67,9 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
   the probe error, NOT `ErrUnsupportedSchema` (that error means specifically
   "recognized schema, missing capability columns"). Pinned by tests.
 - **Accepted art-dupl clones (do not "fix")**: (1) the `costExpr := "0…"`
-  capability-gating blocks in sessions.go/stats.go — three sites need three
-  different string pairs (aliased/plain/qualified), so a helper would just
-  restate the conditional; (2) the `dayFilter, args := dayArgs(day)` +
+  capability-gating blocks in sessions.go/stats.go/agents.go — the sites
+  need different string pairs (aliased/plain/qualified), so a helper would
+  just restate the conditional; (2) the `dayFilter, args := dayArgs(day)` +
   QueryContext shape shared by fillTitlesAndHistogram/fillHourHistogram —
   the shared logic already lives in `dayArgs`, and unifying the two distinct
   queries would take more parameters than the duplicated lines.
@@ -98,8 +98,6 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 - **Examples/tests live in-package** (`package crushdata`): depguard forbids
   an external `_test` package importing the module. `example_test.go` is
   in-package too.
-- **gosec G701 false-positives** on the sessions QueryContext taint analysis;
-  covered by a `//nolint:gosec` with rationale (codebase precedent).
 - **benchstat is NOT in nixpkgs**: use
   `go run golang.org/x/perf/cmd/benchstat@latest`.
 - **Windows is a first-class CI leg — tests must not assume POSIX**:
@@ -115,11 +113,20 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
   and broke the coverage step once.
 - **Lint per file while writing tests** (`golangci-lint run <file>_test.go`),
   not after a large batch; and never trust `cmd | tail` without `pipefail`.
+- **golangci-lint's cache can serve ANOTHER tree's findings**: linting a
+  copy of the repo (same module path) right after linting the original
+  reported the original's absolute paths and findings as if they were the
+  copy's (seen 2026-08-16: a cache-hit G701 that a clean-cache rerun could
+  not reproduce). `golangci-lint cache clean` before judging lint results
+  across trees or claiming reproducibility.
 - **gosec suppressions live in `.golangci.yml` exclusions, never line
-  nolints**: gosec's taint findings fire non-deterministically on the
-  windows runner, and a sleeping finding turns its `//nolint:gosec`
-  "unused" (nolintlint → red leg). Config-level file+rule-ID exclusions
-  are platform-stable; keep the rationale as a plain comment at the site.
+  nolints**: gosec's G7xx taint findings fire non-deterministically across
+  runs and platforms (root cause: `maxCallerEdges` + unordered CHA edges,
+  tracked upstream as securego/gosec#1712; our data point:
+  securego/gosec/issues/1712#issuecomment-5305416042), and a sleeping
+  finding turns its `//nolint:gosec` "unused" (nolintlint → red leg).
+  Config-level file+rule-ID exclusions are platform-stable; keep the
+  rationale as a plain comment at the site.
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 

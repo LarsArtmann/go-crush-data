@@ -11,10 +11,12 @@ import (
 // as the tiebreaker, since timestamps have second precision), with their
 // parts decoded into typed [Part] values.
 //
-// A message whose parts JSON is empty or malformed is returned with nil
-// Parts instead of failing the read: one corrupted row must not hide the
-// rest of the session. Callers needing strict validation can use
-// [DecodeParts] on the raw column via their own query.
+// Parts decoding is tolerant: a single malformed part degrades to
+// [UnknownPart] carrying its discriminator and raw payload, so the
+// well-formed siblings survive, and a message whose parts JSON is empty or
+// wholly unparseable gets nil Parts — either way one corrupted row never
+// hides the rest of the session. Callers needing strict all-or-nothing
+// validation can use [DecodeParts] on the raw column via their own query.
 func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := db.handle.QueryContext(ctx, db.buildMessagesQuery(), sessionID)
 	if err != nil {
@@ -49,7 +51,7 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 		message.CreatedAt = unixTime(createdAtUnix)
 		message.FinishedAt = unixTime(finishedAt.Int64)
 
-		decoded, err := DecodeParts(parts)
+		decoded, err := decodeParts(parts, false)
 		if err != nil {
 			decoded = nil
 		}

@@ -52,7 +52,7 @@ func (db *DB) Stats(ctx context.Context, filter StatsFilter) (Stats, error) {
 func (db *DB) scanSessionStats(ctx context.Context, day string) (Stats, error) {
 	costExpr := "0"
 	if db.schema.SessionsCost {
-		costExpr = "cost"
+		costExpr = costColumn
 	}
 
 	query := fmt.Sprintf(`

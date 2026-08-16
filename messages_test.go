@@ -168,6 +168,58 @@ func TestMessagesToleratesMalformedParts(t *testing.T) {
 	}
 }
 
+// TestMessagesKeepsSiblingsAroundCorruptedPart pins the tolerant decode
+// end to end: one corrupted tool_call among valid parts degrades to
+// UnknownPart carrying the raw payload while its well-formed siblings
+// survive, instead of the whole message's parts being dropped to nil.
+func TestMessagesKeepsSiblingsAroundCorruptedPart(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "s1", "", "Session", 1, fixtureBase, fixtureBase+1)
+		insertMessage(t, db, "m1", "s1", "assistant", `[
+			{"type":"text","data":{"text":"before"}},
+			{"type":"tool_call","data":"flat"},
+			{"type":"tool_result","data":{"tool_call_id":"c1","name":"read","content":"ok"}}
+		]`, "m", "p", fixtureBase)
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	messages, err := db.Messages(context.Background(), "s1")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	if len(messages) != 1 {
+		t.Fatalf("messages = %d, want 1", len(messages))
+	}
+
+	parts := messages[0].Parts
+	if len(parts) != 3 {
+		t.Fatalf("parts = %#v, want 3 (text, degraded tool_call, tool_result)", parts)
+	}
+
+	if text, ok := parts[0].(TextPart); !ok || text.Text != "before" {
+		t.Fatalf("parts[0] = %#v, want TextPart{before}", parts[0])
+	}
+
+	corrupted, ok := parts[1].(UnknownPart)
+	if !ok || corrupted.Type != "tool_call" || string(corrupted.Data) != `"flat"` {
+		t.Fatalf("parts[1] = %#v, want UnknownPart{tool_call} with raw payload", parts[1])
+	}
+
+	if result, ok := parts[2].(ToolResultPart); !ok || result.ToolCallID != "c1" || result.Content != "ok" {
+		t.Fatalf("parts[2] = %#v, want ToolResultPart{c1}", parts[2])
+	}
+}
+
 func TestMessagesOnLegacySchema(t *testing.T) {
 	t.Parallel()
 

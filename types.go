@@ -52,10 +52,12 @@ const (
 )
 
 // Message is one row of the messages table with its parts JSON decoded into
-// typed [Part] values. Parts is nil when the stored JSON is empty or
-// malformed — a single corrupted message never fails the read, mirroring how
-// tolerant readers must behave against a drifting schema. Use [DecodeParts]
-// directly for strict decoding.
+// typed [Part] values. Parts is nil when the stored JSON is empty or wholly
+// unparseable — a corrupted message never fails the read, mirroring how
+// tolerant readers must behave against a drifting schema. A single
+// malformed part instead decodes as [UnknownPart] with its raw payload,
+// keeping the well-formed siblings. Use [DecodeParts] directly for strict
+// all-or-nothing decoding.
 type Message struct {
 	ID         string
 	SessionID  string
@@ -97,9 +99,18 @@ type Stats struct {
 	CostUSD          float64
 	Models           []string
 	Providers        []string
-	SessionTitles    []string
-	HourHistogram    [24]int
-	ModelBreakdown   []ModelStat
+
+	// SessionTitles lists the non-NULL titles of the selected sessions,
+	// most messages first, capped at 20 entries — sessions beyond the cap
+	// are silently omitted (the parity SQL's LIMIT 20).
+	SessionTitles []string
+
+	HourHistogram [24]int
+
+	// ModelBreakdown aggregates the selected sessions per model, capped at
+	// the 20 highest-cost models — models beyond the cap are silently
+	// omitted (the parity SQL's LIMIT 20).
+	ModelBreakdown []ModelStat
 }
 
 // ModelStat is one model's share of a day's activity. See [Stats] for the

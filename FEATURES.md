@@ -16,14 +16,14 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | Session fetch by ID (`ErrSessionNotFound`) | `sessions.go:66` |
 | FULLY_FUNCTIONAL | `Session.Todos` as raw JSON (`json.RawMessage`, nil for NULL) | `types.go:39`, `sessions.go:187` |
 | FULLY_FUNCTIONAL | Message listing ordered by `created_at, id` | `messages.go:18` |
-| FULLY_FUNCTIONAL | Tolerant parts decoding: malformed rows yield nil Parts instead of failing the read | `messages.go:52` |
+| FULLY_FUNCTIONAL | Tolerant parts decoding: one malformed part degrades to `UnknownPart` keeping its raw payload and siblings; wholly unparseable parts yield nil Parts | `messages.go:54` |
 | FULLY_FUNCTIONAL | Sealed `Part` set: Text, Reasoning, ToolCall, ToolResult, Finish, ShellCommand, Unknown (forward-compatible passthrough) | `parts.go:9`–`78` |
 | FULLY_FUNCTIONAL | `DecodeParts` — strict public parts decoder | `parts.go` |
 | FULLY_FUNCTIONAL | `ReadFiles` — files the agent opened during a session | `messages.go:90` |
-| FULLY_FUNCTIONAL | Subagent graphs: preorder by creation time, depth cap 64 (`ErrGraphDepthExceeded` on cycles) | `agents.go:23` |
+| FULLY_FUNCTIONAL | Subagent graphs via a single `WITH RECURSIVE` query: preorder by creation time, depth cap 64 (`ErrGraphDepthExceeded` on cycles) | `agents.go:23`, `agents.go:108` |
 | FULLY_FUNCTIONAL | Day activity stats with the crush-daily parity contract (`TestStatsParityWithCrushDailySQL`) | `stats.go:28` |
 | FULLY_FUNCTIONAL | Models/Providers in Stats sorted ascending (ORDER BY on DISTINCT query) | `stats.go:121` |
-| FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE | `stats.go:249` |
+| FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE; `Stats` field docs state the 20-row caps (`TestStatsCapsAt20`) | `stats.go:249`, `types.go` |
 | FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos — green on master and on the v0.2.1 tag (tests run twice per leg via `-count=2`; `go mod verify` guards the module cache). The immutable v0.2.0 tag's Windows leg is permanently red — test code only; erratum in CHANGELOG `[0.2.1]` | `.github/workflows/ci.yml` |
 | FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml`; local measure 2026-08-15: 87.8% statements |
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |

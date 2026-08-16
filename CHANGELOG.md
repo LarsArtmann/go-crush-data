@@ -17,7 +17,20 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Fixed
 
-- Nothing yet.
+- `Messages` no longer drops a whole message's parts when a single part
+  payload is corrupted: the bad entry now degrades to `UnknownPart`
+  (carrying its type discriminator and raw payload) while the well-formed
+  siblings survive. A parts column that is empty or not parseable as a
+  whole still yields nil Parts. `DecodeParts` remains the strict
+  all-or-nothing decoder for callers who need it.
+
+### Changed
+
+- `AgentGraph` reads the whole subagent tree with a single
+  `WITH RECURSIVE` query instead of one query per node. Preorder ordering,
+  sibling order, the depth cap (`ErrGraphDepthExceeded`), and the legacy
+  flat fallback are unchanged; the 100-children benchmark drops from
+  ~1.58ms/op to ~0.34ms/op.
 
 ## [0.2.1] - 2026-08-16
 

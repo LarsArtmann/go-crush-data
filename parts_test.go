@@ -99,6 +99,46 @@ func verifyUnknowns(t *testing.T, parts []Part) {
 	}
 }
 
+// TestDecodePartsTolerantKeepsSiblings pins the split the message reader
+// relies on: strict decoding fails the whole message on one corrupted
+// entry, while tolerant decoding keeps the well-formed siblings and
+// degrades the bad entry to UnknownPart with its raw payload.
+func TestDecodePartsTolerantKeepsSiblings(t *testing.T) {
+	t.Parallel()
+
+	raw := `[
+		{"type":"text","data":{"text":"before"}},
+		{"type":"tool_call","data":"flat"},
+		{"type":"finish","data":{"reason":"stop"}}
+	]`
+
+	if _, err := DecodeParts(raw); err == nil {
+		t.Fatal("DecodeParts err = nil, want error for corrupted tool_call (strict mode)")
+	}
+
+	parts, err := decodeParts(raw, false)
+	if err != nil {
+		t.Fatalf("decodeParts(tolerant): %v", err)
+	}
+
+	if len(parts) != 3 {
+		t.Fatalf("parts = %d, want 3 (siblings kept): %#v", len(parts), parts)
+	}
+
+	if text, ok := parts[0].(TextPart); !ok || text.Text != "before" {
+		t.Fatalf("parts[0] = %#v, want TextPart{before}", parts[0])
+	}
+
+	corrupted, ok := parts[1].(UnknownPart)
+	if !ok || corrupted.Type != "tool_call" || string(corrupted.Data) != `"flat"` {
+		t.Fatalf("parts[1] = %#v, want UnknownPart{tool_call, raw payload}", parts[1])
+	}
+
+	if finish, ok := parts[2].(FinishPart); !ok || finish.Reason != "stop" {
+		t.Fatalf("parts[2] = %#v, want FinishPart{stop}", parts[2])
+	}
+}
+
 func TestDecodePartsEmptyInputs(t *testing.T) {
 	t.Parallel()
 

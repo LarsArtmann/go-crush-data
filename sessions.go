@@ -107,7 +107,7 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 
 	costExpr := "0 AS cost"
 	if db.schema.SessionsCost {
-		costExpr = "cost"
+		costExpr = costColumn
 	}
 
 	query := fmt.Sprintf(

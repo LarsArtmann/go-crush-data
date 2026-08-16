@@ -20,32 +20,6 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T4** Verify pkg.go.dev renders v0.2.1 (proxy.golang.org already
   serves it; the page still rendered v0.1.1 at last check); spot-check
   `OpenContext`/`Todos`. 5m — pkg.go.dev
-- [ ] **T5** gosec G701 taint false positive: minimal upstream repro + issue
-  (verify-before-filing workflow). The config-level exclusion in
-  `.golangci.yml` (with rationale) is sufficient meanwhile. 30m —
-  `sessions.go:56`
-
-## High
-
-- [ ] **T8** Part-level corruption currently drops the *whole message's*
-  parts: one malformed part payload errors DecodeParts, and Messages
-  swallows that error into `nil` Parts with no signal
-  (`messages.go:52-55`). Fall back to `UnknownPart` for the single bad entry
-  and keep the well-formed siblings; expose a strict path for callers who
-  need all-or-nothing. Add a test with one corrupted `tool_call` among valid
-  parts. 45m — `parts.go:123-136`, `messages.go:52-55`
-
-## Medium
-
-- [ ] **T9** Undocumented result caps: `Stats.SessionTitles` and
-  `Stats.ModelBreakdown` silently truncate at 20 rows (`LIMIT 20` in
-  `stats.go:161,322`) but neither field doc in `types.go` mentions a cap.
-  Either document the caps on Stats or make them configurable via
-  StatsFilter. 20m — `types.go:85-114`, `stats.go:153-165,287-324`
-- [ ] **T10** AgentGraph is N+1: one query per node via childSessions
-  (`agents.go:66`). Fine for real graph sizes, but a single recursive-CTE
-  query (or batched children fetch per depth level) removes the round-trip
-  storm on pathological trees; keep the depth cap. 60m — `agents.go`
 
 ## Low
 

@@ -72,6 +72,11 @@ func (s Schema) MissingColumns() []string {
 //nolint:gochecknoglobals // a slice cannot be a constant and this one is definitionally fixed
 var requiredTables = []string{"sessions", "messages"}
 
+// costColumn names the sessions cost column shared by the schema probe and
+// the capability-substituted cost expressions of the sessions, stats, and
+// agent-subtree queries.
+const costColumn = "cost"
+
 // probeSchema inspects an open database and returns its capabilities.
 //
 // Probe failures surface as errors: a canceled context or an unreadable
@@ -85,7 +90,7 @@ func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
 		err    error
 	)
 
-	if schema.SessionsCost, err = columnExists(ctx, db, "sessions", "cost"); err != nil {
+	if schema.SessionsCost, err = columnExists(ctx, db, "sessions", costColumn); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 

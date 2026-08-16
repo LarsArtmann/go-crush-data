@@ -3,6 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -480,5 +481,55 @@ func TestStatsModelsProvidersOrderedAscending(t *testing.T) {
 		if stats.Providers[i] != want {
 			t.Fatalf("Providers[%d] = %q, want %q (ascending)", i, stats.Providers[i], want)
 		}
+	}
+}
+
+// TestStatsCapsAt20 pins the documented result caps on Stats.SessionTitles
+// and Stats.ModelBreakdown: with more than 20 sessions and models, both
+// slices truncate at exactly 20 entries — silently, as their field docs
+// promise — keeping the top sessions by message count and the top models
+// by cost.
+func TestStatsCapsAt20(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		for i := range 25 {
+			id := fmt.Sprintf("s-%02d", i)
+			seedSessionWithEconomics(
+				db, id, "", fmt.Sprintf("Session %d", i),
+				i+1, 0, 0, float64(i+1), fixtureBase, fixtureBase,
+			)
+			insertMessage(t, db, "m-"+id, id, "assistant", "[]", fmt.Sprintf("model-%02d", i), "", fixtureBase)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	stats, err := db.Stats(context.Background(), StatsFilter{Day: fixtureDay()})
+	if err != nil {
+		t.Fatalf("Stats: %v", err)
+	}
+
+	if len(stats.SessionTitles) != 20 {
+		t.Fatalf("SessionTitles = %d entries, want exactly 20 (documented cap)", len(stats.SessionTitles))
+	}
+
+	if stats.SessionTitles[0] != "Session 24" {
+		t.Fatalf("SessionTitles[0] = %q, want the most-active session first", stats.SessionTitles[0])
+	}
+
+	if len(stats.ModelBreakdown) != 20 {
+		t.Fatalf("ModelBreakdown = %d entries, want exactly 20 (documented cap)", len(stats.ModelBreakdown))
+	}
+
+	if stats.ModelBreakdown[0].Model != "model-24" {
+		t.Fatalf("ModelBreakdown[0].Model = %q, want the highest-cost model first", stats.ModelBreakdown[0].Model)
 	}
 }
