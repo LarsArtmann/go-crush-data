@@ -38,14 +38,17 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Verify module dependencies
+        run: go mod verify
+
       - name: Vet
         run: go vet ./...
 
       - name: Build
         run: go build ./...
 
-      - name: Test (race + shuffle + coverage)
-        run: go test -race -shuffle=on -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Test (race + shuffle + count=2 + coverage)
+        run: go test -race -shuffle=on -count=2 -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Coverage gate (≥85%)
         shell: bash
