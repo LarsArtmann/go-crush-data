@@ -3,6 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -205,6 +206,35 @@ func ExampleDB_Messages() {
 	//   text: List the fixtures.
 }
 
+// ExampleDB_IterMessages streams a session's messages one at a time, for
+// sessions too large to materialize as a single slice.
+func ExampleDB_IterMessages() {
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: setupExampleData(),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := Open(projects[0].DataDir)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	for message, err := range db.IterMessages(context.Background(), "s1") {
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("[%s] %s\n", message.Role, message.ID)
+	}
+
+	// Output:
+	// [user] m1
+}
+
 // ExampleDB_Stats aggregates one calendar day of activity.
 func ExampleDB_Stats() {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
@@ -366,4 +396,24 @@ func ExampleDB_ReadFiles() {
 	// Output:
 	// /repo/main.go
 	// /repo/util.go
+}
+
+// ExampleDecodeTodos turns a session's raw Todos column into typed values.
+func ExampleDecodeTodos() {
+	raw := json.RawMessage(
+		`[{"content":"Ship v0.3","status":"completed","active_form":"Shipping v0.3"},{"content":"Update the docs","status":"in_progress","active_form":"Updating the docs"}]`,
+	)
+
+	todos, err := DecodeTodos(raw)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, todo := range todos {
+		fmt.Printf("%s: %s\n", todo.Status, todo.Content)
+	}
+
+	// Output:
+	// completed: Ship v0.3
+	// in_progress: Update the docs
 }

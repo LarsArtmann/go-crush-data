@@ -3,7 +3,9 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -339,5 +341,137 @@ func TestReadFilesFiltersEmptyPaths(t *testing.T) {
 
 	if paths[0] != "/repo/a.go" || paths[1] != "/repo/b.go" {
 		t.Fatalf("paths = %v, want [/repo/a.go /repo/b.go]", paths)
+	}
+}
+
+// TestIterMessagesMatchesMessages pins the iterator against the slice API:
+// same rows, same order, same decoded fields — one query path, two shapes.
+func TestIterMessagesMatchesMessages(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	materialized, err := db.Messages(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	var streamed []Message
+
+	for message, err := range db.IterMessages(context.Background(), "fixture-root") {
+		if err != nil {
+			t.Fatalf("IterMessages: %v", err)
+		}
+
+		streamed = append(streamed, message)
+	}
+
+	if len(streamed) != len(materialized) {
+		t.Fatalf("IterMessages yielded %d messages, Messages returned %d", len(streamed), len(materialized))
+	}
+
+	for i := range materialized {
+		if !reflect.DeepEqual(streamed[i], materialized[i]) {
+			t.Fatalf("message %d differs: iter = %+v, slice = %+v", i, streamed[i], materialized[i])
+		}
+	}
+}
+
+// TestIterMessagesEarlyBreak verifies that abandoning iteration mid-stream
+// stops cleanly: the messages seen so far arrive in order and no error is
+// surfaced for the rows left behind.
+func TestIterMessagesEarlyBreak(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	var seen []string
+
+	for message, err := range db.IterMessages(context.Background(), "fixture-root") {
+		if err != nil {
+			t.Fatalf("IterMessages: %v", err)
+		}
+
+		seen = append(seen, message.ID)
+
+		if len(seen) == 3 {
+			break
+		}
+	}
+
+	if len(seen) != 3 {
+		t.Fatalf("seen = %v, want the first 3 message IDs", seen)
+	}
+
+	materialized, err := db.Messages(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	for i, id := range seen {
+		if id != materialized[i].ID {
+			t.Fatalf("seen[%d] = %s, want %s (iteration order must match Messages)", i, id, materialized[i].ID)
+		}
+	}
+}
+
+// TestIterMessagesEmptySession yields nothing and no error for a session
+// with no messages — the iterator equivalent of an empty slice.
+func TestIterMessagesEmptySession(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	count := 0
+
+	for _, err := range db.IterMessages(context.Background(), "no-such-session") {
+		if err != nil {
+			t.Fatalf("IterMessages: %v", err)
+		}
+
+		count++
+	}
+
+	if count != 0 {
+		t.Fatalf("IterMessages yielded %d messages for a session with none", count)
+	}
+}
+
+// TestIterMessagesCanceledContext verifies the error contract: a canceled
+// context surfaces as a yielded error, not a panic or a silent stop.
+func TestIterMessagesCanceledContext(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	var (
+		message Message
+		err     error
+		yields  int
+	)
+
+	for message, err = range db.IterMessages(ctx, "fixture-root") {
+		yields++
+
+		break
+	}
+
+	if yields != 1 {
+		t.Fatalf("yields = %d, want exactly 1 (the error yield)", yields)
+	}
+
+	if err == nil {
+		t.Fatal("IterMessages with a canceled context yielded no error")
+	}
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v, want context.Canceled", err)
+	}
+
+	if message.ID != "" {
+		t.Fatalf("error yield carried message %q, want the zero value", message.ID)
 	}
 }

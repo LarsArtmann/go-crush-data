@@ -1,6 +1,7 @@
 package crushdata
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,6 +22,45 @@ func FuzzDecodeParts(f *testing.F) {
 	f.Fuzz(func(t *testing.T, raw string) {
 		_, _ = DecodeParts(raw)
 	})
+}
+
+// FuzzDecodeTodos verifies the todos decoder never panics on arbitrary
+// input and that a successful decode is internally consistent: every item
+// decodes again from its own re-marshalled JSON.
+func FuzzDecodeTodos(f *testing.F) {
+	f.Add(`[{"content":"ship it","status":"completed","active_form":"Shipping it"}]`)
+	f.Add(`[{"content":"?","status":"in_progress"}]`)
+	f.Add(`[]`)
+	f.Add(`null`)
+	f.Add(`[1]`)
+	f.Add(`{"not":"array"}`)
+	f.Add(`[{"status":"drifted"}]`)
+	f.Add(`truncated`)
+
+	f.Fuzz(func(t *testing.T, raw string) {
+		todos, err := DecodeTodos([]byte(raw))
+		if err != nil {
+			return
+		}
+
+		for i, todo := range todos {
+			again, err := DecodeTodos(mustMarshalTodos(t, todo))
+			if err != nil || len(again) != 1 || again[0] != todo {
+				t.Fatalf("todo %d does not roundtrip: %+v -> %v, %v", i, todo, again, err)
+			}
+		}
+	})
+}
+
+func mustMarshalTodos(t *testing.T, todo Todo) []byte {
+	t.Helper()
+
+	encoded, err := json.Marshal([]Todo{todo})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return encoded
 }
 
 // FuzzParseProjectsOutput verifies the CLI-output parser never panics on

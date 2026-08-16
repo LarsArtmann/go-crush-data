@@ -23,6 +23,9 @@ renumbered, and deleting an item retires its ID for good.
 
 ## Low
 
+- [ ] **T8** Adopt `DecodeTodos`/`DB.IterMessages` in crush-daily (the
+  second consumer the todos helper was gated on; makes the census-pinned
+  shape serve real usage). 30m — `~/projects/crush-daily`
 - [ ] **T6** Mine nightly fuzz artifacts for corpus seeds once runs exist.
   ongoing — `.github/workflows/fuzz.yml`
 - [ ] **T7** Pin GitHub action versions via Renovate once the app is

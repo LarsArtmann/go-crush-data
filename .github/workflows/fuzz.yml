@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [FuzzDecodeParts, FuzzParseProjectsOutput, FuzzLoadRegistry]
+        target: [FuzzDecodeParts, FuzzDecodeTodos, FuzzParseProjectsOutput, FuzzLoadRegistry]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

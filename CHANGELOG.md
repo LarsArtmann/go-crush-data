@@ -13,7 +13,17 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
-- Nothing yet.
+- `DecodeTodos` decodes the raw JSON of `Session.Todos` into typed `Todo`
+  values (`Content`, `Status`, `ActiveForm`). The on-disk shape is pinned
+  by a census of 71,747 items across 287 real databases: every item
+  carried exactly `content`, `status`, and `active_form`, with statuses
+  `pending`, `in_progress`, and `completed`. Decoding stays best-effort
+  under drift — unknown statuses pass through, unknown fields are ignored —
+  and `Session.Todos` remains the byte-identical raw contract.
+- `DB.IterMessages` iterates one session's messages (`iter.Seq2[Message,
+  error]`) in the same order as `Messages`, for sessions too large to
+  materialize as one slice. Failures are yielded as `(Message{}, err)`;
+  breaking out of the loop releases the underlying rows.
 
 ### Fixed
 

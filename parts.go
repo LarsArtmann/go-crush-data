@@ -100,6 +100,11 @@ const (
 	partBinary       = "binary"
 )
 
+// jsonNull is the JSON keyword Crush writes for a part payload that carries
+// no data; comparing against the named constant keeps the keyword greppable
+// instead of hiding it as a bare string literal.
+const jsonNull = "null"
+
 // rawPart is the on-disk shape of every parts array entry.
 type rawPart struct {
 	Type string          `json:"type"`
@@ -137,7 +142,7 @@ func decodeParts(raw string, strict bool) ([]Part, error) {
 	for _, entry := range rawParts {
 		// Entries with no type or a null payload carry no information —
 		// Crush has been observed to write such rows.
-		if entry.Type == "" || len(entry.Data) == 0 || string(entry.Data) == "null" {
+		if entry.Type == "" || len(entry.Data) == 0 || string(entry.Data) == jsonNull {
 			continue
 		}
 

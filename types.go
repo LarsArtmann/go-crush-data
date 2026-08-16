@@ -25,7 +25,8 @@ type Project struct {
 // the agent tool (ParentSessionID != ""). The Todos field carries the raw
 // JSON of the Todos column (json.RawMessage) so callers decode it into
 // whatever shape their Crush version writes; it is nil when the column is
-// NULL.
+// NULL. [DecodeTodos] decodes it into the typed [Todo] shape Crush writes
+// today while tolerating future drift.
 type Session struct {
 	ID               string
 	Title            string

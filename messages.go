@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"iter"
 	"slices"
 )
 
@@ -24,42 +25,98 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 	}
 
 	return collectRows(rows, "message", func(rows *sql.Rows) (Message, error) {
-		var (
-			message         Message
-			parts           string
-			model, provider sql.NullString
-			createdAtUnix   int64
-			finishedAt      sql.NullInt64
-		)
-
-		err := rows.Scan(
-			&message.ID,
-			&message.Role,
-			&parts,
-			&model,
-			&provider,
-			&createdAtUnix,
-			&finishedAt,
-		)
-		if err != nil {
-			return Message{}, fmt.Errorf("scan message row: %w", err)
-		}
-
-		message.SessionID = sessionID
-		message.Model = model.String
-		message.Provider = provider.String
-		message.CreatedAt = unixTime(createdAtUnix)
-		message.FinishedAt = unixTime(finishedAt.Int64)
-
-		decoded, err := decodeParts(parts, false)
-		if err != nil {
-			decoded = nil
-		}
-
-		message.Parts = decoded
-
-		return message, nil
+		return scanMessage(rows, sessionID)
 	})
+}
+
+// IterMessages returns the same messages as [DB.Messages], in the same
+// order, as an iterator for sessions too large to materialize as one
+// slice:
+//
+//	for message, err := range db.IterMessages(ctx, sessionID) {
+//		if err != nil {
+//			break // handle err; iteration stops here
+//		}
+//		// ...
+//	}
+//
+// Because an iterator cannot return an error up front, failures — a failed
+// query, a canceled context, a scan error, or an iteration error — are
+// yielded as (Message{}, err) and iteration stops. Breaking out of the
+// loop stops the iteration and releases the underlying rows. Each range
+// over the returned sequence runs the query anew, so storing it and
+// ranging twice reads the session twice.
+func (db *DB) IterMessages(ctx context.Context, sessionID string) iter.Seq2[Message, error] {
+	return func(yield func(Message, error) bool) {
+		rows, err := db.handle.QueryContext(ctx, db.buildMessagesQuery(), sessionID)
+		if err != nil {
+			//nolint:exhaustruct // error yield: the message is intentionally zero
+			yield(Message{}, fmt.Errorf("read messages of session %s from %s: %w", sessionID, db.path, err))
+
+			return
+		}
+
+		defer func() { _ = rows.Close() }()
+
+		for rows.Next() {
+			message, err := scanMessage(rows, sessionID)
+			if err != nil {
+				//nolint:exhaustruct // error yield: the message is intentionally zero
+				yield(Message{}, err)
+
+				return
+			}
+
+			if !yield(message, nil) {
+				return
+			}
+		}
+
+		if err := rows.Err(); err != nil {
+			//nolint:exhaustruct // error yield: the message is intentionally zero
+			yield(Message{}, fmt.Errorf("iterate message rows: %w", err))
+		}
+	}
+}
+
+// scanMessage lifts one row into a Message, decoding its parts tolerantly
+// — the shared row logic of [DB.Messages] and [DB.IterMessages].
+func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
+	var (
+		message         Message
+		parts           string
+		model, provider sql.NullString
+		createdAtUnix   int64
+		finishedAt      sql.NullInt64
+	)
+
+	err := rows.Scan(
+		&message.ID,
+		&message.Role,
+		&parts,
+		&model,
+		&provider,
+		&createdAtUnix,
+		&finishedAt,
+	)
+	if err != nil {
+		return Message{}, fmt.Errorf("scan message row: %w", err)
+	}
+
+	message.SessionID = sessionID
+	message.Model = model.String
+	message.Provider = provider.String
+	message.CreatedAt = unixTime(createdAtUnix)
+	message.FinishedAt = unixTime(finishedAt.Int64)
+
+	decoded, err := decodeParts(parts, false)
+	if err != nil {
+		decoded = nil
+	}
+
+	message.Parts = decoded
+
+	return message, nil
 }
 
 // buildMessagesQuery constructs the messages SELECT, substituting NULL for

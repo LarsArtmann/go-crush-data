@@ -35,9 +35,10 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL |
 | parts.go | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart) |
 | rows.go | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses |
-| messages.go | Messages(sessionID) ordered `created_at, id`; tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); ReadFiles |
+| messages.go | Messages(sessionID) ordered `created_at, id`; tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; ReadFiles |
 | agents.go | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column |
 | stats.go | day aggregates; model-breakdown CTE has the double-count trap — see comment there |
+| todos.go | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census |
 
 Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
 `.github/workflows/` (ci, release, fuzz, bench, flake-update — all
@@ -135,3 +136,8 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 - DB: `<data_dir>/crush.db`, tables sessions/messages/read_files.
 - Agent child session IDs look like `messageID$$toolCallID`.
 - CLI `crush projects --json` prints JSON on **stderr**.
+- Todos column: JSON array of `{content, status, active_form}` items;
+  statuses pending/in_progress/completed. Pinned by a census of 71,747
+  items across all 287 DBs in the local registry (2026-08-16) — zero
+  malformed, zero extra keys. When Crush changes the shape,
+  `TestDecodeTodosCensusShape` is the tripwire.

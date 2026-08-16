@@ -15,7 +15,9 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | Session listing with filters: ByID, Day (filter-location semantics), ParentID, RootOnly, Limit | `sessions.go:45` |
 | FULLY_FUNCTIONAL | Session fetch by ID (`ErrSessionNotFound`) | `sessions.go:66` |
 | FULLY_FUNCTIONAL | `Session.Todos` as raw JSON (`json.RawMessage`, nil for NULL) | `types.go:39`, `sessions.go:187` |
-| FULLY_FUNCTIONAL | Message listing ordered by `created_at, id` | `messages.go:18` |
+| FULLY_FUNCTIONAL | `DecodeTodos` — typed todos decoding (census-pinned shape, drift-tolerant) | `todos.go:47`, `todos_test.go` `TestDecodeTodosCensusShape` |
+| FULLY_FUNCTIONAL | Message listing ordered by `created_at, id` | `messages.go:21` |
+| FULLY_FUNCTIONAL | `DB.IterMessages` — streaming message iteration (`iter.Seq2`), same rows and order as `Messages` | `messages.go:49`, `messages_test.go` `TestIterMessagesMatchesMessages` |
 | FULLY_FUNCTIONAL | Tolerant parts decoding: one malformed part degrades to `UnknownPart` keeping its raw payload and siblings; wholly unparseable parts yield nil Parts | `messages.go:54` |
 | FULLY_FUNCTIONAL | Sealed `Part` set: Text, Reasoning, ToolCall, ToolResult, Finish, ShellCommand, Unknown (forward-compatible passthrough) | `parts.go:9`–`78` |
 | FULLY_FUNCTIONAL | `DecodeParts` — strict public parts decoder | `parts.go` |
@@ -29,7 +31,7 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
 | FULLY_FUNCTIONAL | Doc-truth guard: markdown links resolve, reference-style links defined, `file:line` citations in range — wired into gate and CI | `scripts/check-doc-links.sh` |
-| FULLY_FUNCTIONAL | Fuzz targets for all three parsers (DecodeParts, ParseProjectsOutput, loadRegistry) with seed corpora | `fuzz_test.go` |
+| FULLY_FUNCTIONAL | Fuzz targets for all four parsers (DecodeParts, DecodeTodos, ParseProjectsOutput, loadRegistry) with seed corpora; nightly matrix runs each | `fuzz_test.go`, `.github/workflows/fuzz.yml` |
 | FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmarks.txt` |
 | FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats, agent graph, read files | `example_test.go` |
 | FULLY_FUNCTIONAL | Tag-driven GitHub Release workflow — observed green on the v0.2.0 and v0.2.1 tags (notes match the CHANGELOG section incl. the erratum); dry-run path exercised via `workflow_dispatch` | `.github/workflows/release.yml`, `RELEASING.md` |

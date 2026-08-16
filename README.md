@@ -94,6 +94,28 @@ for _, node := range graph.Nodes {
 }
 ```
 
+Huge sessions stream instead of materializing — `DB.IterMessages` yields
+the same rows as `Messages`, in the same order, one at a time:
+
+```go
+for message, err := range db.IterMessages(ctx, sessionID) {
+	if err != nil {
+		break // handle err
+	}
+	_ = message
+}
+```
+
+Session todo lists decode into typed values with `DecodeTodos` (statuses
+`pending`, `in_progress`, `completed`; unknown values pass through):
+
+```go
+todos, _ := crushdata.DecodeTodos(session.Todos) // []crushdata.Todo
+for _, todo := range todos {
+	fmt.Printf("%s: %s\n", todo.Status, todo.Content)
+}
+```
+
 ## Schema drift
 
 | Capability | Column | Missing on old databases |
@@ -117,7 +139,8 @@ Databases without the required `sessions`/`messages` tables fail `Open` with
   A canceled context surfaces as `context.Canceled`.
 - **`Session.Todos` is raw JSON** (`json.RawMessage`): the column holds
   JSON Crush writes; the library passes it through byte-identical (nil
-  for NULL). Decode it into whatever shape your Crush version writes.
+  for NULL). `DecodeTodos` decodes it into the typed shape Crush writes
+  today while tolerating future drift.
 - **Errors as values**: sentinel errors (`ErrRegistryNotFound`,
   `ErrDatabaseNotFound`, `ErrUnsupportedSchema`, `ErrSessionNotFound`) testable
   with `errors.Is`.
@@ -148,6 +171,8 @@ nix flake check   # build + format checks
 
 See also: [FEATURES.md](FEATURES.md) (honest feature inventory),
 [ROADMAP.md](ROADMAP.md) (direction and recorded non-decisions),
+[docs/recipes/registry-watching.md](docs/recipes/registry-watching.md)
+(live consumers: watching the registry without new dependencies),
 [CONTRIBUTING.md](CONTRIBUTING.md) (parity contract, benchmarks),
 [RELEASING.md](RELEASING.md) (release procedure and tag integrity).
 

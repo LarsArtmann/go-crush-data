@@ -12,18 +12,22 @@ infrastructure that fails loudly before shipping.
 
 ## Raw ideas (not yet actionable)
 
-- **Typed Todos decoding helper** — a best-effort `DecodeTodos` mirroring
-  how Crush writes todo lists, once more than one consumer needs it. Until
-  then raw JSON is the honest contract.
-- **Streaming message iteration** — an iterator (`func(yield ...) bool`)
-  over messages for huge sessions, if a consumer materializes one.
-- **Registry watching** — fsnotify on projects.json for live dashboards.
-  Needs a consumer first; read-only polling is fine today.
+- None right now — the last three (typed todos decoding, streaming message
+  iteration, registry watching) graduated on 2026-08-16: the first two
+  landed as `DecodeTodos` and `DB.IterMessages` (CHANGELOG `[Unreleased]`),
+  the third is a documented consumer-side pattern
+  ([recipes/registry-watching](docs/recipes/registry-watching.md)).
 
 ## Recorded non-decisions (anti-drift)
 
 These were consciously evaluated and rejected. Do not re-litigate without
 new information.
+
+- **No in-library watching.** fsnotify-class dependencies would betray the
+  zero-weight contract (see "No new dependencies" below). Watching the
+  registry is a consumer concern with a verified recipe:
+  [recipes/registry-watching](docs/recipes/registry-watching.md).
+  Decided 2026-08-16.
 
 - **No DOMAIN_LANGUAGE.md.** The domain is small and fully captured in
   doc.go plus type doc comments; a separate glossary would drift from them.
