@@ -23,11 +23,17 @@ infrastructure that fails loudly before shipping.
 These were consciously evaluated and rejected. Do not re-litigate without
 new information.
 
-- **No in-library watching.** fsnotify-class dependencies would betray the
-  zero-weight contract (see "No new dependencies" below). Watching the
-  registry is a consumer concern with a verified recipe:
+- **No in-library watching — including a `watch/` sub-module.** A direct
+  fsnotify-class dependency would betray the zero-weight contract (see "No
+  new dependencies" below). A sub-module would honor that contract but buys
+  nothing: the entire glue is ~30 lines of recipe, and watching *policy*
+  (debounce, filtering, what to do on event) is not worth pinning as API
+  while zero consumers want typed registry events. The verified recipe
+  stands in for both:
   [recipes/registry-watching](docs/recipes/registry-watching.md).
-  Decided 2026-08-16.
+  Decided 2026-08-16; the sub-module variant explicitly re-rejected same
+  day after evaluating it. Revisit when a real consumer wants a live loop
+  (e.g. agent-trace adopting this library for tailing).
 
 - **No DOMAIN_LANGUAGE.md.** The domain is small and fully captured in
   doc.go plus type doc comments; a separate glossary would drift from them.
