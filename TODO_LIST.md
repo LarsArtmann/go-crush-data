@@ -45,6 +45,9 @@ Long-term ideas live in [ROADMAP.md](ROADMAP.md).
 
 ## Medium — CI depth
 
+- [ ] Add `scripts/check-doc-links.sh` (markdown links resolve + `file:line`
+  citations point at real files) and wire it into the canonical gate. 30m —
+  2026-08-16 audit (the drift class this audit fixed by hand)
 - [ ] Add `-count=2` to the CI test command (documented for local use only
   today). 2m — `.github/workflows/ci.yml:48`
 - [ ] Add a `go mod verify` CI step (module cache vs go.sum). 5m —
@@ -55,6 +58,13 @@ Long-term ideas live in [ROADMAP.md](ROADMAP.md).
 
 ## Low
 
+- [ ] Drop the temporal "Generated 2026-08-15" header line from FEATURES.md
+  (endurance-test failure; the date lives in git). 2m — `FEATURES.md:4`
+- [ ] Assign stable IDs to TODO_LIST items so annotations can cite
+  "TODO_LIST item N" instead of the file generically. 10m
+- [ ] Rename `docs/benchmarks/baseline-benchmark-sessions.txt` — it holds
+  all three benchmarks now (Sessions, Messages, AgentGraph). 5m —
+  `bench.yml` references it
 - [ ] Reuse `fakeCLI` in `TestDiscoverProjectsCLIExitNonzeroWithPartialJSON`
   instead of hand-rolling a second script (DRY; inherits the Windows skip).
   10m — `discover_test.go:341`
