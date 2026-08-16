@@ -13,6 +13,20 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+## [0.3.0] - 2026-08-16
+
+### Added
+
 - `DecodeTodos` decodes the raw JSON of `Session.Todos` into typed `Todo`
   values (`Content`, `Status`, `ActiveForm`). The on-disk shape is pinned
   by a census of 71,747 items across 287 real databases: every item
@@ -24,6 +38,9 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   error]`) in the same order as `Messages`, for sessions too large to
   materialize as one slice. Failures are yielded as `(Message{}, err)`;
   breaking out of the loop releases the underlying rows.
+- `docs/recipes/registry-watching.md`: a verified recipe for watching
+  `projects.json` with `go-filewatcher` to react to Crush project
+  additions and removals. Linux-verified via a stand-alone harness.
 
 ### Fixed
 
@@ -189,7 +206,8 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.0...v0.1.1
