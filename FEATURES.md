@@ -1,8 +1,7 @@
 # Features
 
 Honest inventory of what this library does, by status. Code is the source of
-truth; every row cites its evidence. Generated 2026-08-15 by a docs BUILD
-pass — update rows in place when status changes.
+truth; every row cites its evidence. Update rows in place when status changes.
 
 | Status | Feature | Evidence |
 |---|---|---|

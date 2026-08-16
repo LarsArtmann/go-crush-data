@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -195,8 +196,9 @@ func TestDiscoverProjectsRegistryMalformed(t *testing.T) {
 }
 
 // fakeCLI writes a shell script that prints the given payload to stderr (the
-// stream the real CLI uses) and returns its path.
-func fakeCLI(t *testing.T, payload string) string {
+// stream the real CLI uses) and exits with the given code; exitCode != 0
+// pins the CLI-fallback error path (partial JSON printed, then failure).
+func fakeCLI(t *testing.T, payload string, exitCode int) string {
 	t.Helper()
 
 	if runtime.GOOS == "windows" {
@@ -207,6 +209,9 @@ func fakeCLI(t *testing.T, payload string) string {
 	path := filepath.Join(dir, "crush-fake")
 
 	script := "#!/bin/sh\ncat " + shellQuoteFile(t, payload, dir) + " >&2\n"
+	if exitCode != 0 {
+		script += "exit " + strconv.Itoa(exitCode) + "\n"
+	}
 	//nolint:gosec // the fake CLI script must be executable
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
@@ -240,7 +245,7 @@ func TestDiscoverProjectsCLIFallback(t *testing.T) {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: globalDir,
 		CLIFallback:   true,
-		CLIBinary:     fakeCLI(t, payload),
+		CLIBinary:     fakeCLI(t, payload, 0),
 	})
 	if err != nil {
 		t.Fatalf("DiscoverProjects: %v", err)
@@ -268,7 +273,7 @@ func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: globalDir,
 		CLIFallback:   true,
-		CLIBinary:     fakeCLI(t, payload),
+		CLIBinary:     fakeCLI(t, payload, 0),
 	})
 	if err != nil {
 		t.Fatalf("DiscoverProjects: %v", err)
@@ -308,7 +313,7 @@ func TestDiscoverProjectsUnreadableRegistryFallsBackToCLI(t *testing.T) {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: globalDir,
 		CLIFallback:   true,
-		CLIBinary:     fakeCLI(t, payload),
+		CLIBinary:     fakeCLI(t, payload, 0),
 	})
 	if err != nil {
 		t.Fatalf("DiscoverProjects: %v", err)
@@ -344,21 +349,12 @@ func TestDiscoverProjectsCLIExitNonzeroWithPartialJSON(t *testing.T) {
 
 	globalDir := t.TempDir()
 
-	dir := t.TempDir()
-	path := filepath.Join(dir, "crush-fake")
-	// Prints partial JSON to stderr then exits 1.
-	script := "#!/bin/sh\nprintf '%s' '" +
-		`{"projects":[{"path":"/repo/partial","data_dir":"/nonexistent","last_accessed":"x"}` +
-		"' >&2\nexit 1\n"
-	//nolint:gosec // the fake CLI script must be executable
-	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	payload := `{"projects":[{"path":"/repo/partial","data_dir":"/nonexistent","last_accessed":"x"}`
 
 	_, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: globalDir,
 		CLIFallback:   true,
-		CLIBinary:     path,
+		CLIBinary:     fakeCLI(t, payload, 1),
 	})
 	if err == nil {
 		t.Fatal("err = nil, want exit-nonzero error (partial JSON must not silently succeed)")
@@ -400,6 +396,14 @@ func TestParseProjectsOutput(t *testing.T) {
 			name: "closing brace inside JSON string with noise",
 			raw:  "INFO starting\n" + `{"projects":[{"path":"test}","data_dir":"/d","last_accessed":"x"}]}` + "\n",
 			want: 1,
+		},
+		{
+			name: "brace in trailing noise after payload",
+			raw:  "INFO starting\n" + `{"projects":[]}` + "\nWARN cache {flushed}\n",
+			// extractJSONObject spans to the LAST '}', so brace-bearing
+			// trailing noise extends the substring past the payload and
+			// json.Unmarshal rejects it — the documented limitation.
+			wantErr: true,
 		},
 	}
 

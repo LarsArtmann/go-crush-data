@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 	"time"
 
 	_ "modernc.org/sqlite" // the driver the examples use to build throwaway fixtures
@@ -83,6 +84,25 @@ func setupExampleData() string {
 // (Windows paths contain them).
 func quoteJSON(s string) string {
 	return `"` + strings.ReplaceAll(s, `\`, `\\`) + `"`
+}
+
+// TestQuoteJSON pins the helper's backslash escaping: a Windows data dir
+// must render as a valid JSON string, or every registry fixture built with
+// one becomes unparseable (the bug class that broke the v0.2.0 Windows leg).
+func TestQuoteJSON(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct{ in, want string }{
+		{in: "/home/me/project", want: `"/home/me/project"`},
+		{in: `C:\Users\me\AppData`, want: `"C:\\Users\\me\\AppData"`},
+		{in: `\\server\share`, want: `"\\\\server\\share"`},
+	}
+
+	for _, tt := range tests {
+		if got := quoteJSON(tt.in); got != tt.want {
+			t.Errorf("quoteJSON(%q) = %s, want %s", tt.in, got, tt.want)
+		}
+	}
 }
 
 // ExampleDiscoverProjects lists every project Crush knows about.
