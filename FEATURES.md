@@ -30,7 +30,7 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
 | FULLY_FUNCTIONAL | Doc-truth guard: markdown links resolve, reference-style links defined, `file:line` citations in range — wired into gate and CI | `scripts/check-doc-links.sh` |
 | FULLY_FUNCTIONAL | Fuzz targets for all three parsers (DecodeParts, ParseProjectsOutput, loadRegistry) with seed corpora | `fuzz_test.go` |
-| FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
+| FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmarks.txt` |
 | FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats, agent graph, read files | `example_test.go` |
 | FULLY_FUNCTIONAL | Tag-driven GitHub Release workflow — observed green on the v0.2.0 and v0.2.1 tags (notes match the CHANGELOG section incl. the erratum); dry-run path exercised via `workflow_dispatch` | `.github/workflows/release.yml`, `RELEASING.md` |
 | PARTIALLY_FUNCTIONAL | Nightly fuzz workflow — written and actionlint-clean, first scheduled run pending (03:17 UTC) | `.github/workflows/fuzz.yml` |

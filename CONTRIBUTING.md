@@ -45,13 +45,13 @@ misleading "undefined:" build errors inside `nix flake check`.
 
 ### Benchmarks
 
-`docs/benchmarks/baseline-benchmark-sessions.txt` is the committed baseline;
+`docs/benchmarks/baseline-benchmarks.txt` is the committed baseline;
 the `Benchmark trend` workflow compares every push against it and posts the
 diff to the job summary. To regenerate the baseline:
 
 ```bash
 go test -run '^$' -bench BenchmarkSessionsList -count 6 . \
-  > docs/benchmarks/baseline-benchmark-sessions.txt
+  > docs/benchmarks/baseline-benchmarks.txt
 ```
 
 To compare locally: `go run golang.org/x/perf/cmd/benchstat@latest old.txt new.txt`.

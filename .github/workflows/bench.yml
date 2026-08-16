@@ -30,7 +30,7 @@ jobs:
             echo "## Benchmark comparison"
             echo
             echo '```'
-            go tool benchstat docs/benchmarks/baseline-benchmark-sessions.txt current.txt
+            go tool benchstat docs/benchmarks/baseline-benchmarks.txt current.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 

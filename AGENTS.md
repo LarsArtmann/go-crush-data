@@ -41,7 +41,7 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 
 Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
 `.github/workflows/` (ci, release, fuzz, bench, flake-update — all
-tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmark-sessions.txt`
+tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 (benchstat baseline for the bench.yml trend; regenerate via
 `go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples).
 
