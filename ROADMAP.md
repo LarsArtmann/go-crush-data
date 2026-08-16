@@ -43,3 +43,8 @@ new information.
   invariant; CI uploads the exact HTML report as an artifact for anyone who
   wants the number. A live badge would add an account/endpoint dependency
   for zero enforcement value.
+- **No branch protection on master.** Required CI status checks would also
+  block direct pushes, which is how this repo works (local auto-commit
+  daemon + manual pushes). The adopted guard instead is RELEASING.md
+  precondition 4: a tag may only be cut once all matrix legs are green on
+  origin. Decided 2026-08-16; revisit if the workflow moves to PRs.

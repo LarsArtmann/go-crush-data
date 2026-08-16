@@ -68,6 +68,11 @@ what consumers got; treat it, not `git log`, as the release ledger.
 - [x] Confirm the `Release` workflow published the GitHub Release with the
       correct CHANGELOG section (first run: v0.2.0, observed 2026-08-16
       tooling).
+- [x] Full procedure rehearsed on v0.2.1 (2026-08-16): all matrix legs
+      observed green on origin before tagging; annotated tag integrity
+      verified local == remote; Release notes matched the `[0.2.1]` section
+      including the erratum; proxy.golang.org served the tag; a fresh
+      temp-module `go get` compiled and ran.
 
 ## Decision log
 

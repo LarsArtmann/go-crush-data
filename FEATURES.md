@@ -24,14 +24,14 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | Day activity stats with the crush-daily parity contract (`TestStatsParityWithCrushDailySQL`) | `stats.go:28` |
 | FULLY_FUNCTIONAL | Models/Providers in Stats sorted ascending (ORDER BY on DISTINCT query) | `stats.go:121` |
 | FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE | `stats.go:249` |
-| FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos — green on master since the Windows fixes; the immutable v0.2.0 tag predates them (TODO_LIST: cut v0.2.1) | `.github/workflows/ci.yml` |
+| FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos — green on master and on the v0.2.1 tag (tests run twice per leg via `-count=2`; `go mod verify` guards the module cache). The immutable v0.2.0 tag's Windows leg is permanently red — test code only; erratum in CHANGELOG `[0.2.1]` | `.github/workflows/ci.yml` |
 | FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml`; local measure 2026-08-15: 87.8% statements |
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
 | FULLY_FUNCTIONAL | Fuzz targets for all three parsers (DecodeParts, ParseProjectsOutput, loadRegistry) with seed corpora | `fuzz_test.go` |
 | FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
 | FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats, agent graph, read files | `example_test.go` |
-| FULLY_FUNCTIONAL | Tag-driven GitHub Release workflow — observed green on v0.2.0 tag | `.github/workflows/release.yml`, `RELEASING.md` |
+| FULLY_FUNCTIONAL | Tag-driven GitHub Release workflow — observed green on the v0.2.0 and v0.2.1 tags (notes match the CHANGELOG section incl. the erratum); dry-run path exercised via `workflow_dispatch` | `.github/workflows/release.yml`, `RELEASING.md` |
 | PARTIALLY_FUNCTIONAL | Nightly fuzz workflow — written and actionlint-clean, first scheduled run pending (03:17 UTC) | `.github/workflows/fuzz.yml` |
 | FULLY_FUNCTIONAL | Benchmark-trend CI job comparing pushes against the baseline — observed green on v0.2.0 push | `.github/workflows/bench.yml` |
 | FULLY_FUNCTIONAL | Coverage HTML artifact uploaded on CI (ubuntu leg); static ≥85% badge on README | `.github/workflows/ci.yml`, `README.md` |
