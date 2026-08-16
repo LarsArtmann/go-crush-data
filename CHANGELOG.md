@@ -19,6 +19,33 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 - Nothing yet.
 
+## [0.2.1] - 2026-08-16
+
+### Added
+
+- CI hardening: the test suite runs twice per matrix leg (`-count=2`, so
+  cached first-run results cannot mask repetition-sensitive failures) and a
+  `go mod verify` step fails the build when the downloaded module cache does
+  not match `go.sum`.
+- Regression tests pinning the v0.2.0 Windows bug class: `TestQuoteJSON`
+  (backslash escaping in example fixtures) and the `}`-in-trailing-noise
+  decode-error case in `TestParseProjectsOutput`.
+
+### Fixed
+
+- The Windows test suite: v0.2.0's `windows-latest` CI leg failed on test
+  code only — example fixtures embedded Windows paths as invalid JSON
+  (unescaped backslashes), matrix steps assumed the runner's default shell,
+  and CLI-fallback tests referenced `/bin/sh`. The library code was never
+  affected; the suite now passes on all three matrix legs.
+
+### Erratum: v0.2.0 Windows CI
+
+The immutable `v0.2.0` tag is permanently red on its windows-latest leg.
+  The failures are confined to the test suite; the library itself is correct
+  on Windows. This release is the all-platform-green replacement — prefer
+  `v0.2.1` on every OS.
+
 ## [0.2.0] - 2026-08-16
 
 ### Added
@@ -139,7 +166,8 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/LarsArtmann/go-crush-data/releases/tag/v0.1.0
