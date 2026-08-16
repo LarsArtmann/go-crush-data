@@ -70,7 +70,6 @@ func GlobalDataDir() string {
 		return filepath.Join(xdg, AppName)
 	}
 
-	//nolint:goconst // "windows" is the standard Go idiom for runtime.GOOS comparisons
 	if runtime.GOOS == "windows" {
 		if dir := windowsLocalAppData(); dir != "" {
 			return filepath.Join(dir, AppName)

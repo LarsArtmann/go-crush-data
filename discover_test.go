@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -195,45 +194,66 @@ func TestDiscoverProjectsRegistryMalformed(t *testing.T) {
 	}
 }
 
-// fakeCLI writes a shell script that prints the given payload to stderr (the
-// stream the real CLI uses) and exits with the given code; exitCode != 0
-// pins the CLI-fallback error path (partial JSON printed, then failure).
+// fakeCLIEnv marks the process as a fake-CLI child (set by fakeCLI in the
+// parent); the payload and exit code travel in sibling variables.
+const (
+	fakeCLIEnv        = "GO_CRUSH_DATA_FAKE_CLI"
+	fakeCLIPayloadEnv = fakeCLIEnv + "_PAYLOAD"
+	fakeCLIExitEnv    = fakeCLIEnv + "_EXIT"
+)
+
+// TestMain doubles as the fake CLI. DiscoverProjects execs the path fakeCLI
+// returns — this very test binary — so the child re-enters TestMain, sees
+// the marker env var, prints the requested payload to stderr, and exits
+// with the requested code, never reaching m.Run.
+//
+// Decision (2026-08-16): re-exec the test binary instead of `go build`-ing
+// a testdata helper — no toolchain invocation inside tests, no second
+// binary to keep cross-platform, and argv needs no changes because the
+// payload rides in env vars.
+func TestMain(m *testing.M) {
+	if os.Getenv(fakeCLIEnv) != "" {
+		_, _ = os.Stderr.WriteString(os.Getenv(fakeCLIPayloadEnv))
+
+		code := 0
+
+		if s := os.Getenv(fakeCLIExitEnv); s != "" {
+			if parsed, err := strconv.Atoi(s); err == nil {
+				code = parsed
+			}
+		}
+
+		os.Exit(code)
+	}
+
+	os.Exit(m.Run())
+}
+
+// fakeCLI configures the test binary itself (via TestMain) to stand in for
+// the crush CLI: it prints payload to stderr — the stream the real CLI
+// uses — and exits with the given code; exitCode != 0 pins the CLI-fallback
+// error path (partial JSON printed, then failure). Re-execing the test
+// binary instead of writing a /bin/sh script keeps the fixture
+// cross-platform: Windows has no /bin/sh, which is why these tests used to
+// skip there and the v0.2.0 Windows breakage went unnoticed until a tagged
+// release. Payload and exit code travel in process env vars (t.Setenv), so
+// tests using fakeCLI must not call t.Parallel.
 func fakeCLI(t *testing.T, payload string, exitCode int) string {
 	t.Helper()
 
-	if runtime.GOOS == "windows" {
-		t.Skip("fakeCLI creates a /bin/sh script; not applicable on Windows")
-	}
-
-	dir := t.TempDir()
-	path := filepath.Join(dir, "crush-fake")
-
-	script := "#!/bin/sh\ncat " + shellQuoteFile(t, payload, dir) + " >&2\n"
-	if exitCode != 0 {
-		script += "exit " + strconv.Itoa(exitCode) + "\n"
-	}
-	//nolint:gosec // the fake CLI script must be executable
-	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+	exe, err := os.Executable()
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	return path
+	t.Setenv(fakeCLIEnv, "1")
+	t.Setenv(fakeCLIPayloadEnv, payload)
+	t.Setenv(fakeCLIExitEnv, strconv.Itoa(exitCode))
+
+	return exe
 }
 
-func shellQuoteFile(t *testing.T, payload, dir string) string {
-	t.Helper()
-
-	file := filepath.Join(dir, "payload.json")
-	if err := os.WriteFile(file, []byte(payload), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	return file
-}
-
-func TestDiscoverProjectsCLIFallback(t *testing.T) {
-	t.Parallel()
-
+func TestDiscoverProjectsCLIFallback(t *testing.T) { //nolint:paralleltest // t.Setenv
 	globalDir := t.TempDir()
 	dataDir := t.TempDir()
 	makeProjectDB(t, dataDir)
@@ -259,9 +279,7 @@ func TestDiscoverProjectsCLIFallback(t *testing.T) {
 // TestDiscoverProjectsCLIFallbackToleratesLogNoise pins the real-world CLI
 // contract: the crush CLI may print log or warning lines around its JSON
 // payload on stderr; discovery must still decode the payload.
-func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) {
-	t.Parallel()
-
+func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) { //nolint:paralleltest // t.Setenv
 	globalDir := t.TempDir()
 	dataDir := t.TempDir()
 	makeProjectDB(t, dataDir)
@@ -288,12 +306,10 @@ func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) {
 // trigger: a registry that exists but cannot be read (permissions) falls
 // through to the CLI exactly like a missing one. Skipped when running as
 // root, which reads chmod-000 files regardless.
-func TestDiscoverProjectsUnreadableRegistryFallsBackToCLI(t *testing.T) {
+func TestDiscoverProjectsUnreadableRegistryFallsBackToCLI(t *testing.T) { //nolint:paralleltest // t.Setenv
 	if os.Geteuid() == 0 {
 		t.Skip("running as root: chmod-000 files are still readable")
 	}
-
-	t.Parallel()
 
 	globalDir := t.TempDir()
 	dataDir := t.TempDir()
@@ -340,13 +356,7 @@ func TestDiscoverProjectsCLIFailure(t *testing.T) {
 // TestDiscoverProjectsCLIExitNonzeroWithPartialJSON pins the error path: a
 // CLI that exits nonzero after printing partial JSON to stderr must surface
 // as an error, not silently return the partial payload's projects.
-func TestDiscoverProjectsCLIExitNonzeroWithPartialJSON(t *testing.T) {
-	t.Parallel()
-
-	if runtime.GOOS == "windows" {
-		t.Skip("creates a /bin/sh script; not applicable on Windows")
-	}
-
+func TestDiscoverProjectsCLIExitNonzeroWithPartialJSON(t *testing.T) { //nolint:paralleltest // t.Setenv
 	globalDir := t.TempDir()
 
 	payload := `{"projects":[{"path":"/repo/partial","data_dir":"/nonexistent","last_accessed":"x"}`
