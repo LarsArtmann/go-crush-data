@@ -83,7 +83,7 @@ func OpenContext(ctx context.Context, dataDir string) (*DB, error) {
 
 // checkDatabaseFile validates that path refers to a readable database file.
 func checkDatabaseFile(path string) error {
-	//nolint:gosec // path is caller-supplied by design: reading local files at arbitrary paths is this library's purpose
+	// path is caller-supplied by design: reading local files at arbitrary paths is this library's purpose
 	info, err := os.Stat(path)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrDatabaseNotFound, err)

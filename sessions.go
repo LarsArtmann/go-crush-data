@@ -53,7 +53,7 @@ func (db *DB) Sessions(ctx context.Context, filter SessionFilter) ([]Session, er
 
 	query, args := db.buildSessionsQuery(filter)
 
-	//nolint:gosec // query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args
+	// query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args
 	rows, err := db.handle.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list sessions in %s: %w", db.path, err)

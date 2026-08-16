@@ -300,7 +300,7 @@ func hashTree(t *testing.T, dbPath string) string {
 	hash := sha256.New()
 
 	for _, suffix := range []string{"", "-wal", "-shm"} {
-		//nolint:gosec // reading the test's own fixture files
+		// reading the test's own fixture files
 		data, err := os.ReadFile(dbPath + suffix)
 		if err != nil {
 			continue

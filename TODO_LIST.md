@@ -21,8 +21,9 @@ renumbered, and deleting an item retires its ID for good.
   serves it; the page still rendered v0.1.1 at last check); spot-check
   `OpenContext`/`Todos`. 5m — pkg.go.dev
 - [ ] **T5** gosec G701 taint false positive: minimal upstream repro + issue
-  (verify-before-filing workflow). The `//nolint:gosec` with rationale is
-  sufficient meanwhile. 30m — `sessions.go`
+  (verify-before-filing workflow). The config-level exclusion in
+  `.golangci.yml` (with rationale) is sufficient meanwhile. 30m —
+  `sessions.go:56`
 
 ## Low
 
