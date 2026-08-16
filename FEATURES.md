@@ -28,6 +28,7 @@ truth; every row cites its evidence. Update rows in place when status changes.
 | FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml`; local measure 2026-08-15: 87.8% statements |
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |
+| FULLY_FUNCTIONAL | Doc-truth guard: markdown links resolve, reference-style links defined, `file:line` citations in range — wired into gate and CI | `scripts/check-doc-links.sh` |
 | FULLY_FUNCTIONAL | Fuzz targets for all three parsers (DecodeParts, ParseProjectsOutput, loadRegistry) with seed corpora | `fuzz_test.go` |
 | FULLY_FUNCTIONAL | Committed benchmark baseline (Sessions, Messages, AgentGraph) + local benchstat workflow | `docs/benchmarks/baseline-benchmark-sessions.txt` |
 | FULLY_FUNCTIONAL | Runnable godoc examples covering discovery, sessions, messages, stats, agent graph, read files | `example_test.go` |

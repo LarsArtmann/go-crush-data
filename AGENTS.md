@@ -10,7 +10,8 @@ duplicated in crush-daily (collector) and the mindwalk fork (adapter/crush).
 # Canonical full gate — ALWAYS with pipefail; plain pipes mask lint exit codes
 set -o pipefail
 go build ./... && go vet ./... && go test -race -shuffle=on ./... \
-  && nix run .#lint && nix flake check && nix develop --command actionlint
+  && nix run .#lint && nix flake check && nix develop --command actionlint \
+  && scripts/check-doc-links.sh
 
 go build ./...        # no GOEXPERIMENT needed (stdlib encoding/json v1 by design)
 go test ./...         # fixtures are generated per-test; no committed binary testdata
@@ -19,6 +20,7 @@ nix flake check       # build + format
 nix run .#lint        # golangci-lint (~90 linters; run per-file while writing tests)
 nix run .#test        # race test via nix
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard
+scripts/check-doc-links.sh    # markdown links + file:line citations in root docs resolve (runs in CI)
 ```
 
 Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabase` opens a real crush.db read-only. Re-run it after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).

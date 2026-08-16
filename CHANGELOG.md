@@ -50,7 +50,7 @@ The immutable `v0.2.0` tag is permanently red on its windows-latest leg.
 
 ### Added
 
-- `OpenContext(ctx, dataDir)`: [Open] with a caller-supplied context. The
+- `OpenContext(ctx, dataDir)`: `Open` with a caller-supplied context. The
   schema probes at open honor context cancellation; `Open` now delegates
   with `context.Background` and is behaviorally unchanged.
 - CI now runs `nix flake check` in a dedicated job and shuffles test order

@@ -39,7 +39,7 @@ Long-term ideas live in [ROADMAP.md](ROADMAP.md).
   "TODO_LIST item N" instead of the file generically. 10m
 - [ ] Rename `docs/benchmarks/baseline-benchmark-sessions.txt` — it holds
   all three benchmarks now (Sessions, Messages, AgentGraph). 5m —
-  `bench.yml` references it
+  `.github/workflows/bench.yml` references it
 - [ ] Mine nightly fuzz artifacts for corpus seeds once runs exist. ongoing —
   `.github/workflows/fuzz.yml`
 - [ ] Pin GitHub action versions via Renovate once the app is installed

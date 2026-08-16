@@ -29,6 +29,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: scripts/check-vendor-hash.sh HEAD~1
 
+      - name: Doc links guard (markdown links + file:line citations)
+        if: matrix.os == 'ubuntu-latest'
+        run: scripts/check-doc-links.sh
+
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
