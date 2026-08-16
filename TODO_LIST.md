@@ -17,15 +17,11 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T3** Observe the first monthly flake-lock PR; check the vendorHash
   guard fires correctly on a stale hash. 5m —
   `.github/workflows/flake-update.yml`
-- [ ] **T4** Verify pkg.go.dev renders v0.2.1 (proxy.golang.org already
-  serves it; the page still rendered v0.1.1 at last check); spot-check
-  `OpenContext`/`Todos`. 5m — pkg.go.dev
+- [ ] **T4** Verify pkg.go.dev renders v0.3.0 (`DecodeTodos`,
+  `DB.IterMessages`); confirm the recipe page lists. 5m — pkg.go.dev
 
 ## Low
 
-- [ ] **T8** Adopt `DecodeTodos`/`DB.IterMessages` in crush-daily (the
-  second consumer the todos helper was gated on; makes the census-pinned
-  shape serve real usage). 30m — `~/projects/crush-daily`
 - [ ] **T6** Mine nightly fuzz artifacts for corpus seeds once runs exist.
   ongoing — `.github/workflows/fuzz.yml`
 - [ ] **T7** Pin GitHub action versions via Renovate once the app is

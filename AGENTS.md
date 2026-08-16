@@ -141,3 +141,10 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
   items across all 287 DBs in the local registry (2026-08-16) — zero
   malformed, zero extra keys. When Crush changes the shape,
   `TestDecodeTodosCensusShape` is the tripwire.
+- Real consumer adoption: `crush-daily` decodes per-session todos
+  (pending/in_progress/completed counts in `ProjectDailySummary.TodoStats`)
+  and iterates messages via `DB.IterMessages` to count part kinds
+  (`TextPart`/`ReasoningPart`/`ToolCallPart`/`ToolResultPart`/`FinishPart`/
+  `ShellCommandPart`/`UnknownPart`) into
+  `ProjectDailySummary.MessagePartStats`. Census-pinned shape is therefore
+  exercised against production data, not just synthetic.
