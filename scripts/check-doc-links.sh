@@ -55,7 +55,7 @@ is_citable() {
 		$cite != *"\$"* && $cite != *"\\"* && $cite != "~"* &&
 		$cite != *"..v"* && ! ($cite =~ ^\.[a-z0-9]+$) ]] &&
 		! [[ $runtime_artifacts == *"|$(basename "${cite%%:*}")|"* ||
-			$runtime_artifacts =~ (^| )$(basename "${cite%%:*}")($| ) ]]
+		$runtime_artifacts =~ (^| )$(basename "${cite%%:*}")($| ) ]]
 }
 
 # resolve <doc> <target>: a relative link target that exists.
@@ -64,10 +64,10 @@ resolve() {
 	target=${target%%#*}
 
 	case "$target" in
-		"" | "." | "..") return 0 ;;
-		http://* | https://* | mailto:* | cid:*) return 0 ;;
-		/*) target=${target#/} ;;
-		*) target=$(dirname "$doc")/$target ;;
+	"" | "." | "..") return 0 ;;
+	http://* | https://* | mailto:* | cid:*) return 0 ;;
+	/*) target=${target#/} ;;
+	*) target=$(dirname "$doc")/$target ;;
 	esac
 
 	[[ -e $target ]]

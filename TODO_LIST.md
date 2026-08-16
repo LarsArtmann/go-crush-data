@@ -25,9 +25,38 @@ renumbered, and deleting an item retires its ID for good.
   `.golangci.yml` (with rationale) is sufficient meanwhile. 30m —
   `sessions.go:56`
 
+## High
+
+- [ ] **T8** Part-level corruption currently drops the *whole message's*
+  parts: one malformed part payload errors DecodeParts, and Messages
+  swallows that error into `nil` Parts with no signal
+  (`messages.go:52-55`). Fall back to `UnknownPart` for the single bad entry
+  and keep the well-formed siblings; expose a strict path for callers who
+  need all-or-nothing. Add a test with one corrupted `tool_call` among valid
+  parts. 45m — `parts.go:123-136`, `messages.go:52-55`
+
+## Medium
+
+- [ ] **T9** Undocumented result caps: `Stats.SessionTitles` and
+  `Stats.ModelBreakdown` silently truncate at 20 rows (`LIMIT 20` in
+  `stats.go:161,322`) but neither field doc in `types.go` mentions a cap.
+  Either document the caps on Stats or make them configurable via
+  StatsFilter. 20m — `types.go:85-114`, `stats.go:153-165,287-324`
+- [ ] **T10** AgentGraph is N+1: one query per node via childSessions
+  (`agents.go:66`). Fine for real graph sizes, but a single recursive-CTE
+  query (or batched children fetch per depth level) removes the round-trip
+  storm on pathological trees; keep the depth cap. 60m — `agents.go`
+
 ## Low
 
 - [ ] **T6** Mine nightly fuzz artifacts for corpus seeds once runs exist.
   ongoing — `.github/workflows/fuzz.yml`
 - [ ] **T7** Pin GitHub action versions via Renovate once the app is
   installed (depends on T1). 10m — `.github/workflows/*.yml`
+
+## Parked (plan-level, tracked in the ecosystem plan — not this repo)
+
+- Upstream PR to cosmtrek/mindwalk for the `sdk/go-crush-data` branch
+  (Stream X T24; needs user go-ahead to push).
+- Link the charmbracelet/crush schema-documentation issue here once filed
+  (Stream X T20).
