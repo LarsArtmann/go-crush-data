@@ -28,6 +28,11 @@ what consumers got; treat it, not `git log`, as the release ledger.
 
 3. The working tree is clean and `master` is pushed.
 
+4. **CI is green on ALL matrix legs on origin** (ubuntu, windows, macos)
+   for the commit you are about to tag. The local gate tests one platform
+   only. v0.2.0 was tagged while CI was still running and its Windows leg
+   is permanently red on that immutable tag — do not repeat that.
+
 ## Procedure
 
 1. Create an **annotated** tag (lightweight tags are invisible to some

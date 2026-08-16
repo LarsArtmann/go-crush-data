@@ -139,6 +139,7 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/LarsArtmann/go-crush-data/releases/tag/v0.1.0

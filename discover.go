@@ -214,12 +214,14 @@ func ParseProjectsOutput(raw []byte) ([]Project, error) {
 // in raw, or raw itself when either delimiter is missing so that the caller
 // reports the original input in its parse error.
 //
-// Limitation: this is a byte-level scan, not a JSON parser. When noise before
-// the payload contains an unpaired '{', the extracted substring starts too
-// early and json.Unmarshal fails — which is the desired outcome (the caller
-// reports the error). Braces inside JSON string values do not confuse the
-// scan because the last '}' in a valid JSON object is always the closing
-// brace, regardless of braces in string values.
+// Limitation: this is a byte-level scan, not a JSON parser. Braces inside
+// JSON string values cannot truncate the scan — the first '{' through the
+// last '}' always spans the whole object — but the converse is NOT safe:
+// noise after the payload that contains a '}' extends the substring past
+// the object, and json.Unmarshal fails on the trailing garbage. That is the
+// desired outcome (the caller reports the error), but it means a payload
+// followed by brace-bearing noise errors instead of parsing; the same holds
+// for noise before the payload with an unpaired '{'.
 func extractJSONObject(raw []byte) []byte {
 	start := bytes.IndexByte(raw, '{')
 

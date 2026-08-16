@@ -42,21 +42,21 @@ at report time.
 
 ## b) PARTIALLY DONE
 
-| Item | What remains |
-|------|--------------|
-| TODO_LIST.md sync | Still shows all 21 C-tasks unchecked; needs the delete-done-items rewrite (was next when interrupted) |
-| AGENTS.md update | New facts not yet recorded (scripts/, 4 new workflows, bench baseline, examples, OpenContext/Todos changes) |
-| Final gate | Gates 1–3 green, but C17–C20 edits (badge, lint config, windows test, docs) came after gate 3 — one final full pass pending |
-| Real-DB smoke test | Not re-run after `Todos`/probe changes (`CRUSH_DATA_REAL_DATA_DIR=./.crush go test -run TestSessionsOnRealDatabase`) |
-| Coverage % | CI enforces ≥85%; exact post-sweep number not re-measured locally |
-| Workflows' first real runs | release/fuzz/bench/flake-update written + actionlint-clean but never executed by GitHub — first observations outstanding (tracked as PARTIALLY_FUNCTIONAL in FEATURES.md) |
+| Item | What remains (then) | Resolution |
+|------|--------------|------------|
+| TODO_LIST.md sync | ~~Still shows all 21 C-tasks unchecked; needs the delete-done-items rewrite~~ | done at `88012fe` (rewritten again after v0.2.0; rebuilt 2026-08-16) |
+| AGENTS.md update | ~~New facts not yet recorded (scripts/, 4 new workflows, bench baseline, examples, OpenContext/Todos changes)~~ | done at `88012fe` |
+| Final gate | ~~Gates 1–3 green, but C17–C20 edits came after gate 3 — one final full pass pending~~ | done at `88012fe` (run twice, green) |
+| Real-DB smoke test | ~~Not re-run after `Todos`/probe changes~~ | done at `88012fe` (PASS, all capabilities, 4 sessions) |
+| Coverage % | ~~CI enforces ≥85%; exact post-sweep number not re-measured locally~~ | done at `88012fe` (87.8%, CI-exact flags) |
+| Workflows' first real runs | ~~release/fuzz/bench/flake-update written but never executed by GitHub~~ | release green on v0.2.0 (`6948933`); bench green on push; fuzz + flake-update first runs still pending (TODO_LIST) |
 
 ## c) NOT STARTED
 
-- v0.2.0 release itself: all API work (OpenContext, Todos, probe strictness) staged under `[Unreleased]`; tag deliberately not cut.
-- Committing/pushing the session's 35-file diff (no user instruction to commit; auto-daemon had not picked it up at report time).
-- Renovate **app installation** on the repo (config validates but does nothing until enabled).
-- Live coverage badge (codecov or artifact-backed) — static badge shipped instead.
+- ~~v0.2.0 release itself: all API work staged under `[Unreleased]`; tag deliberately not cut.~~ done at `6948933` — tag pushed, Release published, `go get` validated
+- ~~Committing/pushing the session's 35-file diff (no user instruction to commit; auto-daemon had not picked it up at report time).~~ done — daemon committed as `9b4d346`, pushed
+- Renovate **app installation** on the repo (config validates but does nothing until enabled). ← still open — TODO_LIST (external)
+- ~~Live coverage badge (codecov or artifact-backed) — static badge shipped instead.~~ **Won't implement — D2 decided: static badge kept; recorded non-decision in ROADMAP.md**
 
 ## d) TOTALLY FUCKED UP (honest ledger)
 
@@ -97,58 +97,58 @@ at report time.
 
 ## f) Up to 50 next things (Pareto-ordered)
 
-| # | Task | Size |
-|---|------|------|
-| 1 | Rewrite TODO_LIST.md (delete done tiers, keep open remainder) | 10m |
-| 2 | Update AGENTS.md (gate command with pipefail, scripts/, workflows, bench baseline, examples, API changes) | 15m |
-| 3 | Final full gate incl. actionlint | 5m |
-| 4 | Real-DB smoke test re-run | 5m |
-| 5 | Measure + record coverage % in FEATURES/README | 5m |
-| 6 | Commit (curated series or daemon) + push — user decision | — |
-| 7 | Cut v0.2.0 per RELEASING.md — user decision | 15m |
-| 8 | Observe release workflow on the v0.2.0 tag; tick RELEASING checklist | 10m |
-| 9 | Observe first nightly fuzz run (03:17 UTC) | 5m |
-| 10 | Observe first bench-trend run; sanity-check the summary render | 5m |
-| 11 | Install/enable Renovate app on the repo | 5m |
-| 12 | Observe first monthly flake-lock PR | 5m |
-| 13 | Pin bench.yml's benchstat version (currently @latest) | 10m |
-| 14 | Release workflow `workflow_dispatch` dry-run support | 10m |
-| 15 | CI: pin golangci-lint via go.mod `tool` directive instead of `go install @v2.12.2` | 15m |
-| 16 | README: mention `OpenContext` + `Todos` raw JSON in Design bullets | 10m |
-| 17 | Examples: `AgentGraph` + `ReadFiles` examples | 20m |
-| 18 | Pin `dedupeProjects` zero-timestamp "sorts last" doc claim with a test | 10m |
-| 19 | Pin `Session(byID)` → `ErrSessionNotFound` if not already covered | 5m |
-| 20 | Pin `ReadFiles` empty-path filtering | 10m |
-| 21 | Pin combined `Day + Limit` filter composition | 10m |
-| 22 | Pin messages legacy-schema NULL substitution (model/provider/finished) | 10m |
-| 23 | WAL concurrency: exercise `Messages` concurrently, not just `Sessions` | 15m |
-| 24 | Document/pin `Models`/`Providers` DISTINCT ordering (undefined today) | 10m |
-| 25 | Stats day filter on legacy schema combo test | 10m |
-| 26 | Benchmarks: add `BenchmarkMessages`, `BenchmarkAgentGraph` to trend | 20m |
-| 27 | CI: add windows + macos matrix legs | 30m |
-| 28 | Fuzz: mine nightly artifacts for corpus seeds | ongoing |
-| 29 | `windowsLocalAppData` on real Windows (matrix leg covers it) | — |
-| 30 | Live coverage badge via codecov/artifact (replaces static) | 30m |
-| 31 | pkg.go.dev re-verification after v0.2.0 crawl | 5m |
-| 32 | CODEOWNERS file | 5m |
-| 33 | SECURITY.md (reporting policy; read-only lib, tiny surface) | 15m |
-| 34 | `DecodeTodos` helper when 2nd consumer appears (ROADMAP idea) | 60m |
-| 35 | Streaming message iterator (ROADMAP idea; needs consumer) | 90m |
-| 36 | Registry watching (ROADMAP idea; needs consumer) | 90m |
-| 37 | CONTRIBUTING: document `go run benchstat@latest` fallback next to nix absence | 5m |
-| 38 | Record in-package examples decision in AGENTS.md conventions | 5m |
-| 39 | `TestSessionsOnRealDatabase`: assert schema capabilities explicitly | 10m |
-| 40 | Add `-count=2` to documented local race command | 2m |
-| 41 | Consider `defaults write`-style darwin global-dir handling audit (upstream parity) | 20m |
-| 42 | `extractJSONObject`: handle brace-inside-string noise edge explicitly (documented limit) | 15m |
-| 43 | Fuzz `loadRegistry` JSON shape (registryFile) | 15m |
-| 44 | CLI-fallback: fake CLI emitting exit-nonzero + partial JSON → error path pin | 10m |
-| 45 | `DiscoverProjects` result ordering pin (sorted by DataDir) | 5m |
-| 46 | LSP restart + diagnostics cleanup (process hygiene) | 5m |
-| 47 | Sweep `//nolint` directives for staleness quarterly | 15m |
-| 48 | gosec G701 taint false positive: upstream minimal repro + issue | 30m |
-| 49 | Evaluate `nix flake update` cadence vs Renovate nix manager overlap | 10m |
-| 50 | Archive this status report once TODO_LIST sync lands | 5m |
+| # | Task | Size | Resolution |
+|---|------|------|------------|
+| 1 | Rewrite TODO_LIST.md (delete done tiers, keep open remainder) | 10m | done at `88012fe` |
+| 2 | Update AGENTS.md (gate command with pipefail, scripts/, workflows, bench baseline, examples, API changes) | 15m | done at `88012fe` |
+| 3 | Final full gate incl. actionlint | 5m | done at `88012fe` (run twice) |
+| 4 | Real-DB smoke test re-run | 5m | done at `88012fe` |
+| 5 | Measure + record coverage % in FEATURES/README | 5m | done at `88012fe` (87.8%) |
+| 6 | Commit (curated series or daemon) + push — user decision | — | done — daemon committed `9b4d346`, pushed |
+| 7 | Cut v0.2.0 per RELEASING.md — user decision | 15m | done at `6948933` |
+| 8 | Observe release workflow on the v0.2.0 tag; tick RELEASING checklist | 10m | done at `6948933` |
+| 9 | Observe first nightly fuzz run (03:17 UTC) | 5m | still open — TODO_LIST (external) |
+| 10 | Observe first bench-trend run; sanity-check the summary render | 5m | done — green on the v0.2.0 push |
+| 11 | Install/enable Renovate app on the repo | 5m | still open — TODO_LIST (external) |
+| 12 | Observe first monthly flake-lock PR | 5m | still open — TODO_LIST (external) |
+| 13 | Pin bench.yml's benchstat version (currently @latest) | 10m | done at `0778b21` (go.mod `tool` directive) |
+| 14 | Release workflow `workflow_dispatch` dry-run support | 10m | done at `0778b21` — triggering it once is still TODO_LIST |
+| 15 | CI: pin golangci-lint via go.mod `tool` directive instead of `go install @v2.12.2` | 15m | done at `0778b21` |
+| 16 | README: mention `OpenContext` + `Todos` raw JSON in Design bullets | 10m | done at `eabdcb1` |
+| 17 | Examples: `AgentGraph` + `ReadFiles` examples | 20m | done at `eabdcb1` |
+| 18 | Pin `dedupeProjects` zero-timestamp "sorts last" doc claim with a test | 10m | done at `770b69d` |
+| 19 | Pin `Session(byID)` → `ErrSessionNotFound` if not already covered | 5m | done — already covered (verified), `770b69d` |
+| 20 | Pin `ReadFiles` empty-path filtering | 10m | done at `770b69d` |
+| 21 | Pin combined `Day + Limit` filter composition | 10m | done at `770b69d` |
+| 22 | Pin messages legacy-schema NULL substitution (model/provider/finished) | 10m | done — already covered (verified), `dd64a2d` |
+| 23 | WAL concurrency: exercise `Messages` concurrently, not just `Sessions` | 15m | done at `0822d70` |
+| 24 | Document/pin `Models`/`Providers` DISTINCT ordering (undefined today) | 10m | done at `770b69d` (ORDER BY added + pinned) |
+| 25 | Stats day filter on legacy schema combo test | 10m | done at `dd64a2d` |
+| 26 | Benchmarks: add `BenchmarkMessages`, `BenchmarkAgentGraph` to trend | 20m | done at `581658b` |
+| 27 | CI: add windows + macos matrix legs | 30m | done at `79c9720` (+ Windows fallout fixes `c3a083b`, `c7482e2`) |
+| 28 | Fuzz: mine nightly artifacts for corpus seeds | ongoing | still open — TODO_LIST (needs first nightly artifacts) |
+| 29 | `windowsLocalAppData` on real Windows (matrix leg covers it) | — | done — matrix leg green at `c7482e2` |
+| 30 | Live coverage badge via codecov/artifact (replaces static) | 30m | **Won't implement — D2 decided: static kept (ROADMAP non-decision)** |
+| 31 | pkg.go.dev re-verification after v0.2.0 crawl | 5m | still open — TODO_LIST |
+| 32 | CODEOWNERS file | 5m | done at `80d1b34` |
+| 33 | SECURITY.md (reporting policy; read-only lib, tiny surface) | 15m | done at `80d1b34` |
+| 34 | `DecodeTodos` helper when 2nd consumer appears (ROADMAP idea) | 60m | NOT-DO — ROADMAP raw idea (needs a 2nd consumer) |
+| 35 | Streaming message iterator (ROADMAP idea; needs consumer) | 90m | NOT-DO — ROADMAP raw idea |
+| 36 | Registry watching (ROADMAP idea; needs consumer) | 90m | NOT-DO — ROADMAP raw idea |
+| 37 | CONTRIBUTING: document `go run benchstat@latest` fallback next to nix absence | 5m | done at `80d1b34` |
+| 38 | Record in-package examples decision in AGENTS.md conventions | 5m | done — AGENTS.md Tooling gotchas ("Examples/tests live in-package") |
+| 39 | `TestSessionsOnRealDatabase`: assert schema capabilities explicitly | 10m | done at `dd64a2d` |
+| 40 | Add `-count=2` to documented local race command | 2m | done at `80d1b34` (AGENTS.md) — CI copy is TODO_LIST |
+| 41 | Consider `defaults write`-style darwin global-dir handling audit (upstream parity) | 20m | done at `f679a90` — matches Crush's conventions, no action |
+| 42 | `extractJSONObject`: handle brace-inside-string noise edge explicitly (documented limit) | 15m | done at `dd64a2d` (edge tests); doc comment corrected 2026-08-16 |
+| 43 | Fuzz `loadRegistry` JSON shape (registryFile) | 15m | done at `0822d70` (`FuzzLoadRegistry`) |
+| 44 | CLI-fallback: fake CLI emitting exit-nonzero + partial JSON → error path pin | 10m | done at `dd64a2d` |
+| 45 | `DiscoverProjects` result ordering pin (sorted by DataDir) | 5m | done at `770b69d` |
+| 46 | LSP restart + diagnostics cleanup (process hygiene) | 5m | done — executed in the 23:04 session |
+| 47 | Sweep `//nolint` directives for staleness quarterly | 15m | done at `f679a90` (13 directives, all rationale'd; recurrence is by habit) |
+| 48 | gosec G701 taint false positive: upstream minimal repro + issue | 30m | still open — TODO_LIST (nolint sufficient meanwhile) |
+| 49 | Evaluate `nix flake update` cadence vs Renovate nix manager overlap | 10m | done at `f679a90` — Renovate nix manager disabled |
+| 50 | Archive this status report once TODO_LIST sync lands | 5m | done — this annotation; file moved to `archived/` 2026-08-16 |
 
 ## g) Questions I cannot figure out myself (max 3)
 
@@ -157,17 +157,25 @@ at report time.
    Cut the tag per RELEASING.md (which also gives the release workflow its
    first real run), or hold for review? Downstream consumers (crush-daily,
    mindwalk) must migrate the `Todos` field either way.
+   → **Resolved: cut** — v0.2.0 tagged, pushed, published (`6948933`).
 2. **Commit policy for this 35-file diff.** Curated commit series by theme
    (infra / bugfix / API / tests / docs) with detailed messages, one
    session commit, or leave it to the auto-commit daemon? And push, or
    local-only?
+   → **Resolved de-facto: the daemon committed and pushed** (`9b4d346`);
+   its message misdescribes the diff — see RELEASING.md/AGENTS.md truth
+   rules added afterwards.
 3. **Coverage badge honesty bar.** The static "≥85% enforced" badge states
    the invariant but shows no live number. Is that acceptable, or do you
    want a real artifact-backed badge (codecov account or a gh-pages JSON
    endpoint maintained by CI)?
+   → **Resolved: static badge kept** (D2); live badge is a recorded
+   non-decision in ROADMAP.md.
 
 ---
 
 *Report generated 2026-08-15 22:44 CEST. Work tree: 35 files changed, all
 uncommitted. All three verification gates that ran were green at their
-point in time.*
+point in time. Fully resolved and archived 2026-08-16 (docs-health audit):
+39 of 50 items shipped, 6 still open live in TODO_LIST.md, 4 closed as
+non-decisions, 1 closed by this archival.*

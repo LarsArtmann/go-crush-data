@@ -21,7 +21,7 @@ nix run .#test        # race test via nix
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard
 ```
 
-Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabase` opens a real crush.db read-only. Re-run it after any change to scan/probe code.
+Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabase` opens a real crush.db read-only. Re-run it after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
 ## Architecture (single root package `crushdata`)
 
@@ -79,17 +79,17 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmark-sessions.txt`
   record verification; they do not substitute for it.
 - **Diff daemon commits before trusting their messages**: parts of this
   history are auto-generated commits whose subjects misdescribe their
-  diffs (example: `9b4d346` says "No library API surface changed" over the
-  breaking `Session.Todos` change). Run `git show <sha>` before repeating
-  any claim taken from a subject line. CHANGELOG.md, not `git log`, is the
-  record of what shipped.
+  diffs (one claims "No library API surface changed" over the breaking
+  `Session.Todos` change). Run `git show <sha>` before repeating any claim
+  taken from a subject line. CHANGELOG.md, not `git log`, is the record of
+  what shipped.
 
 ## Tooling gotchas
 
 - **go.sum and flake.nix vendorHash are coupled**: refreshing dependencies
-  without updating `vendorHash` breaks `nix flake check` (happened in
-  16260fe). After `go get` / `go mod tidy`, update the hash from the
-  mismatch error's "got:" value.
+  without updating `vendorHash` breaks `nix flake check` (has bitten once on
+  a dependency refresh). After `go get` / `go mod tidy`, update the hash
+  from the mismatch error's "got:" value.
 - **`nix flake check` only sees git-tracked files**: untracked `.go` files
   are invisible to the flake's source filter, producing misleading
   "undefined: ..." build errors. Commit new files before judging flake health.
@@ -100,6 +100,14 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmark-sessions.txt`
   covered by a `//nolint:gosec` with rationale (codebase precedent).
 - **benchstat is NOT in nixpkgs**: use
   `go run golang.org/x/perf/cmd/benchstat@latest`.
+- **Windows is a first-class CI leg — tests must not assume POSIX**: fake
+  CLIs written as `/bin/sh` scripts must skip on windows
+  (`runtime.GOOS` guards in `discover_test.go`); Windows paths embedded in
+  JSON need backslash escaping (`quoteJSON` in `example_test.go` — a raw
+  `C:\Users\...` breaks the decoder).
+- **Workflow steps need `defaults.run.shell: bash`**: the windows-latest
+  default is PowerShell, which splits `-flag=file` arguments differently
+  and broke the coverage step once.
 - **Lint per file while writing tests** (`golangci-lint run <file>_test.go`),
   not after a large batch; and never trust `cmd | tail` without `pipefail`.
 

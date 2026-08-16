@@ -62,29 +62,29 @@ tag state is verified; use `mktemp -d` for scratch dirs.
 
 ## 2) Coarse Plan — tasks of 30–100 min (ALL TODOs included)
 
-| ID | Task | Impact | Effort | Tier |
-|----|------|--------|--------|------|
-| C1 | CI: add `nix flake check` job + `go test -shuffle=on` | Prevents silent flake rot | 60m | 1% |
-| C2 | go.sum↔vendorHash drift guard (CI step + script) | Kills known failure class | 45m | 1% |
-| C3 | Verify & harden CLI-fallback stderr parsing | Only suspected live bug | 60m | 1% |
-| C4 | Test sweep A: row paths (FinishedAt, rows.Err, hour guard, zero-table) | Hardens promises | 90m | 4% |
-| C5 | Test sweep B: filter/graph paths (non-UTC stats, depth cap, dedupe tie, fan-out, WAL concurrency) | Hardens promises | 100m | 4% |
-| C6 | Registry/parser pins (`"null"`, chmod-000 fallback) | Edge-case correctness | 40m | 4% |
-| C7 | Release integrity: document ls-remote result, record v0.1.2 decision | Trust | 30m | 4% |
-| C8 | Tag-driven GitHub Release workflow (CHANGELOG → notes) | Release hygiene | 60m | 4% |
-| C9 | Nightly fuzz job + one real 60s local run | Deep robustness | 45m | 20% |
-| C10 | Benchstat trend artifact (baseline + CI compare) | Perf visibility | 50m | 20% |
-| C11 | API: `OpenContext(ctx, dir)` + `Open` delegating + cancel tests | API completeness | 90m | 20% |
-| C12 | API: `Session.Todos` → `json.RawMessage` (+CHANGELOG break note) | Type honesty | 60m | 20% |
-| C13 | Schema-probe strictness (surface probe errors) | Correctness | 100m | 20% |
-| C14 | `example_test.go`: Discover, Messages type-switch, Stats | Docs quality | 60m | 20% |
-| C15 | Docs batch: README tz note in Quick start, CONTRIBUTING parity warning + re-read, link check | Docs quality | 45m | 20% |
-| C16 | FEATURES.md + ROADMAP.md (docs-health BUILD) | Repo navigation | 90m | 20% |
-| C17 | Coverage badge + pkg.go.dev verification | Polish | 30m | 80% |
-| C18 | HTML artifact render validation (2 files) | Artifact integrity | 20m | 80% |
-| C19 | Dependency automation: Renovate config + monthly flake-update workflow | Maintenance | 60m | 80% |
-| C20 | Tidiness: unused-exclusion re-eval, windowsLocalAppData test, exhaustruct audit | Hygiene | 45m | 80% |
-| C21 | Record non-decisions (DOMAIN_LANGUAGE skip, CTE-if-hot) in ROADMAP | Anti-drift | 12m | 80% |
+| ID | Task | Impact | Effort | Tier | Status |
+|----|------|--------|--------|------|--------|
+| C1 | CI: add `nix flake check` job + `go test -shuffle=on` | Prevents silent flake rot | 60m | 1% | done `9b4d346` |
+| C2 | go.sum↔vendorHash drift guard (CI step + script) | Kills known failure class | 45m | 1% | done `9b4d346` |
+| C3 | Verify & harden CLI-fallback stderr parsing | Only suspected live bug | 60m | 1% | done `9b4d346` |
+| C4 | Test sweep A: row paths (FinishedAt, rows.Err, hour guard, zero-table) | Hardens promises | 90m | 4% | done `9b4d346` |
+| C5 | Test sweep B: filter/graph paths (non-UTC stats, depth cap, dedupe tie, fan-out, WAL concurrency) | Hardens promises | 100m | 4% | done `9b4d346` |
+| C6 | Registry/parser pins (`"null"`, chmod-000 fallback) | Edge-case correctness | 40m | 4% | done `9b4d346` |
+| C7 | Release integrity: document ls-remote result, record v0.1.2 decision | Trust | 30m | 4% | done `9b4d346` |
+| C8 | Tag-driven GitHub Release workflow (CHANGELOG → notes) | Release hygiene | 60m | 4% | done `9b4d346`; first real run green on v0.2.0 (`6948933`) |
+| C9 | Nightly fuzz job + one real 60s local run | Deep robustness | 45m | 20% | done `9b4d346` (12.2M execs, 0 crashers) |
+| C10 | Benchstat trend artifact (baseline + CI compare) | Perf visibility | 50m | 20% | done `9b4d346` |
+| C11 | API: `OpenContext(ctx, dir)` + `Open` delegating + cancel tests | API completeness | 90m | 20% | done `9b4d346` |
+| C12 | API: `Session.Todos` → `json.RawMessage` (+CHANGELOG break note) | Type honesty | 60m | 20% | done `9b4d346` |
+| C13 | Schema-probe strictness (surface probe errors) | Correctness | 100m | 20% | done `9b4d346` |
+| C14 | `example_test.go`: Discover, Messages type-switch, Stats | Docs quality | 60m | 20% | done `9b4d346` (+2 more at `eabdcb1`) |
+| C15 | Docs batch: README tz note in Quick start, CONTRIBUTING parity warning + re-read, link check | Docs quality | 45m | 20% | done `9b4d346` |
+| C16 | FEATURES.md + ROADMAP.md (docs-health BUILD) | Repo navigation | 90m | 20% | done `9b4d346` |
+| C17 | Coverage badge + pkg.go.dev verification | Polish | 30m | 80% | done `9b4d346` (static badge; v0.1.1 verified) |
+| C18 | HTML artifact render validation (2 files) | Artifact integrity | 20m | 80% | done `9b4d346` |
+| C19 | Dependency automation: Renovate config + monthly flake-update workflow | Maintenance | 60m | 80% | done `9b4d346` (app install still external — TODO_LIST) |
+| C20 | Tidiness: unused-exclusion re-eval, windowsLocalAppData test, exhaustruct audit | Hygiene | 45m | 80% | done `9b4d346` |
+| C21 | Record non-decisions (DOMAIN_LANGUAGE skip, CTE-if-hot) in ROADMAP | Anti-drift | 12m | 80% | done `9b4d346` |
 
 Sorted by importance/impact: C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 →
 C11 → C13 → C12 → C14 → C9 → C10 → C15 → C16 → C19 → C17 → C20 → C18 → C21.
@@ -168,6 +168,12 @@ Execution order within each tier follows the coarse ordering; F-tasks of
 one C-task complete before the next C-task starts (except C1/C2 which can
 interleave — independent files).
 
+**Resolution (2026-08-16):** every F-task landed with its parent C-task in
+the single `9b4d346` batch — with two exceptions: F26 (release workflow
+verified on a real release: v0.2.0, `6948933`) and F56 (pkg.go.dev verified
+for v0.1.1 then; the v0.2.0 re-check is still open in TODO_LIST.md). F55
+resolved as the static badge (live badge is a recorded non-decision).
+
 ---
 
 ## 4) Execution Graph
@@ -231,4 +237,6 @@ flowchart TD
 - No new dependencies; no DTO layers; no config surface for a read-only library.
 - No DOMAIN_LANGUAGE.md at this size — decision recorded in ROADMAP instead.
 
-*Snapshot generated 2026-08-15 22:00. Living tasks: TODO_LIST.md.*
+*Snapshot generated 2026-08-15 22:00. Living tasks: TODO_LIST.md. Fully
+executed (all C1–C21 + F1–F65 closed — see Status column and the F-table
+resolution note); archived 2026-08-16 by the docs-health audit.*

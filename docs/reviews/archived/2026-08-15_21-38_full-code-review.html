@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>Full Code Review — go-crush-data (2026-08-15)</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -1036,7 +1036,7 @@
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Ticketed</span>
+          <span class="severity severity-nice">Ticketed → Resolved</span>
           <h3>Open cannot be cancelled</h3>
           <div class="where">db.go:48 &middot; TODO_LIST</div>
           <p>
@@ -1045,10 +1045,11 @@
             this harmless today; a future <code>OpenContext</code> would let
             callers bound startup on slow filesystems (NFS).
           </p>
+          <p><strong>Resolved:</strong> <code>OpenContext(ctx, dir)</code> shipped in v0.2.0 (`9b4d346`); <code>Open</code> delegates with <code>context.Background</code>.</p>
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Ticketed</span>
+          <span class="severity severity-nice">Ticketed → Non-decision</span>
           <h3>AgentGraph is N+1</h3>
           <div class="where">agents.go &middot; TODO_LIST</div>
           <p>
@@ -1056,10 +1057,11 @@
             fan-out), and the recursion buys the depth guard; a recursive CTE
             is the escalation path if a consumer ever reports it hot.
           </p>
+          <p><strong>Resolved:</strong> recorded non-decision in ROADMAP.md — rewrite only if a consumer profiles it hot.</p>
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Ticketed</span>
+          <span class="severity severity-nice">Ticketed → Resolved</span>
           <h3>Session.Todos is an untyped JSON string</h3>
           <div class="where">types.go:33 &middot; TODO_LIST</div>
           <p>
@@ -1068,10 +1070,11 @@
             data&rdquo; explicit at the type level &mdash; a breaking-ish
             change to bundle with the next minor.
           </p>
+          <p><strong>Resolved:</strong> <code>json.RawMessage</code> shipped as a breaking change in v0.2.0 (`9b4d346`).</p>
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Ticketed</span>
+          <span class="severity severity-nice">Ticketed → Resolved</span>
           <h3>Capability probe cannot distinguish missing from broken</h3>
           <div class="where">schema.go:97-127 &middot; TODO_LIST</div>
           <p>
@@ -1080,6 +1083,7 @@
             schema and reads degrade silently. An acceptable tolerant-reader
             tradeoff, but worth a strictness decision later.
           </p>
+          <p><strong>Resolved:</strong> probes surface errors strictly since v0.2.0 (`9b4d346`); <code>ErrUnsupportedSchema</code> is reserved for readable pre-table schemas.</p>
         </div>
 
         <h2 id="table"><span class="num">03</span>Issue table</h2>
@@ -1149,7 +1153,7 @@
               <td>db.go</td>
               <td>48</td>
               <td>Open has no ctx</td>
-              <td><span class="badge badge-low">Ticketed</span></td>
+              <td><span class="badge badge-fixed">Resolved v0.2.0</span></td>
             </tr>
             <tr>
               <td>8</td>
@@ -1157,7 +1161,7 @@
               <td>agents.go</td>
               <td>&mdash;</td>
               <td>N+1 traversal</td>
-              <td><span class="badge badge-low">Ticketed</span></td>
+              <td><span class="badge badge-low">Non-decision</span></td>
             </tr>
             <tr>
               <td>9</td>
@@ -1165,7 +1169,7 @@
               <td>types.go</td>
               <td>33</td>
               <td>Todos untyped JSON string</td>
-              <td><span class="badge badge-low">Ticketed</span></td>
+              <td><span class="badge badge-fixed">Resolved v0.2.0</span></td>
             </tr>
             <tr>
               <td>10</td>
@@ -1173,7 +1177,7 @@
               <td>schema.go</td>
               <td>97&ndash;127</td>
               <td>Probe conflates missing/broken</td>
-              <td><span class="badge badge-low">Ticketed</span></td>
+              <td><span class="badge badge-fixed">Resolved v0.2.0</span></td>
             </tr>
           </tbody>
         </table>
@@ -1285,3 +1289,10 @@
     </script>
   </body>
 </html>
+<!--
+RESOLUTION (2026-08-16, docs-health audit)
+All findings closed: 6 fixed on the spot (landed as 74dd031, released v0.1.1);
+3 of 4 ticketed items shipped in v0.2.0 (OpenContext, Todos json.RawMessage,
+strict probes — 9b4d346); AgentGraph N+1 is a recorded non-decision
+(ROADMAP.md). This snapshot was archived to docs/reviews/archived/.
+-->

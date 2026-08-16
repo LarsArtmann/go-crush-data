@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>Pareto Execution Plan — Full Code Review, go-crush-data (2026-08-15)</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -966,6 +966,7 @@
               <th>Task</th>
               <th>Impact</th>
               <th>Effort</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -975,6 +976,7 @@
               <td>Reorder <code>SessionFilter.args()</code> to ByID, Day, ParentID; update the ByID doc (filters compose)</td>
               <td>Correctness</td>
               <td>15 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>2</td>
@@ -982,6 +984,7 @@
               <td>Query children with <code>ORDER BY created_at ASC, id ASC</code>; delete <code>reverseByCreated</code></td>
               <td>Correctness</td>
               <td>15 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>3</td>
@@ -989,6 +992,7 @@
               <td>Rewrite the <code>doc.go</code> Timestamps section to match tested day-filter semantics</td>
               <td>Trust</td>
               <td>10 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>4</td>
@@ -996,6 +1000,7 @@
               <td>Delete unused <code>fixtureDB</code> + <code>insertLegacySession</code>; drop redundant <code>project.DataDir = dataDir</code></td>
               <td>Hygiene</td>
               <td>10 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>5</td>
@@ -1003,6 +1008,7 @@
               <td>Add regression tests: ByID+Day, ByID+ParentID, children-by-created_at</td>
               <td>Lock-in</td>
               <td>20 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>6</td>
@@ -1010,6 +1016,7 @@
               <td>Create <code>TODO_LIST.md</code> with unfixed findings</td>
               <td>Continuity</td>
               <td>10 min</td>
+              <td>done `74dd031`</td>
             </tr>
             <tr>
               <td>7</td>
@@ -1017,6 +1024,7 @@
               <td>Write HTML review report + this plan</td>
               <td>Record</td>
               <td>30 min</td>
+              <td>done `bcc0a50`</td>
             </tr>
           </tbody>
         </table>
@@ -1178,3 +1186,10 @@
     </script>
   </body>
 </html>
+<!--
+RESOLUTION (2026-08-16, docs-health audit)
+All 7 tasks executed (mostly in 74dd031, released as v0.1.1); the two
+review bugs became regression pins, and every follow-up the review surfaced
+was executed later that night (C1-C21) and shipped in v0.2.0. Archived to
+docs/planning/archived/.
+-->

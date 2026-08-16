@@ -1,129 +1,64 @@
 # TODO List
 
-Short- and mid-term improvement tasks. Rewritten 2026-08-15 after the
-consolidated roadmap execution (C1–C21, all tiers done and gate-verified —
-see CHANGELOG `[0.2.0]` and
-`docs/status/2026-08-15_22-44_roadmap-t1-t4-execution-status.md`).
-v0.2.0 shipped 2026-08-16 — see CHANGELOG and the Pareto plan at
-`docs/planning/2026-08-15_23-09_pareto-v0.2.0-ship-and-harden.md`.
+Short- and mid-term improvement tasks, ranked by impact. Completed items are
+deleted from this file — their record lives in [CHANGELOG.md](CHANGELOG.md).
+Long-term ideas live in [ROADMAP.md](ROADMAP.md).
 
-## Pending (external dependencies)
+## Pending user decisions
 
-- [ ] Install/enable the Renovate app on the repo (config validates; inert
-  until enabled via GitHub App UI). 5m
-- [ ] Observe first nightly fuzz run (03:17 UTC). 5m
-- [ ] Observe first monthly flake-lock PR. 5m
-- [ ] Fuzz: mine nightly artifacts for corpus seeds. ongoing
-- [ ] gosec G701 taint false positive: upstream minimal repro + issue. 30m
-  (nolint is sufficient; upstream repro deferred to a separate session)
+- [ ] **Cut v0.2.1** to put the Windows test-suite fixes on a tagged version.
+  The v0.2.0 tag is immutable and its Windows CI leg is red (test code only —
+  `quoteJSON` escaping and `/bin/sh`-based fake CLIs; library code is
+  correct). Master is green since `c7482e2`/`c3a083b`. When cut, fold an
+  errata note about v0.2.0's Windows tests into the `[0.2.1]` section.
+  Requires tag push approval. 30m — `docs/status/2026-08-16_00-40_*.md` (g/1)
 
-## Done
+## External (waiting on GitHub UI, schedules, or upstream)
 
-All items from the v0.2.0 Pareto plan (M1–M13, 60 micro tasks) were
-executed and gate-verified on 2026-08-16.
+- [ ] Install/enable the Renovate app (config validates; inert until the
+  GitHub App is installed). 5m — `renovate.json`
+- [ ] Require green CI status checks on master (branch is currently
+  unprotected — verified via the branches API). 5m — GitHub settings
+- [ ] Observe the first nightly fuzz run (03:17 UTC); on green, flip the
+  FEATURES row to FULLY_FUNCTIONAL. 5m — `.github/workflows/fuzz.yml`
+- [ ] Observe the first monthly flake-lock PR; check the vendorHash guard
+  fires correctly on a stale hash. 5m — `.github/workflows/flake-update.yml`
+- [ ] Verify pkg.go.dev crawled v0.2.0 (page still rendered v0.1.1 docs at
+  last check); spot-check `OpenContext`/`Todos`. 5m — pkg.go.dev
+- [ ] gosec G701 taint false positive: minimal upstream repro + issue
+  (verify-before-filing workflow). The `//nolint:gosec` with rationale is
+  sufficient meanwhile. 30m — `sessions.go`
 
-### v0.2.0 release (M1)
+## High — Windows & parser correctness
 
-- [x] Cut v0.2.0: CHANGELOG section, annotated tag, push, release workflow
-  green, GitHub Release published, module proxy serving, clean `go get`
-  validated. 2026-08-16.
+- [ ] Add a `TestParseProjectsOutput` case: `}` in noise AFTER the JSON
+  payload (extraction grabs too much → decode error path). The comment in
+  `discover.go` now documents this limitation; pin it. 10m —
+  `discover_test.go` (table at :380)
+- [ ] Add `TestQuoteJSON` — pin backslash escaping as the regression guard
+  for the Windows example fix. 10m — `example_test.go:84`
+- [ ] Cross-platform fakeCLI: compile a tiny Go helper (or use
+  `os.Executable`) instead of `/bin/sh` scripts so CLI fallback tests RUN on
+  Windows instead of skipping. 45m — `discover_test.go:202`, `:341`
+- [ ] Audit remaining tests for platform assumptions (`/bin/sh`, chmod,
+  unescaped Windows paths). 20m — `*_test.go`
 
-### Truth & safety (M4)
+## Medium — CI depth
 
-- [x] Add `.crush/` to the repo `.gitignore`. 2m
-- [x] RELEASING.md: daemon-commit unreliability note (CHANGELOG = truth). 5m
-- [x] AGENTS.md: verify-then-annotate + diff-daemon-commits rules. 5m
-- [x] CHANGELOG policy: doc-only changes not changelogged. 5m
-- [x] CI: upload `go tool cover -html` artifact. 10m
-- [x] Audit daemon commit messages vs diffs (2427223 clean, 9b4d346
-  already flagged). 15m
+- [ ] Add `-count=2` to the CI test command (documented for local use only
+  today). 2m — `.github/workflows/ci.yml:48`
+- [ ] Add a `go mod verify` CI step (module cache vs go.sum). 5m —
+  `.github/workflows/ci.yml`
+- [ ] Trigger the release workflow's `dry_run` input once to exercise the
+  notes-extraction path (support shipped, never triggered). 5m —
+  `.github/workflows/release.yml:11`
 
-### Automation enablement (M3)
+## Low
 
-- [x] Pin benchstat via go.mod `tool` directive (drop `@latest`). 10m
-- [x] Pin golangci-lint via go.mod `tool` directive (drop `go install
-  @v2.12.2`). 12m
-- [x] Release workflow `workflow_dispatch` dry-run support. 10m
-- [ ] Renovate app install (external — needs GitHub App UI). 5m
-
-### Test pins (M5, M6)
-
-- [x] Pin `Day + Limit` filter composition. 10m
-- [x] Pin `dedupeProjects` zero-timestamp "sorts last" claim. 10m
-- [x] Pin `DiscoverProjects` result ordering (sorted by DataDir). 5m
-- [x] Pin `ReadFiles` empty-path filtering. 10m
-- [x] Document + pin `Models`/`Providers` DISTINCT ordering (added ORDER BY). 10m
-- [x] Pin `Session(byID)` → `ErrSessionNotFound` (already covered). 5m
-- [x] Pin messages legacy-schema NULL substitution (already covered). 10m
-- [x] Stats day filter on legacy schema combo test. 10m
-- [x] `TestSessionsOnRealDatabase`: assert schema capabilities explicitly. 10m
-- [x] CLI-fallback: exit-nonzero + partial JSON → error-path pin. 10m
-- [x] `extractJSONObject`: brace-inside-string edge cases documented + tested. 15m
-
-### Concurrency + fuzz (M7)
-
-- [x] WAL concurrency test for `Messages`. 12m
-- [x] Fuzz target: `loadRegistry` JSON shape. 12m
-- [ ] Corpus mining pass (deferred — no nightly artifacts yet). ongoing
-
-### Examples + README (M8)
-
-- [x] README Design bullets: `OpenContext` + `Todos` raw JSON. 10m
-- [x] `ExampleAgentGraph` with `// Output:` block. 20m
-- [x] `ExampleReadFiles` with `// Output:` block. 15m
-
-### CI matrix (M9)
-
-- [x] Add windows-latest + macos-latest matrix legs. 25m
-- [x] Platform fallout fixes (shell: bash for awk, vendor guard ubuntu-only). 15m
-- [x] Bench workflow observed green on push. 5m
-- [ ] Observe matrix runs green on origin (in progress at time of writing). 5m
-
-### Benchmarks (M10)
-
-- [x] Add `BenchmarkMessages`. 15m
-- [x] Add `BenchmarkAgentGraph`. 15m
-- [x] Regenerate baseline with all three benchmarks. 5m
-
-### Hygiene pack (M11)
-
-- [x] CODEOWNERS file. 5m
-- [x] SECURITY.md (reporting policy). 12m
-- [x] CONTRIBUTING: benchstat fallback note. 5m
-- [x] AGENTS.md: `-count=2` on local race command. 2m
-
-### Coverage visibility (M12)
-
-- [x] CI: upload `cover -html` artifact. 10m
-- [x] D2 decision: static badge kept (live badge not worth the dependency). 0m
-
-### Deep audits (M13)
-
-- [x] Daemon commit audit (no new misdescriptions). 15m
-- [x] gosec G701: nolint still needed; upstream repro deferred. 12m
-- [x] `//nolint` sweep: 13 directives, all with rationales, none stale. 12m
-- [x] nix vs Renovate overlap: disabled Renovate nix manager. 10m
-- [x] Darwin global-dir audit: matches Crush's XDG conventions; no action. 10m
-
-### Prior sessions
-
-- [x] Consolidated roadmap C1–C21 (all four tiers), gates 1–3 + final gate
-  green — 2026-08-15.
-- [x] TODO_LIST sync, AGENTS.md update, final gate re-run, real-DB smoke
-  test, coverage measurement — 2026-08-15 (closure pass).
-- [x] Fix `SessionFilter` condition/argument order drift (`sessions.go`) —
-  fixed 2026-08-15; regression test `TestSessionsByIDComposesWithOtherFilters`.
-- [x] Fix `AgentGraph` sibling ordering to follow `created_at`, not reversed
-  `updated_at` (`agents.go`) — fixed 2026-08-15; regression test
-  `TestAgentGraphSiblingsOrderedByCreatedNotUpdated`.
-- [x] Align `doc.go` day-filter documentation with the tested semantics —
-  fixed 2026-08-15.
-- [x] Delete dead test helpers `fixtureDB`, `insertLegacySession` — done
-  2026-08-15.
-- [x] README/AGENTS audit fixes (timezone semantics, `nix run .#lint`,
-  Windows path, tooling gotchas) — done 2026-08-15.
-- [x] Verify remote tag integrity (origin v0.1.1 = 74dd031, no retag) —
-  done 2026-08-15 22:00.
-
-(Raw ideas — `DecodeTodos`, streaming iterator, registry watching — live in
-ROADMAP.md, not here.)
+- [ ] Reuse `fakeCLI` in `TestDiscoverProjectsCLIExitNonzeroWithPartialJSON`
+  instead of hand-rolling a second script (DRY; inherits the Windows skip).
+  10m — `discover_test.go:341`
+- [ ] Mine nightly fuzz artifacts for corpus seeds once runs exist. ongoing —
+  `.github/workflows/fuzz.yml`
+- [ ] Pin GitHub action versions via Renovate once the app is installed
+  (depends on the external item above). 10m — `.github/workflows/*.yml`

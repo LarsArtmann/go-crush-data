@@ -6,16 +6,16 @@ pass — update rows in place when status changes.
 
 | Status | Feature | Evidence |
 |---|---|---|
-| FULLY_FUNCTIONAL | Project discovery from the projects.json registry, deduplicated to one project per data directory (newest access wins, ties keep the first entry) | `discover.go:109` `dedupeProjects` |
-| FULLY_FUNCTIONAL | `crush projects --json` CLI fallback; tolerates log noise around the JSON payload | `discover.go:164` `queryProjectsCLI`, `discover.go:215` `extractJSONObject` |
-| FULLY_FUNCTIONAL | `ParseProjectsOutput` — public parser for raw CLI output | `discover.go:190` |
+| FULLY_FUNCTIONAL | Project discovery from the projects.json registry, deduplicated to one project per data directory (newest access wins, ties keep the first entry) | `discover.go:237` `dedupeProjects` |
+| FULLY_FUNCTIONAL | `crush projects --json` CLI fallback; tolerates log noise around the JSON payload | `discover.go:165` `queryProjectsCLI`, `discover.go:223` `extractJSONObject` |
+| FULLY_FUNCTIONAL | `ParseProjectsOutput` — public parser for raw CLI output | `discover.go:191` |
 | FULLY_FUNCTIONAL | Read-only open (`mode=ro`, single connection, `_txlock=immediate`); byte-identical after reads | `db.go:108` `openSQLite`, `db_test.go` `TestOpenIsReadOnly` |
 | FULLY_FUNCTIONAL | `OpenContext` — open with a caller context bounding the schema probes | `db.go:58` |
 | FULLY_FUNCTIONAL | Schema capability probing (cost, parent_session_id, model, provider, finished_at, read_files) with strict error surfacing | `schema.go:82` `probeSchema` |
 | FULLY_FUNCTIONAL | `Schema.MissingColumns` — user-facing drift warning list | `schema.go:44` |
 | FULLY_FUNCTIONAL | Session listing with filters: ByID, Day (filter-location semantics), ParentID, RootOnly, Limit | `sessions.go:45` |
 | FULLY_FUNCTIONAL | Session fetch by ID (`ErrSessionNotFound`) | `sessions.go:66` |
-| FULLY_FUNCTIONAL | `Session.Todos` as raw JSON (`json.RawMessage`, nil for NULL) | `types.go:38`, `sessions.go:187` |
+| FULLY_FUNCTIONAL | `Session.Todos` as raw JSON (`json.RawMessage`, nil for NULL) | `types.go:39`, `sessions.go:187` |
 | FULLY_FUNCTIONAL | Message listing ordered by `created_at, id` | `messages.go:18` |
 | FULLY_FUNCTIONAL | Tolerant parts decoding: malformed rows yield nil Parts instead of failing the read | `messages.go:52` |
 | FULLY_FUNCTIONAL | Sealed `Part` set: Text, Reasoning, ToolCall, ToolResult, Finish, ShellCommand, Unknown (forward-compatible passthrough) | `parts.go:9`–`78` |
@@ -25,7 +25,7 @@ pass — update rows in place when status changes.
 | FULLY_FUNCTIONAL | Day activity stats with the crush-daily parity contract (`TestStatsParityWithCrushDailySQL`) | `stats.go:28` |
 | FULLY_FUNCTIONAL | Models/Providers in Stats sorted ascending (ORDER BY on DISTINCT query) | `stats.go:121` |
 | FULLY_FUNCTIONAL | Per-model breakdown with session-level double-count protection CTE | `stats.go:249` |
-| FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos | `.github/workflows/ci.yml` |
+| FULLY_FUNCTIONAL | CI matrix: ubuntu, windows, macos — green on master since the Windows fixes; the immutable v0.2.0 tag predates them (TODO_LIST: cut v0.2.1) | `.github/workflows/ci.yml` |
 | FULLY_FUNCTIONAL | CI: vet/build/race/shuffle/coverage gate (≥85%), golangci-lint, govulncheck | `.github/workflows/ci.yml`; local measure 2026-08-15: 87.8% statements |
 | FULLY_FUNCTIONAL | CI: `nix flake check` job (vendorHash freshness, format) | `.github/workflows/ci.yml` `flake` job |
 | FULLY_FUNCTIONAL | go.sum ↔ vendorHash drift guard with tamper-proven failure mode | `scripts/check-vendor-hash.sh` |

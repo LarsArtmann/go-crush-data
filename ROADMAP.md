@@ -10,14 +10,6 @@ data. The roadmap optimizes for: correctness under schema drift, zero
 friction for downstream consumers (crush-daily, mindwalk), and boring
 infrastructure that fails loudly before shipping.
 
-## v0.2.0 (next minor)
-
-The API bundle already staged under `[Unreleased]` in the CHANGELOG:
-
-- `OpenContext` — context-bounded opens. Shipped, pending release.
-- `Session.Todos` as `json.RawMessage` — shipped, breaking, pending release.
-- Strict schema-probe errors — shipped, pending release.
-
 ## Raw ideas (not yet actionable)
 
 - **Typed Todos decoding helper** — a best-effort `DecodeTodos` mirroring
@@ -27,7 +19,6 @@ The API bundle already staged under `[Unreleased]` in the CHANGELOG:
   over messages for huge sessions, if a consumer materializes one.
 - **Registry watching** — fsnotify on projects.json for live dashboards.
   Needs a consumer first; read-only polling is fine today.
-- **Coverage badge** — once CI publishes a coverage artifact (see TODO_LIST).
 
 ## Recorded non-decisions (anti-drift)
 
@@ -48,3 +39,7 @@ new information.
   zero-CGO reader. modernc.org/sqlite is the only allowed weight.
 - **No config surface.** It is a read-only library; options structs cover
   legitimate variation without env vars or files.
+- **No live coverage badge.** The static "≥85% enforced" badge states the
+  invariant; CI uploads the exact HTML report as an artifact for anyone who
+  wants the number. A live badge would add an account/endpoint dependency
+  for zero enforcement value.
