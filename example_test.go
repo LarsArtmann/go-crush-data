@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -66,7 +65,7 @@ func setupExampleData() string {
 	globalDir := filepath.Join(root, "global")
 	registry := `{"projects":[{` +
 		`"path":"/home/me/project",` +
-		`"data_dir":` + quoteJSON(dataDir) + `,` +
+		`"data_dir":` + jsonString(dataDir) + `,` +
 		`"last_accessed":"2026-08-04T12:00:00Z"}]}`
 
 	if err := os.MkdirAll(globalDir, 0o750); err != nil {
@@ -80,16 +79,11 @@ func setupExampleData() string {
 	return globalDir
 }
 
-// quoteJSON renders s as a JSON string literal, escaping backslashes
-// (Windows paths contain them).
-func quoteJSON(s string) string {
-	return `"` + strings.ReplaceAll(s, `\`, `\\`) + `"`
-}
-
-// TestQuoteJSON pins the helper's backslash escaping: a Windows data dir
-// must render as a valid JSON string, or every registry fixture built with
-// one becomes unparseable (the bug class that broke the v0.2.0 Windows leg).
-func TestQuoteJSON(t *testing.T) {
+// TestJSONString pins the fixture helper's backslash escaping: a Windows
+// data dir must render as a valid JSON string, or every registry fixture
+// built with one becomes unparseable (the bug class that broke the v0.2.0
+// Windows leg).
+func TestJSONString(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct{ in, want string }{
@@ -99,8 +93,8 @@ func TestQuoteJSON(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		if got := quoteJSON(tt.in); got != tt.want {
-			t.Errorf("quoteJSON(%q) = %s, want %s", tt.in, got, tt.want)
+		if got := jsonString(tt.in); got != tt.want {
+			t.Errorf("jsonString(%q) = %s, want %s", tt.in, got, tt.want)
 		}
 	}
 }
@@ -299,7 +293,7 @@ func setupExampleDataCurrent() string {
 	globalDir := filepath.Join(root, "global")
 	registry := `{"projects":[{` +
 		`"path":"/home/me/project",` +
-		`"data_dir":` + quoteJSON(dataDir) + `,` +
+		`"data_dir":` + jsonString(dataDir) + `,` +
 		`"last_accessed":"2026-08-04T12:00:00Z"}]}`
 
 	if err := os.MkdirAll(globalDir, 0o750); err != nil {

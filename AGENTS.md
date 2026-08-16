@@ -100,11 +100,14 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmark-sessions.txt`
   covered by a `//nolint:gosec` with rationale (codebase precedent).
 - **benchstat is NOT in nixpkgs**: use
   `go run golang.org/x/perf/cmd/benchstat@latest`.
-- **Windows is a first-class CI leg — tests must not assume POSIX**: fake
-  CLIs written as `/bin/sh` scripts must skip on windows
-  (`runtime.GOOS` guards in `discover_test.go`); Windows paths embedded in
-  JSON need backslash escaping (`quoteJSON` in `example_test.go` — a raw
-  `C:\Users\...` breaks the decoder).
+- **Windows is a first-class CI leg — tests must not assume POSIX**:
+  fake CLIs re-exec the test binary via `TestMain` + env vars
+  (`fakeCLI` in `discover_test.go` — never a `/bin/sh` script, which would
+  force a Windows skip and hide real breakage, the v0.2.0 lesson); Windows
+  paths embedded in JSON need backslash escaping (`jsonString` — a raw
+  `C:\Users\...` breaks the decoder; pinned by `TestJSONString`); premises
+  that only hold on POSIX (chmod-000 unreadability) need an explicit
+  `runtime.GOOS` guard with the reason, not a silent skip.
 - **Workflow steps need `defaults.run.shell: bash`**: the windows-latest
   default is PowerShell, which splits `-flag=file` arguments differently
   and broke the coverage step once.

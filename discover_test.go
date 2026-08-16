@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -61,8 +62,9 @@ func TestDiscoverProjectsRegistryFirst(t *testing.T) {
 	}
 }
 
-// jsonString quotes s as a JSON string with escaped backslashes (Windows-ish
-// paths appear on all platforms in tests).
+// jsonString quotes s as a JSON string with escaped backslashes, so temp-dir
+// paths embed correctly in registry/CLI fixtures on every platform (Windows
+// paths contain raw backslashes). Pinned by TestJSONString.
 func jsonString(s string) string {
 	return `"` + strings.ReplaceAll(s, `\`, `\\`) + `"`
 }
@@ -304,9 +306,14 @@ func TestDiscoverProjectsCLIFallbackToleratesLogNoise(t *testing.T) { //nolint:p
 
 // TestDiscoverProjectsUnreadableRegistryFallsBackToCLI pins the fallback
 // trigger: a registry that exists but cannot be read (permissions) falls
-// through to the CLI exactly like a missing one. Skipped when running as
-// root, which reads chmod-000 files regardless.
+// through to the CLI exactly like a missing one. POSIX-only by premise:
+// chmod-000 makes a file unreadable on unix systems, while Windows ignores
+// file modes for reads, and root reads chmod-000 files regardless.
 func TestDiscoverProjectsUnreadableRegistryFallsBackToCLI(t *testing.T) { //nolint:paralleltest // t.Setenv
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-000 unreadability is a POSIX premise; Windows ignores file modes for reads")
+	}
+
 	if os.Geteuid() == 0 {
 		t.Skip("running as root: chmod-000 files are still readable")
 	}
