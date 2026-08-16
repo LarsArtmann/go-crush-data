@@ -115,6 +115,11 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
   and broke the coverage step once.
 - **Lint per file while writing tests** (`golangci-lint run <file>_test.go`),
   not after a large batch; and never trust `cmd | tail` without `pipefail`.
+- **gosec suppressions live in `.golangci.yml` exclusions, never line
+  nolints**: gosec's taint findings fire non-deterministically on the
+  windows runner, and a sleeping finding turns its `//nolint:gosec`
+  "unused" (nolintlint → red leg). Config-level file+rule-ID exclusions
+  are platform-stable; keep the rationale as a plain comment at the site.
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 
