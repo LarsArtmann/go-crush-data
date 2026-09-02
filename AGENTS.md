@@ -27,18 +27,18 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 
 ## Architecture (single root package `crushdata`)
 
-| File | Role |
-|---|---|
-| discover.go | projects.json registry + `crush projects --json` CLI fallback (stderr capture) + dedupe (many paths → one data_dir) |
-| db.go | read-only open (`mode=ro&_txlock=immediate`, 1 conn) + ErrDatabaseNotFound/ErrUnsupportedSchema |
-| schema.go | capability probing via pragma_table_info — THE drift defense |
-| sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL |
-| parts.go | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart) |
-| rows.go | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses |
+| File        | Role                                                                                                                                                                                                              |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| discover.go | projects.json registry + `crush projects --json` CLI fallback (stderr capture) + dedupe (many paths → one data_dir)                                                                                               |
+| db.go       | read-only open (`mode=ro&_txlock=immediate`, 1 conn) + ErrDatabaseNotFound/ErrUnsupportedSchema                                                                                                                   |
+| schema.go   | capability probing via pragma_table_info — THE drift defense                                                                                                                                                      |
+| sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL                                                                                                                                  |
+| parts.go    | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart)                                                   |
+| rows.go     | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses                                                                             |
 | messages.go | Messages(sessionID) ordered `created_at, id`; tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; ReadFiles |
-| agents.go | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column |
-| stats.go | day aggregates; model-breakdown CTE has the double-count trap — see comment there |
-| todos.go | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census |
+| agents.go   | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column                                     |
+| stats.go    | day aggregates; model-breakdown CTE has the double-count trap — see comment there                                                                                                                                 |
+| todos.go    | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census                                                                                                                 |
 
 Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
 `.github/workflows/` (ci, release, fuzz, bench, flake-update — all

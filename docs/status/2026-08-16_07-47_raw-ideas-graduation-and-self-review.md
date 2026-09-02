@@ -10,7 +10,7 @@ run. Format note: Markdown per explicit user request (skill default is HTML).
 ## a) FULLY DONE
 
 Verifiably complete; evidence cited. (Note: nothing this session is
-*committed* yet — code work that is done-but-uncommitted sits in (b) by the
+_committed_ yet — code work that is done-but-uncommitted sits in (b) by the
 "committed, tested, working" rule. These items are complete as one-shot
 verifications or checks.)
 
@@ -98,7 +98,7 @@ honest failures are process failures:
    large structural edit as find/replace instead of one precise edit.
 2. **goconst detour: ~6 wasted round trips.** The linter's first message
    literally said "make it a constant"; I instead ran comment-rewording
-   archaeology, including a botched sed experiment that *disproved* my
+   archaeology, including a botched sed experiment that _disproved_ my
    comment-counting theory while lint still reported 3 occurrences — and
    I never established the real counting mechanism. The final fix was the
    mechanical constant I could have applied first. Time burned, zero
@@ -142,29 +142,29 @@ honest failures are process failures:
 
 ## f) Next tasks (ranked)
 
-| # | Task | Impact | Effort | Category |
-|---|---|---|---|---|
-| 1 | Commit this session's work (see question g/1 for granularity) | Critical | S | Cleanup |
-| 2 | Push + observe all three CI legs green | Critical | S | CI |
-| 3 | T8: adopt DecodeTodos/IterMessages in crush-daily | High | M | Feature |
-| 4 | Add BenchmarkIterMessages; regenerate baseline if trend shifts | High | M | Quality |
-| 5 | Cut v0.3.0 after legs green (2× Added ⇒ minor) | High | S | Release |
-| 6 | Verify pkg.go.dev renders v0.3.0 + spot-check new symbols (extends T4) | Medium | S | Docs |
-| 7 | Observe first nightly fuzz incl. FuzzDecodeTodos (extends T2) | Medium | S | CI |
-| 8 | HARVEST this report's (f) into TODO_LIST/ROADMAP | Medium | S | Docs |
-| 9 | Investigate LSP-vs-CLI lint divergence; pin note in AGENTS.md | Medium | S | Tooling |
-| 10 | Reproduce goconst's occurrence counting (comments? tests?) and document it in AGENTS.md tooling gotchas | Medium | S | Tooling |
-| 11 | Cross-platform note for the recipe (or a macOS runner check for the harness pattern) | Low | S | Docs |
-| 12 | doc.go: one sentence each for streaming + todos under existing sections | Low | S | Docs |
-| 13 | T1 (Renovate app install) — still external, config validates | Medium | S | CI |
-| 14 | T3 (first flake-lock PR observation) | Low | S | CI |
-| 15 | T6 (mine fuzz corpus seeds once nightly runs exist) | Low | M | Quality |
-| 16 | T7 (pin action SHAs via Renovate after T1) | Low | S | CI |
-| 17 | Upstream mindwalk PR (Parked; needs go-ahead) | Medium | M | Ecosystem |
-| 18 | File/refresh the charmbracelet/crush schema-docs issue; link it in Parked | Medium | S | Ecosystem |
-| 19 | Consider a `DecodeTodos` strictness knob ONLY if a real consumer hits drift (none has) | Low | S | Feature |
-| 20 | Re-run census after next Crush release; update pinned shape if drifted | Low | S | Maintenance |
-| 21 | Add `IterMessages` + `DecodeTodos` to example_test.go "all APIs" coverage check (both have examples; keep the invariant: every public API has a runnable example) | Low | S | Docs |
+| #  | Task                                                                                                                                                              | Impact   | Effort | Category    |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ----------- |
+| 1  | Commit this session's work (see question g/1 for granularity)                                                                                                     | Critical | S      | Cleanup     |
+| 2  | Push + observe all three CI legs green                                                                                                                            | Critical | S      | CI          |
+| 3  | T8: adopt DecodeTodos/IterMessages in crush-daily                                                                                                                 | High     | M      | Feature     |
+| 4  | Add BenchmarkIterMessages; regenerate baseline if trend shifts                                                                                                    | High     | M      | Quality     |
+| 5  | Cut v0.3.0 after legs green (2× Added ⇒ minor)                                                                                                                    | High     | S      | Release     |
+| 6  | Verify pkg.go.dev renders v0.3.0 + spot-check new symbols (extends T4)                                                                                            | Medium   | S      | Docs        |
+| 7  | Observe first nightly fuzz incl. FuzzDecodeTodos (extends T2)                                                                                                     | Medium   | S      | CI          |
+| 8  | HARVEST this report's (f) into TODO_LIST/ROADMAP                                                                                                                  | Medium   | S      | Docs        |
+| 9  | Investigate LSP-vs-CLI lint divergence; pin note in AGENTS.md                                                                                                     | Medium   | S      | Tooling     |
+| 10 | Reproduce goconst's occurrence counting (comments? tests?) and document it in AGENTS.md tooling gotchas                                                           | Medium   | S      | Tooling     |
+| 11 | Cross-platform note for the recipe (or a macOS runner check for the harness pattern)                                                                              | Low      | S      | Docs        |
+| 12 | doc.go: one sentence each for streaming + todos under existing sections                                                                                           | Low      | S      | Docs        |
+| 13 | T1 (Renovate app install) — still external, config validates                                                                                                      | Medium   | S      | CI          |
+| 14 | T3 (first flake-lock PR observation)                                                                                                                              | Low      | S      | CI          |
+| 15 | T6 (mine fuzz corpus seeds once nightly runs exist)                                                                                                               | Low      | M      | Quality     |
+| 16 | T7 (pin action SHAs via Renovate after T1)                                                                                                                        | Low      | S      | CI          |
+| 17 | Upstream mindwalk PR (Parked; needs go-ahead)                                                                                                                     | Medium   | M      | Ecosystem   |
+| 18 | File/refresh the charmbracelet/crush schema-docs issue; link it in Parked                                                                                         | Medium   | S      | Ecosystem   |
+| 19 | Consider a `DecodeTodos` strictness knob ONLY if a real consumer hits drift (none has)                                                                            | Low      | S      | Feature     |
+| 20 | Re-run census after next Crush release; update pinned shape if drifted                                                                                            | Low      | S      | Maintenance |
+| 21 | Add `IterMessages` + `DecodeTodos` to example_test.go "all APIs" coverage check (both have examples; keep the invariant: every public API has a runnable example) | Low      | S      | Docs        |
 
 (21 real items; padded filler withheld — the skill allows up to 50, not
 a quota.)
@@ -187,5 +187,5 @@ a quota.)
 
 ---
 
-*Report ends. Waiting for instructions. Section (f) is pending HARVEST into
-TODO_LIST/ROADMAP until instructed.*
+_Report ends. Waiting for instructions. Section (f) is pending HARVEST into
+TODO_LIST/ROADMAP until instructed._

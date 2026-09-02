@@ -103,11 +103,11 @@ artifacts structurally valid (tag-balance parser) ✓.
 
 1. **Seven wasted edit round-trips from exact-match sloppiness**: an edit
    attempted before Viewing the file (tool refused — system working, my
-   fault), a FEATURES multiedit built from *rendered* `||` pipes instead of
+   fault), a FEATURES multiedit built from _rendered_ `||` pipes instead of
    raw `|`, a guessed table cell ("Todos untyped string" vs the actual
    "untyped JSON string"), a RELEASING edit that swallowed a blank line
    between numbered items (caught on read-back), and a wrong grep pattern
-   when counting my own resolution markers (`| done \`` vs `done at \``).
+   when counting my own resolution markers (`| done \` vs`done at \`).
    All self-caught, zero repo damage — all preventable by View-before-edit,
    every single time.
 2. **Wrote a rule, then immediately skirted it**: I widened the AGENTS
@@ -122,7 +122,7 @@ artifacts structurally valid (tag-balance parser) ✓.
 4. **Annotated HTML without validating**: I treated C18's structural HTML
    validation as a closed precedent, then edited two HTML files and never
    re-ran that validation on my own edits until this report forced the
-   question. Precedent is not a substitute for re-verification after *my*
+   question. Precedent is not a substitute for re-verification after _my_
    changes.
 
 ## e) WHAT WE SHOULD IMPROVE
@@ -150,26 +150,26 @@ artifacts structurally valid (tag-balance parser) ✓.
 TODO_LIST.md is the canonical list (17 open items, verified this session).
 Below are THIS session's genuinely new or re-ranked items:
 
-| # | Task | Size |
-|---|------|------|
-| 1 | Clean the temporal "Generated 2026-08-15" header line from FEATURES.md | 2m |
-| 2 | `scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate | 30m |
-| 3 | Give TODO_LIST items stable IDs; annotations cite them | 15m |
-| 4 | Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now) | 5m |
-| 5 | **Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note | 30m |
-| 6 | Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external | 5m |
-| 7 | Observe first monthly flake-update PR — TODO_LIST external | 5m |
-| 8 | Install Renovate app — TODO_LIST external (GitHub App UI) | 5m |
-| 9 | Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external | 5m |
-| 10 | `TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High | 10m |
-| 11 | `TestQuoteJSON` backslash-escape pin — TODO_LIST High | 10m |
-| 12 | Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High | 45m |
-| 13 | Platform-assumption audit of remaining tests — TODO_LIST High | 20m |
-| 14 | CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium | 7m |
-| 15 | Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium | 5m |
-| 16 | gosec G701 upstream repro — TODO_LIST external | 30m |
-| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing | ongoing |
-| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external | 5m |
+| #  | Task                                                                                      | Size    |
+| -- | ----------------------------------------------------------------------------------------- | ------- |
+| 1  | Clean the temporal "Generated 2026-08-15" header line from FEATURES.md                    | 2m      |
+| 2  | `scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate | 30m     |
+| 3  | Give TODO_LIST items stable IDs; annotations cite them                                    | 15m     |
+| 4  | Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now)         | 5m      |
+| 5  | **Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note        | 30m     |
+| 6  | Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external                           | 5m      |
+| 7  | Observe first monthly flake-update PR — TODO_LIST external                                | 5m      |
+| 8  | Install Renovate app — TODO_LIST external (GitHub App UI)                                 | 5m      |
+| 9  | Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external        | 5m      |
+| 10 | `TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High                       | 10m     |
+| 11 | `TestQuoteJSON` backslash-escape pin — TODO_LIST High                                     | 10m     |
+| 12 | Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High                | 45m     |
+| 13 | Platform-assumption audit of remaining tests — TODO_LIST High                             | 20m     |
+| 14 | CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium                                 | 7m      |
+| 15 | Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium                            | 5m      |
+| 16 | gosec G701 upstream repro — TODO_LIST external                                            | 30m     |
+| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing                       | ongoing |
+| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external  | 5m      |
 
 (18 real items — stop at real value; the remainder of the backlog is
 unchanged and lives in TODO_LIST.md.)
@@ -192,6 +192,6 @@ unchanged and lives in TODO_LIST.md.)
 
 ---
 
-*Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
+_Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
 by the 2026-08-16 docs-health audit session. Left uncommitted per daemon
-policy (no user commit instruction).*
+policy (no user commit instruction)._

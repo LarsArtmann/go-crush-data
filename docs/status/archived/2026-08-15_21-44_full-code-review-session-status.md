@@ -126,6 +126,7 @@ at the time I made it. See question 2.
 ## f) NEXT — up to 50, ordered by impact
 
 **Release & CI (highest value):**
+
 1. ~~Add `nix flake check` job to CI (closes the flake-rot gap; e-1).~~ done at `9b4d346` (C1)
 2. ~~Verify v0.1.1 tag integrity & module proxy state; decide on v0.1.2 (see q2).~~ done — origin v0.1.1 = `74dd031`, fresh tag, no retag; v0.1.2 not needed (decision logged in RELEASING.md, `9b4d346`)
 3. ~~Add tag-driven GitHub Release workflow (notes from CHANGELOG).~~ done at `9b4d346` (C8); first real run green on v0.2.0 (`6948933`)
@@ -137,7 +138,7 @@ at the time I made it. See question 2.
 
 **Correctness/robustness of existing code:**
 9. ~~Verify CLI-fallback parser against noisy stderr; extract JSON substring
-   before parsing (e-7).~~ done at `9b4d346` (C3 — defect confirmed, then fixed)
+before parsing (e-7).~~ done at `9b4d346` (C3 — defect confirmed, then fixed)
 10. ~~Test `Message.FinishedAt` populated path (fixture never sets it non-null).~~ done at `9b4d346` (`TestMessagesFinishedAtPopulated`)
 11. ~~Test `Stats` day filter in non-UTC location (mirror of sessions pin).~~ done at `9b4d346` (C5)
 12. ~~Test `AgentGraph` depth-cap path (`ErrGraphDepthExceeded`) — 64+ chain.~~ done at `9b4d346` (65-chain)
@@ -145,14 +146,14 @@ at the time I made it. See question 2.
 14. ~~`collectRows` `rows.Err()` branch test (80% covered).~~ done at `9b4d346` (C4)
 15. ~~`fillHourHistogram` out-of-range hour guard test.~~ done at `9b4d346` (C4)
 16. ~~Test registry unreadable (chmod 000) triggers CLI fallback, not just
-    missing file.~~ done at `9b4d346` (C6, root-skip guard)
+missing file.~~ done at `9b4d346` (C6, root-skip guard)
 17. ~~`ParseProjectsOutput("null")` behavior pin (nil, no error?).~~ done at `9b4d346` (C6)
 18. ~~Wide fan-out AgentGraph stress (100 children).~~ done at `9b4d346` (C5)
 19. ~~Concurrent-read-while-writer-has-WAL integration test (proves the
-    mode=ro + txlock claim under contention).~~ done at `9b4d346` (Sessions) + `0822d70` (Messages)
+mode=ro + txlock claim under contention).~~ done at `9b4d346` (Sessions) + `0822d70` (Messages)
 20. ~~`TestOpen` on a valid SQLite file with no tables at all → currently
-    `ErrUnsupportedSchema`? foreign-database case covers it; add explicit
-    zero-table case anyway (cheap).~~ done — already covered by `TestOpenUnsupportedSchema` (verified during C4; F14 closed as covered)
+`ErrUnsupportedSchema`? foreign-database case covers it; add explicit
+zero-table case anyway (cheap).~~ done — already covered by `TestOpenUnsupportedSchema` (verified during C4; F14 closed as covered)
 
 **API evolution (next minor, bundled):**
 21. ~~`OpenContext(ctx, dataDir)` + `Open` delegating.~~ done at `9b4d346` (C11)
@@ -163,12 +164,12 @@ at the time I made it. See question 2.
 
 **Docs & repo hygiene:**
 26. ~~Record session learnings in AGENTS.md (vendorHash coupling, nix
-    source-filter untracked-file gotcha, concurrent-edit protocol).~~ done at `88012fe` + `232ff1f`
+source-filter untracked-file gotcha, concurrent-edit protocol).~~ done at `88012fe` + `232ff1f`
 27. ~~README: day-filter timezone semantics paragraph.~~ done at `74dd031`
 28. ~~README: add `nix run .#lint` to Development.~~ done at `bcc0a50`
 29. ~~`example_test.go` with 2-3 runnable examples.~~ done at `9b4d346` (4) + `eabdcb1` (2 more)
 30. ~~CONTRIBUTING: note the stats-parity contract (don't "improve" the SQL
-    without updating `TestStatsParityWithCrushDailySQL`).~~ done at `9b4d346` (C15)
+without updating `TestStatsParityWithCrushDailySQL`).~~ done at `9b4d346` (C15)
 31. ~~FEATURES.md + ROADMAP.md via docs-health BUILD (small, honest).~~ done at `9b4d346` (C16)
 32. ~~Coverage badge if CI exposes it.~~ done at `9b4d346` (C17, static ≥85% badge); live badge is a recorded non-decision
 33. ~~Validate the two HTML artifacts render (open browser / structural check).~~ done at `9b4d346` (C18)
@@ -176,16 +177,16 @@ at the time I made it. See question 2.
 
 **Tidiness:**
 35. ~~Re-evaluate the blanket `_test.go` `unused` lint exclusion (dead helpers
-    are gone; exclusion may be stale now — verify noise before removing).~~ done at `9b4d346` (C20 — removed, 0 dead helpers behind it)
+are gone; exclusion may be stale now — verify noise before removing).~~ done at `9b4d346` (C20 — removed, 0 dead helpers behind it)
 36. ~~Remove stale LSP diagnostics annoyance: restart LSP after file deletion
-    mid-session (process habit, not repo change).~~ **NOT-DO — process habit, no repo artifact**
+mid-session (process habit, not repo change).~~ **NOT-DO — process habit, no repo artifact**
 37. ~~`go.sum` ↔ `vendorHash` pre-commit check script (fails if go.sum changed
-    without flake.nix hash) — kills the e-1 class at the source.~~ done at `9b4d346` (C2: `scripts/check-vendor-hash.sh`, wired into CI)
+without flake.nix hash) — kills the e-1 class at the source.~~ done at `9b4d346` (C2: `scripts/check-vendor-hash.sh`, wired into CI)
 38. ~~Add `.gitattributes`/`.editorconfig` note? Already present — verify
-    consistency only. (Skip if no findings.)~~ done — both present, no findings
+consistency only. (Skip if no findings.)~~ done — both present, no findings
 39. ~~Consider `windowsLocalAppData` GOOS-gated unit test (low).~~ done at `9b4d346` (C20 env-only test); real-Windows coverage via the CI matrix legs (`79c9720`, green at `c7482e2`)
 40. ~~Blanket `exhaustruct` exclusions audit (os/exec.Cmd only today — fine;
-    re-check after new deps).~~ done at `9b4d346` (C20 — all load-bearing)
+re-check after new deps).~~ done at `9b4d346` (C20 — all load-bearing)
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 
@@ -225,5 +226,5 @@ inline. All 3 questions resolved. Still-open follow-ups live in TODO_LIST.md
 (Renovate app install, scheduled-workflow first observations, pkg.go.dev
 v0.2.0 check). Archived by the 2026-08-16 docs-health audit.
 
-*Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
-by the 2026-08-15 full-code-review session.*
+_Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
+by the 2026-08-15 full-code-review session._

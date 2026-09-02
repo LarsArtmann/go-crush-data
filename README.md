@@ -118,13 +118,13 @@ for _, todo := range todos {
 
 ## Schema drift
 
-| Capability | Column | Missing on old databases |
-|---|---|---|
-| Cost | `sessions.cost` | `CostUSD` reads 0 |
-| Subagents | `sessions.parent_session_id` | `AgentGraph` returns the root only |
-| Models | `messages.model` | model fields read empty |
-| Providers | `messages.provider` | provider fields read empty |
-| Finish times | `messages.finished_at` | `FinishedAt` reads zero |
+| Capability   | Column                       | Missing on old databases           |
+| ------------ | ---------------------------- | ---------------------------------- |
+| Cost         | `sessions.cost`              | `CostUSD` reads 0                  |
+| Subagents    | `sessions.parent_session_id` | `AgentGraph` returns the root only |
+| Models       | `messages.model`             | model fields read empty            |
+| Providers    | `messages.provider`          | provider fields read empty         |
+| Finish times | `messages.finished_at`       | `FinishedAt` reads zero            |
 
 `db.Schema().MissingColumns()` tells you exactly what an old database lacks.
 Databases without the required `sessions`/`messages` tables fail `Open` with

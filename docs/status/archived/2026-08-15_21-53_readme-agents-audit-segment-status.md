@@ -6,7 +6,8 @@ its on-the-spot fixes, plus the TODO_LIST filename correction from the
 previous report. This report covers only this session's run and what it
 noticed. Baseline: `16260fe` → daemon landed `74dd031` (pushed, tagged
 v0.1.1). Working tree right now: README.md, AGENTS.md, TODO_LIST.md modified
-+ this docs/status/ directory — all mine, uncommitted (daemon owns commits).
+
+- this docs/status/ directory — all mine, uncommitted (daemon owns commits).
 
 **Verification state:** `go build ./...` green after doc edits (run even for
 docs-only changes). Full gate (race/lint/flake) was green at 21:44 on
@@ -48,7 +49,7 @@ docs-only changes). Full gate (race/lint/flake) was green at 21:44 on
 ## b) PARTIALLY DONE
 
 1. ~~**README at ~8.5–9/10, AGENTS.md at ~9/10.** The audit fixed everything
-   found; "superb" as a *verified* claim would need the remaining nits
+   found; "superb" as a _verified_ claim would need the remaining nits
    below plus (f) items 33–34. Remaining known nits: README has no
    day-filter timezone note in the Quick start comments (only in Design);
    no coverage badge; CONTRIBUTING not re-checked this segment.~~ done —
@@ -128,6 +129,7 @@ Nothing new this segment. Cumulative honest ledger from this session:
 ## f) NEXT — up to 50, ordered by impact
 
 **Release & CI:**
+
 1. ~~Add `nix flake check` job to CI.~~ done at `9b4d346` (C1)
 2. ~~Decide v0.1.1 tag integrity question (q2 from 21:44 — still open).~~ done — fresh tag, no retag; decision logged in RELEASING.md (`9b4d346`)
 3. ~~Tag-driven GitHub Release workflow (notes from CHANGELOG).~~ done at `9b4d346` (C8); green on v0.2.0 (`6948933`)
@@ -140,7 +142,7 @@ Nothing new this segment. Cumulative honest ledger from this session:
 
 **Correctness/robustness (existing code):**
 10. ~~Verify CLI-fallback parser against noisy stderr; extract JSON substring
-    before parsing if confirmed.~~ done at `9b4d346` (C3)
+before parsing if confirmed.~~ done at `9b4d346` (C3)
 11. ~~Test `Message.FinishedAt` populated path (fixture never sets it).~~ done at `9b4d346`
 12. ~~Test `Stats` day filter in non-UTC location.~~ done at `9b4d346`
 13. ~~Test `AgentGraph` depth-cap path (`ErrGraphDepthExceeded`).~~ done at `9b4d346`
@@ -161,9 +163,9 @@ Nothing new this segment. Cumulative honest ledger from this session:
 
 **Docs & repo hygiene:**
 26. ~~README: timezone note inside the Quick start snippet comments (not just
-    Design).~~ done at `74dd031` (present in current README)
+Design).~~ done at `74dd031` (present in current README)
 27. ~~CONTRIBUTING: stats-parity contract warning (don't "improve" SQL
-    without updating `TestStatsParityWithCrushDailySQL`).~~ done at `9b4d346` (C15)
+without updating `TestStatsParityWithCrushDailySQL`).~~ done at `9b4d346` (C15)
 28. ~~`example_test.go` with 2–3 runnable examples.~~ done at `9b4d346` (4) + `eabdcb1` (2)
 29. ~~FEATURES.md + ROADMAP.md via docs-health BUILD.~~ done at `9b4d346` (C16)
 30. ~~Coverage badge if CI exposes it.~~ done at `9b4d346` (C17, static ≥85% badge)
@@ -174,14 +176,14 @@ Nothing new this segment. Cumulative honest ledger from this session:
 
 **Tidiness:**
 35. ~~Re-evaluate blanket `_test.go` `unused` lint exclusion (dead helpers
-    gone; exclusion may be stale).~~ done at `9b4d346` (C20 — removed)
+gone; exclusion may be stale).~~ done at `9b4d346` (C20 — removed)
 36. ~~Restart LSP / clear stale diagnostics habit after mid-session deletes.~~ **NOT-DO — process habit, no repo artifact** (executed in the 23:04 session)
 37. ~~`windowsLocalAppData` GOOS-gated unit test (low).~~ done at `9b4d346` (C20) + real-Windows matrix leg `79c9720`
 38. ~~`exhaustruct` exclusion audit after any new dependency.~~ done at `9b4d346` (C20 — all load-bearing)
 39. ~~Consider `docs/DOMAIN_LANGUAGE.md` — likely premature at this size;
-    decide consciously, default skip.~~ done — recorded non-decision in ROADMAP.md (C21)
+decide consciously, default skip.~~ done — recorded non-decision in ROADMAP.md (C21)
 40. ~~Re-verify reports' claims before any future "waiting for instructions"
-    handoff (behavioral rule from d-5 — keep enforcing).~~ done — encoded as the verify-then-annotate rule (AGENTS.md, `232ff1f`)
+handoff (behavioral rule from d-5 — keep enforcing).~~ done — encoded as the verify-then-annotate rule (AGENTS.md, `232ff1f`)
 
 (35–40 are the honest bottom of the barrel; stop at real value.)
 
@@ -219,5 +221,5 @@ covered zero-table case folded into existing test), 2 closed as config-done
 with external install/observation pending in TODO_LIST.md. All 3 questions
 resolved. Archived by the 2026-08-16 docs-health audit.
 
-*Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
-by the 2026-08-15 review session (segment 2: README/AGENTS audit).*
+_Point-in-time snapshot. Living work items live in TODO_LIST.md. Generated
+by the 2026-08-15 review session (segment 2: README/AGENTS audit)._

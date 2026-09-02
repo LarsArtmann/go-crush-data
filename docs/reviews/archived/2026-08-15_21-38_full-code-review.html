@@ -856,9 +856,8 @@
           <h1>go-crush-data &mdash; Full Code Review</h1>
           <p class="hero-subtitle">
             Every source and test file read. Two confirmed correctness bugs
-            found and fixed with regression tests, one documentation split
-            brain repaired, dead code removed, and a stale Nix vendor hash
-            corrected.
+            found and fixed with regression tests, one documentation split brain
+            repaired, dead code removed, and a stale Nix vendor hash corrected.
           </p>
         </div>
 
@@ -927,11 +926,13 @@
         <div class="issue issue-critical">
           <span class="severity severity-critical">Fixed</span>
           <h3>SessionFilter silently swapped SQL parameters</h3>
-          <div class="where">sessions.go &middot; args() vs buildSessionsQuery</div>
+          <div class="where">
+            sessions.go &middot; args() vs buildSessionsQuery
+          </div>
           <p>
-            Bind arguments were appended in the order Day, ParentID, ByID
-            while the WHERE clauses were emitted as ByID, Day, ParentID. Any
-            filter combining <code>ByID</code> with <code>Day</code> or
+            Bind arguments were appended in the order Day, ParentID, ByID while
+            the WHERE clauses were emitted as ByID, Day, ParentID. Any filter
+            combining <code>ByID</code> with <code>Day</code> or
             <code>ParentID</code> bound the day string to <code>id = ?</code>
             and the session ID to the date comparison &mdash; returning zero
             rows with no error. Reproduced before the fix:
@@ -952,15 +953,17 @@
         <div class="issue issue-critical">
           <span class="severity severity-critical">Fixed</span>
           <h3>AgentGraph sibling order followed updated_at, not created_at</h3>
-          <div class="where">agents.go &middot; childSessions / reverseByCreated</div>
+          <div class="where">
+            agents.go &middot; childSessions / reverseByCreated
+          </div>
           <p>
-            The documented contract is preorder with &ldquo;each subtree
-            ordered by creation time&rdquo;. The implementation reversed the
-            sessions listing (ordered <code>updated_at DESC</code>), which
-            yields <code>updated_at ASC</code> &mdash; created order only when
-            the two correlate. Reproduced before the fix: siblings created
-            +1s/+2s but touched in reverse order came back misordered, and
-            the helper&rsquo;s comment (&ldquo;flips newest-first into
+            The documented contract is preorder with &ldquo;each subtree ordered
+            by creation time&rdquo;. The implementation reversed the sessions
+            listing (ordered <code>updated_at DESC</code>), which yields
+            <code>updated_at ASC</code> &mdash; created order only when the two
+            correlate. Reproduced before the fix: siblings created +1s/+2s but
+            touched in reverse order came back misordered, and the
+            helper&rsquo;s comment (&ldquo;flips newest-first into
             oldest-first&rdquo;) laundered the lie.
           </p>
           <div class="callout callout-solution">
@@ -980,12 +983,12 @@
           <h3>Package doc contradicted the tested day-filter semantics</h3>
           <div class="where">doc.go:27-31</div>
           <p>
-            <code>doc.go</code> claimed day filters &ldquo;compare against
-            the UTC calendar day of created_at&rdquo;. That is half the truth:
-            the filter value is formatted in <em>its own location</em>, as
-            pinned by <code>TestSessionsDayFilterUsesDayLocation</code> and
-            documented precisely on <code>SessionFilter.Day</code>. A split
-            brain between package doc and field doc.
+            <code>doc.go</code> claimed day filters &ldquo;compare against the
+            UTC calendar day of created_at&rdquo;. That is half the truth: the
+            filter value is formatted in <em>its own location</em>, as pinned by
+            <code>TestSessionsDayFilterUsesDayLocation</code> and documented
+            precisely on <code>SessionFilter.Day</code>. A split brain between
+            package doc and field doc.
           </p>
           <div class="callout callout-solution">
             <strong>Fix</strong> Rewrote the Timestamps section to state both
@@ -1006,8 +1009,8 @@
           </p>
           <div class="callout callout-solution">
             <strong>Fix</strong> Updated to the derivation&rsquo;s reported
-            hash; verified via <code>nix build .#default.goModules</code>.
-            Full <code>nix flake check</code> additionally requires
+            hash; verified via <code>nix build .#default.goModules</code>. Full
+            <code>nix flake check</code> additionally requires
             <code>rows.go</code> to be committed (untracked files are invisible
             to the flake&rsquo;s git source filter).
           </div>
@@ -1041,11 +1044,15 @@
           <div class="where">db.go:48 &middot; TODO_LIST</div>
           <p>
             <code>Open</code> probes the schema on
-            <code>context.Background()</code>. Six fast local queries make
-            this harmless today; a future <code>OpenContext</code> would let
-            callers bound startup on slow filesystems (NFS).
+            <code>context.Background()</code>. Six fast local queries make this
+            harmless today; a future <code>OpenContext</code> would let callers
+            bound startup on slow filesystems (NFS).
           </p>
-          <p><strong>Resolved:</strong> <code>OpenContext(ctx, dir)</code> shipped in v0.2.0 (`9b4d346`); <code>Open</code> delegates with <code>context.Background</code>.</p>
+          <p>
+            <strong>Resolved:</strong>
+            <code>OpenContext(ctx, dir)</code> shipped in v0.2.0 (`9b4d346`);
+            <code>Open</code> delegates with <code>context.Background</code>.
+          </p>
         </div>
 
         <div class="issue issue-nice">
@@ -1054,10 +1061,13 @@
           <div class="where">agents.go &middot; TODO_LIST</div>
           <p>
             One query per node. Fine for realistic graphs (depth cap 64, small
-            fan-out), and the recursion buys the depth guard; a recursive CTE
-            is the escalation path if a consumer ever reports it hot.
+            fan-out), and the recursion buys the depth guard; a recursive CTE is
+            the escalation path if a consumer ever reports it hot.
           </p>
-          <p><strong>Resolved:</strong> recorded non-decision in ROADMAP.md — rewrite only if a consumer profiles it hot.</p>
+          <p>
+            <strong>Resolved:</strong> recorded non-decision in ROADMAP.md —
+            rewrite only if a consumer profiles it hot.
+          </p>
         </div>
 
         <div class="issue issue-nice">
@@ -1066,11 +1076,14 @@
           <div class="where">types.go:33 &middot; TODO_LIST</div>
           <p>
             The field carries an opaque JSON blob. <code>json.RawMessage</code>
-            (or a decoded type) would make &ldquo;this is structured
-            data&rdquo; explicit at the type level &mdash; a breaking-ish
-            change to bundle with the next minor.
+            (or a decoded type) would make &ldquo;this is structured data&rdquo;
+            explicit at the type level &mdash; a breaking-ish change to bundle
+            with the next minor.
           </p>
-          <p><strong>Resolved:</strong> <code>json.RawMessage</code> shipped as a breaking change in v0.2.0 (`9b4d346`).</p>
+          <p>
+            <strong>Resolved:</strong> <code>json.RawMessage</code> shipped as a
+            breaking change in v0.2.0 (`9b4d346`).
+          </p>
         </div>
 
         <div class="issue issue-nice">
@@ -1083,7 +1096,11 @@
             schema and reads degrade silently. An acceptable tolerant-reader
             tradeoff, but worth a strictness decision later.
           </p>
-          <p><strong>Resolved:</strong> probes surface errors strictly since v0.2.0 (`9b4d346`); <code>ErrUnsupportedSchema</code> is reserved for readable pre-table schemas.</p>
+          <p>
+            <strong>Resolved:</strong> probes surface errors strictly since
+            v0.2.0 (`9b4d346`); <code>ErrUnsupportedSchema</code> is reserved
+            for readable pre-table schemas.
+          </p>
         </div>
 
         <h2 id="table"><span class="num">03</span>Issue table</h2>
@@ -1188,42 +1205,67 @@
             <div class="check">+</div>
             <div class="text">
               <strong>Schema-drift defense is exemplary</strong>
-              <span>Capability probing at Open + zero-value substitution + MissingColumns() for user warnings: absent columns never fail reads, and the required-table check fails loudly with a typed error.</span>
+              <span
+                >Capability probing at Open + zero-value substitution +
+                MissingColumns() for user warnings: absent columns never fail
+                reads, and the required-table check fails loudly with a typed
+                error.</span
+              >
             </div>
           </div>
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
               <strong>Sealed Part union</strong>
-              <span>Unexported isPart() closes the set; unknown discriminators pass through as UnknownPart with the raw payload. Forward compatibility by construction, verified by fuzzing.</span>
+              <span
+                >Unexported isPart() closes the set; unknown discriminators pass
+                through as UnknownPart with the raw payload. Forward
+                compatibility by construction, verified by fuzzing.</span
+              >
             </div>
           </div>
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
               <strong>Parity contract on the analytics SQL</strong>
-              <span>TestStatsParityWithCrushDailySQL re-runs the historical collector SQL verbatim and requires identical numbers, so refactors cannot silently change reported statistics.</span>
+              <span
+                >TestStatsParityWithCrushDailySQL re-runs the historical
+                collector SQL verbatim and requires identical numbers, so
+                refactors cannot silently change reported statistics.</span
+              >
             </div>
           </div>
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
               <strong>Read-only proven, not promised</strong>
-              <span>TestOpenIsReadOnly hashes crush.db + WAL/SHM sidecars before and after a full read pass. The strongest possible statement of the library&rsquo;s core safety claim.</span>
+              <span
+                >TestOpenIsReadOnly hashes crush.db + WAL/SHM sidecars before
+                and after a full read pass. The strongest possible statement of
+                the library&rsquo;s core safety claim.</span
+              >
             </div>
           </div>
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
               <strong>Dual-schema fixtures generated per test</strong>
-              <span>current + legacy DDL with the same seed data: every read is exercised against both shapes without committed binary testdata.</span>
+              <span
+                >current + legacy DDL with the same seed data: every read is
+                exercised against both shapes without committed binary
+                testdata.</span
+              >
             </div>
           </div>
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
               <strong>Error taxonomy</strong>
-              <span>Five sentinels + one typed error; caller errors returned unwrapped with self-contained messages; every wrap names the database path.</span>
+              <span
+                >Five sentinels + one typed error; caller errors returned
+                unwrapped with self-contained messages; every wrap names the
+                database path.</span
+              >
             </div>
           </div>
         </div>
@@ -1234,13 +1276,12 @@
           <p>
             A small, sharp, single-purpose library doing exactly what it
             promises: typed, tolerant, provably read-only access to an
-            undocumented, drifting schema. The two correctness bugs were in
-            the newest, least-tested seams (filter composition, subtree
-            ordering), not in the core paths. With both fixed and pinned by
-            regression tests, coverage at 86%+, race detector clean, ~90
-            linters silent, and the remaining findings ticketed in
-            TODO_LIST.md, the codebase leaves this review stronger than it
-            entered.
+            undocumented, drifting schema. The two correctness bugs were in the
+            newest, least-tested seams (filter composition, subtree ordering),
+            not in the core paths. With both fixed and pinned by regression
+            tests, coverage at 86%+, race detector clean, ~90 linters silent,
+            and the remaining findings ticketed in TODO_LIST.md, the codebase
+            leaves this review stronger than it entered.
           </p>
         </div>
 

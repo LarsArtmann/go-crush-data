@@ -1,7 +1,7 @@
 # Roadmap
 
 Long-term direction and raw ideas. Items graduate to [TODO_LIST.md](TODO_LIST.md)
-when they become actionable and bounded. This file records *why*, not *when*.
+when they become actionable and bounded. This file records _why_, not _when_.
 
 ## Direction
 
@@ -26,7 +26,7 @@ new information.
 - **No in-library watching — including a `watch/` sub-module.** A direct
   fsnotify-class dependency would betray the zero-weight contract (see "No
   new dependencies" below). A sub-module would honor that contract but buys
-  nothing: the entire glue is ~30 lines of recipe, and watching *policy*
+  nothing: the entire glue is ~30 lines of recipe, and watching _policy_
   (debounce, filtering, what to do on event) is not worth pinning as API
   while zero consumers want typed registry events. The verified recipe
   stands in for both:

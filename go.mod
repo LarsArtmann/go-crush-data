@@ -1,8 +1,8 @@
 module github.com/LarsArtmann/go-crush-data
 
-go 1.26.5
+go 1.26.7
 
-require modernc.org/sqlite v1.56.0
+require modernc.org/sqlite v1.58.0
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
@@ -221,9 +221,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.7.0 // indirect
-	modernc.org/libc v1.75.3 // indirect
+	modernc.org/libc v1.75.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.12.0 // indirect
+	modernc.org/memory v1.12.1 // indirect
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 )

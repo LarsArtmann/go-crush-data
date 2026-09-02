@@ -43,10 +43,10 @@ work was respected and left untouched. My diff: `rows.go` (new), `messages.go`, 
 
 ## b) PARTIALLY DONE
 
-1. **art-dupl closed loop** — report is clean of *unjudged* clones, but accepted clones are only
+1. **art-dupl closed loop** — report is clean of _unjudged_ clones, but accepted clones are only
    documented in prose. No `art-dupl baseline` file exists, so CI cannot distinguish accepted vs
    new clones.
-2. **Lint verification** — my 4 files are clean, but 3 issues remain in the *other* session's
+2. **Lint verification** — my 4 files are clean, but 3 issues remain in the _other_ session's
    in-flight files (`godox` TODO at sessions_test.go:226, `golines` in agents_test.go:226 and
    sessions_test.go:242). Deliberately not touched; unresolved ownership.
 3. **Full verification battery** — `nix flake check` never ran (skipped; `nix run .#lint` also
@@ -69,7 +69,7 @@ work was respected and left untouched. My diff: `rows.go` (new), `messages.go`, 
    before finishing, but it proves the conversion was mechanical-first, think-second.
 2. **Two stale-read edit failures** — edited `sessions.go` twice against outdated file state
    because the concurrent session rewrote `buildSessionsQuery` underneath me. Recovered by
-   re-reading, but I should have re-verified freshness immediately before *every* edit once the
+   re-reading, but I should have re-verified freshness immediately before _every_ edit once the
    first mtime mismatch appeared.
 3. **"All clean" claimed while an unverified warning sat in diagnostics** — the stale
    `golangci_lint_ls unused: collectRows` warning never got explicitly re-checked/cleared (build
@@ -92,6 +92,7 @@ work was respected and left untouched. My diff: `rows.go` (new), `messages.go`, 
 ## f) Next things to get done (impact-sorted)
 
 **Close this refactor's loops**
+
 1. ~~`art-dupl baseline` to encode the 2 accepted clone groups; commit baseline.~~ **Won't implement — acceptances are documented in AGENTS.md "Critical decisions" instead; art-dupl stays advisory.**
 2. ~~Wire `art-dupl check` (diff vs baseline) into CI / flake check.~~ **Won't implement — see 1.**
 3. ~~Add error-path test for `collectRows` (context cancellation mid-iteration).~~ done at `9b4d346` (`TestCollectRowsSurfacesIterationError`)
@@ -99,27 +100,27 @@ work was respected and left untouched. My diff: `rows.go` (new), `messages.go`, 
 5. ~~Clear golangci LSP cache; confirm `unused collectRows` warning is gone.~~ done — was a stale diagnostic; CLI lint has been 0 issues since `9b4d346`
 6. ~~Investigate `nix run .#lint` → "Permission denied" on store binary (flake app definition).~~ done at `9b4d346` — flake app programs now point at `bin/`
 7. ~~Add CHANGELOG entry for the collectRows refactor (after concurrent session settles).~~ **Won't implement — internal refactor, not consumer-visible; the CHANGELOG policy now excludes it** (`232ff1f`)
-8. ~~Re-run `go test -race ./...` after the concurrent session lands, to validate the *combined* tree.~~ done at `9b4d346` (gates 1–3 + final gate)
+8. ~~Re-run `go test -race ./...` after the concurrent session lands, to validate the _combined_ tree.~~ done at `9b4d346` (gates 1–3 + final gate)
 
 **Concurrent session's open ends (verify ownership before touching)**
 9. ~~Fix `godox` TODO at sessions_test.go:226 (note about args/conditions ordering in
-   `buildSessionsQuery` — appears to describe the bug the co-location refactor just fixed;
-   verify and delete the TODO).~~ done at `9b4d346` (lint 0 issues)
+`buildSessionsQuery` — appears to describe the bug the co-location refactor just fixed;
+verify and delete the TODO).~~ done at `9b4d346` (lint 0 issues)
 10. ~~Fix `golines` formatting in agents_test.go:116 and sessions_test.go:242.~~ done at `9b4d346`
 11. ~~Review new untracked `docs/` + `TODO_LIST.md` for drift vs AGENTS.md once committed.~~ done at `88012fe` (AGENTS update) + the 2026-08-16 docs-health audit
 12. ~~Confirm `SessionFilter.args()` (old method) is fully dead after the co-location refactor.~~ done — `buildSessionsQuery` returns `(query, args)`; no `args()` method exists (`sessions.go:102`)
 
 **Day-filter split brain**
 13. ~~Decide: one typed day-filter helper (WHERE/AND/subselect/qualified variants) vs documenting
-    the 3 remaining hand-rolled sites as accepted in AGENTS.md.~~ done — decided: accepted-and-documented (AGENTS.md "Critical decisions", accepted art-dupl clones)
+the 3 remaining hand-rolled sites as accepted in AGENTS.md.~~ done — decided: accepted-and-documented (AGENTS.md "Critical decisions", accepted art-dupl clones)
 14. ~~If consolidating, keep `TestStatsParityWithCrushDailySQL` as the guard; update it only
-    deliberately.~~ **NOT-DO/DUPLICATE — subsumed by 13 (no consolidation happened).** The parity test remains law regardless.
+deliberately.~~ **NOT-DO/DUPLICATE — subsumed by 13 (no consolidation happened).** The parity test remains law regardless.
 
 **Quality / hardening**
 15. ~~Real-data smoke: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabase`.~~ done at `88012fe` and re-run after every later source change (last: `dd64a2d` era)
 16. ~~Consider SQL-side `path != ''` in ReadFiles instead of Go-side `slices.DeleteFunc`.~~ **Won't implement — behavior pinned by test at `770b69d`; SQL-side changes nothing observable.**
 17. ~~Consider SQL-side hour bounds (`BETWEEN 0 AND 23`) instead of Go-side bounds check (behavior-
-    contract change; parity test must be consulted first).~~ **Won't implement — parity contract is law; the Go-side guard is pinned at `9b4d346`.**
+contract change; parity test must be consulted first).~~ **Won't implement — parity contract is law; the Go-side guard is pinned at `9b4d346`.**
 18. ~~`DB.Session` single-row lookup still goes through rows machinery — `QueryRowContext` candidate.~~ **Won't implement — the shared row path keeps the tolerant scan and `ErrSessionNotFound` semantics; forking it for one row adds a second scan path for zero observable gain** (`sessions.go:67`)
 19. ~~Add `Example` functions for `Stats`, `Messages`, `AgentGraph` (public repo, pkg.go.dev docs).~~ done at `9b4d346` (Discover/Sessions/Messages/Stats) and `eabdcb1` (AgentGraph/ReadFiles)
 20. ~~Benchmark collectRows closure cost vs manual loops (expected negligible; confirm once).~~ **NOT-DO/DUPLICATE — `BenchmarkSessionsList`/`BenchmarkMessages`/`BenchmarkAgentGraph` (`581658b`) measure the real paths through `collectRows`.**
@@ -134,7 +135,7 @@ work was respected and left untouched. My diff: `rows.go` (new), `messages.go`, 
 ## g) Questions I cannot figure out myself
 
 1. **Baseline policy:** do you want the 2 accepted art-dupl clones committed as an
-   `art-dupl baseline` file with CI failing on *new* clones — or is art-dupl advisory-only here?
+   `art-dupl baseline` file with CI failing on _new_ clones — or is art-dupl advisory-only here?
    → **Resolved de-facto: advisory-only.** Acceptances live in AGENTS.md "Critical decisions";
    no baseline file was ever created.
 2. **CHANGELOG ownership:** the concurrent session is editing CHANGELOG.md — should I append the
@@ -159,5 +160,5 @@ c/1 = f/3, c/2 = f/7, c/3 = f/13, c/4 = f/1. The refactor itself
 landed as part of the C1–C21 batch (`9b4d346`) and shipped in v0.2.0
 (`6948933`). Archived by the 2026-08-16 docs-health audit.
 
-*Point-in-time snapshot. An auto-git daemon commits continuously; this report was written
-uncommitted per session rules (no explicit commit request).*
+_Point-in-time snapshot. An auto-git daemon commits continuously; this report was written
+uncommitted per session rules (no explicit commit request)._

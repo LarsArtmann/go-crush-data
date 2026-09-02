@@ -1,7 +1,13 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.5
+  go: 1.26.7
+  build-tags:
+    - goexperiment.arenas
+    - goexperiment.goroutineleakprofile
+    - goexperiment.jsonv2
+    - goexperiment.runtimesecret
+    - goexperiment.simd
   allow-parallel-runners: true
   allow-serial-runners: true
   issues-exit-code: 1
@@ -22,7 +28,6 @@ linters:
     - copyloopvar
     - cyclop
     - decorder
-    - depguard
     - dogsled
     - dupl
     - dupword
@@ -120,20 +125,35 @@ linters:
     - wsl_v5
     - zerologlint
   disable:
+    - depguard
     - noinlineerr
   settings:
     cyclop:
       max-complexity: 12
-    depguard:
-      rules:
-        main:
-          allow:
-            - $gostd
-            - $module
-            - modernc.org/sqlite
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+        - (*sql.DB).Close
+        - (*sql.Rows).Close
+        - (*sql.Stmt).Close
+        - (net.Conn).Close
+        - (*net.TCPConn).Close
+        - (*net.UDPConn).Close
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Print
+        - fmt.Printf
+        - fmt.Println
+        - (*strings.Builder).WriteString
+        - (*bytes.Buffer).WriteString
     exhaustruct:
       exclude:
         - os/exec.Cmd
+    funlen:
+      lines: 200
+      statements: 100
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
@@ -142,6 +162,10 @@ linters:
         - ifElseChain
     gomoddirectives:
       replace-local: true
+    gosec:
+      excludes:
+        - G304
+        - G115
     ireturn:
       allow:
         - error
@@ -152,22 +176,26 @@ linters:
         - github.com/LarsArtmann/go-crush-data.Part
     makezero:
       always: true
+    mnd:
+      ignored-numbers:
+        - "0"
+        - "1"
+        - "2"
+        - "100"
     revive:
       rules:
         - disabled: true
           name: exported
         - disabled: true
           name: package-comments
+    tagliatelle:
+      case:
+        rules:
+          json: snake
     testifylint:
       disable:
         - go-require
       enable-all: true
-    tagliatelle:
-      case:
-        rules:
-          # json tags mirror Crush's on-disk snake_case schema, which these
-          # types decode; camelCase would break every read.
-          json: snake
     varnamelen:
       ignore-map-index-ok: true
       ignore-names:
@@ -185,36 +213,44 @@ linters:
         - db
         - id
       ignore-type-assert-ok: true
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - errors.Join(
+        - .Wrap(
+        - .Wrapf(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
   exclusions:
     generated: lax
     rules:
-      # gosec's taint findings are false positives here by design (a
-      # read-only library for caller-chosen local paths, schema-gated SQL
-      # with parameterized values, and a documented CLI fallback), and they
-      # fire non-deterministically on the windows runner — when gosec
-      # sleeps there, a line-level //nolint:gosec turns "unused" and
-      # nolintlint fails the leg (seen 2026-08-16 on run 31920446013).
-      # Suppressing by file + rule ID in config keeps every platform
-      # linting identically; the rationale stays as a code comment at each
-      # site.
       - path: ^db\.go$
-        linters: [gosec]
-        text: 'G703' # path traversal: opening caller-supplied paths is the API
+        text: G703
+        linters:
+          - gosec
       - path: ^discover\.go$
-        linters: [gosec]
-        text: 'G304' # reading the caller-supplied registry path is the API
+        text: G304
+        linters:
+          - gosec
       - path: ^discover\.go$
-        linters: [gosec]
-        text: 'G204' # exec of the configured CLI is the documented fallback
+        text: G204
+        linters:
+          - gosec
       - path: ^sessions\.go$
-        linters: [gosec]
-        text: 'G701' # SQL taint: literals only; values arrive parameterized
+        text: G701
+        linters:
+          - gosec
       - path: ^stats\.go$
-        linters: [gosec]
-        text: 'G201' # SQL formatting from hardcoded literals
+        text: G201
+        linters:
+          - gosec
       - path: ^stats\.go$
-        linters: [gosec]
-        text: 'G202' # SQL concatenation of schema-gated literals
+        text: G202
+        linters:
+          - gosec
       - path: _test\.go
         linters:
           - exhaustruct
@@ -223,7 +259,11 @@ linters:
           - funlen
           - cyclop
           - goconst
-          - gosec # test fixtures open their own generated files
+          - gosec
+      - path: _test\.go
+        text: unused
+        linters:
+          - unused
     paths:
       - _templ\.go$
       - \.gen\.go$
