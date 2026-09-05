@@ -151,17 +151,16 @@ func (db *DB) distinctMessageColumns(ctx context.Context, column, day string) ([
 }
 
 func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Stats) error {
-	dayFilter, args := dayArgs(day)
-
-	// dayFilter is a fixed literal, not user input
-	rows, err := db.handle.QueryContext(ctx, `
+	rows, err := db.queryDayRows(ctx, day, "aggregate session titles",
+		`
 		SELECT title FROM sessions
-		WHERE title IS NOT NULL`+dayFilter+`
+		WHERE title IS NOT NULL`,
+		`
 		ORDER BY message_count DESC
 		LIMIT 20
-	`, args...)
+	`)
 	if err != nil {
-		return fmt.Errorf("aggregate session titles in %s: %w", db.path, err)
+		return err
 	}
 
 	titles, err := collectRows(rows, "session title", func(rows *sql.Rows) (string, error) {
@@ -182,17 +181,16 @@ func (db *DB) fillTitlesAndHistogram(ctx context.Context, day string, stats *Sta
 }
 
 func (db *DB) fillHourHistogram(ctx context.Context, day string, stats *Stats) error {
-	dayFilter, args := dayArgs(day)
-
-	// dayFilter is a fixed literal, not user input
-	rows, err := db.handle.QueryContext(ctx, `
+	rows, err := db.queryDayRows(ctx, day, "aggregate hour histogram",
+		`
 		SELECT CAST(strftime('%H', created_at, 'unixepoch') AS INTEGER) AS hour, COUNT(*) AS count
 		FROM sessions
-		WHERE 1=1`+dayFilter+`
+		WHERE 1=1`,
+		`
 		GROUP BY hour
-	`, args...)
+	`)
 	if err != nil {
-		return fmt.Errorf("aggregate hour histogram in %s: %w", db.path, err)
+		return err
 	}
 
 	buckets, err := collectRows(rows, "hour histogram", scanHourBucket)
@@ -239,6 +237,19 @@ func dayArgs(day string) (string, []any) {
 	}
 
 	return " AND date(created_at, 'unixepoch') = ?", []any{day}
+}
+
+// queryDayRows runs queryPrefix + day filter + querySuffix, wrapping
+// failures with label. The day filter is a fixed literal, not user input.
+func (db *DB) queryDayRows(ctx context.Context, day, label, queryPrefix, querySuffix string) (*sql.Rows, error) {
+	dayFilter, args := dayArgs(day)
+
+	rows, err := db.handle.QueryContext(ctx, queryPrefix+dayFilter+querySuffix, args...)
+	if err != nil {
+		return nil, fmt.Errorf("%s in %s: %w", label, db.path, err)
+	}
+
+	return rows, nil
 }
 
 // scanModelBreakdown aggregates per-model usage. The query joins sessions
