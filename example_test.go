@@ -368,7 +368,8 @@ func ExampleDB_AgentGraph() {
 	// depth 1: Explore subagent
 }
 
-// ExampleDB_ReadFiles lists the files a session read during its conversation.
+// ExampleDB_ReadFiles lists the files a session read during its conversation,
+// most recently read first.
 func ExampleDB_ReadFiles() {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
 		GlobalDataDir: setupExampleDataCurrent(),
@@ -394,8 +395,8 @@ func ExampleDB_ReadFiles() {
 	}
 
 	// Output:
-	// /repo/main.go
 	// /repo/util.go
+	// /repo/main.go
 }
 
 // ExampleDecodeTodos turns a session's raw Todos column into typed values.

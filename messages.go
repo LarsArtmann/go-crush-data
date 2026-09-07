@@ -8,9 +8,16 @@ import (
 	"slices"
 )
 
-// Messages returns one session's messages ordered by creation time (and ID
-// as the tiebreaker, since timestamps have second precision), with their
-// parts decoded into typed [Part] values.
+// Messages returns one session's messages in insertion order (rowid —
+// the order Crush wrote the rows), with their parts decoded into typed
+// [Part] values.
+//
+// Insertion order is also the correct tiebreak for the second-precision
+// created_at timestamps: Crush generates message IDs with uuid.New()
+// (UUIDv4, random), so ordering by (created_at, id) would be deterministic
+// but arbitrary within a second — a same-second tool_result could sort
+// before its tool_call. rowid is the insertion counter, unique, and
+// inversion-free against created_at on real databases.
 //
 // Parts decoding is tolerant: a single malformed part degrades to
 // [UnknownPart] carrying its discriminator and raw payload, so the
@@ -87,6 +94,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		parts           string
 		model, provider sql.NullString
 		createdAtUnix   int64
+		updatedAtUnix   int64
 		finishedAt      sql.NullInt64
 	)
 
@@ -97,6 +105,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		&model,
 		&provider,
 		&createdAtUnix,
+		&updatedAtUnix,
 		&finishedAt,
 	)
 	if err != nil {
@@ -107,6 +116,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	message.Model = model.String
 	message.Provider = provider.String
 	message.CreatedAt = unixTime(createdAtUnix)
+	message.UpdatedAt = unixTime(updatedAtUnix)
 	message.FinishedAt = unixTime(finishedAt.Int64)
 
 	decoded, err := decodeParts(parts, false)
@@ -138,14 +148,15 @@ func (db *DB) buildMessagesQuery() string {
 	}
 
 	return fmt.Sprintf(
-		"SELECT id, role, parts, %s, %s, created_at, %s FROM messages WHERE session_id = ? ORDER BY created_at, id",
+		"SELECT id, role, parts, %s, %s, created_at, updated_at, %s FROM messages WHERE session_id = ? ORDER BY rowid",
 		modelExpr, providerExpr, finishedExpr,
 	)
 }
 
 // ReadFiles returns the paths the agent actually opened during a session,
-// according to the read_files table. Databases that predate the table return
-// an empty slice.
+// most recently read first — the same ordering upstream's read_files listing
+// uses (ORDER BY read_at DESC). Databases that predate the table return an
+// empty slice.
 func (db *DB) ReadFiles(ctx context.Context, sessionID string) ([]string, error) {
 	if !db.schema.ReadFilesTable {
 		return []string{}, nil
@@ -153,7 +164,7 @@ func (db *DB) ReadFiles(ctx context.Context, sessionID string) ([]string, error)
 
 	rows, err := db.handle.QueryContext(
 		ctx,
-		"SELECT path FROM read_files WHERE session_id = ?",
+		"SELECT path FROM read_files WHERE session_id = ? ORDER BY read_at DESC",
 		sessionID,
 	)
 	if err != nil {

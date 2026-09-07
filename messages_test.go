@@ -117,6 +117,11 @@ func TestMessagesFinishedAtPopulated(t *testing.T) {
 		t.Fatalf("FinishedAt = %v, want %d", done.FinishedAt, fixtureBase+7)
 	}
 
+	// insertMessage writes updated_at = created_at; the scan must surface it.
+	if done.UpdatedAt.Unix() != fixtureBase+1 {
+		t.Fatalf("UpdatedAt = %v, want %d", done.UpdatedAt, fixtureBase+1)
+	}
+
 	if open := byID["m-open"]; !open.FinishedAt.IsZero() {
 		t.Fatalf("FinishedAt = %v, want zero time for NULL column", open.FinishedAt)
 	}
@@ -303,7 +308,8 @@ func TestReadFilesAbsentOnLegacySchema(t *testing.T) {
 
 // TestReadFilesFiltersEmptyPaths pins the documented behavior: ReadFiles
 // removes empty-string paths Go-side via slices.DeleteFunc, so rows with
-// an empty path column do not appear in the result.
+// an empty path column do not appear in the result. Distinct read_at values
+// double as the ordering pin: rows come back most recently read first.
 func TestReadFilesFiltersEmptyPaths(t *testing.T) {
 	t.Parallel()
 
@@ -312,11 +318,20 @@ func TestReadFilesFiltersEmptyPaths(t *testing.T) {
 	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
 		insertSession(t, db, "session-with-empty-paths", "", "Has empty paths", 1, fixtureBase, fixtureBase)
 
-		for _, path := range []string{"", "/repo/a.go", "", "/repo/b.go", ""} {
+		for _, row := range []struct {
+			path   string
+			readAt int64
+		}{
+			{path: "", readAt: fixtureBase + 1},
+			{path: "/repo/a.go", readAt: fixtureBase + 2},
+			{path: "", readAt: fixtureBase + 3},
+			{path: "/repo/b.go", readAt: fixtureBase + 4},
+			{path: "", readAt: fixtureBase + 5},
+		} {
 			if _, err := db.ExecContext(
 				context.Background(),
 				`INSERT INTO read_files (session_id, path, read_at) VALUES (?, ?, ?)`,
-				"session-with-empty-paths", path, fixtureBase+4,
+				"session-with-empty-paths", row.path, row.readAt,
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -339,8 +354,9 @@ func TestReadFilesFiltersEmptyPaths(t *testing.T) {
 		t.Fatalf("paths = %v, want 2 (empty paths filtered)", paths)
 	}
 
-	if paths[0] != "/repo/a.go" || paths[1] != "/repo/b.go" {
-		t.Fatalf("paths = %v, want [/repo/a.go /repo/b.go]", paths)
+	// b.go was read last (fixtureBase+4), so it leads the result.
+	if paths[0] != "/repo/b.go" || paths[1] != "/repo/a.go" {
+		t.Fatalf("paths = %v, want [/repo/b.go /repo/a.go] (most recently read first)", paths)
 	}
 }
 
