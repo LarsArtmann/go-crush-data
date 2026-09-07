@@ -23,19 +23,31 @@ upcoming docs/release" and partly "what should on-disk readers do meanwhile".
 
 ### Context: the read-only consumer ecosystem
 
-There is a small but real ecosystem of tools that read Crush's local data
-for analytics/search, all currently built on the undocumented on-disk
-format:
+There is a real ecosystem of open-source tools that read Crush's local
+data — Go, Rust, TypeScript; all currently built on the
+undocumented on-disk format (every row verified against its source on
+2026-09-07):
 
-- [go-crush-data](https://github.com/LarsArtmann/go-crush-data) — typed
-  read-only Go library over `projects.json` + `crush.db` (mine; verified
-  against v0.92.0 / 559ec80)
-- crush-daily — daily per-project stats (uses go-crush-data)
-- [deja-vu](https://github.com/vshulcz/deja-vu) session search
-  (vshulcz/deja-vu#2949, see discussion #3697)
-- crush-tmux — read-only SQLite watermark probing (see #3531)
+| Tool | Lang | What it does with the data |
+| --- | --- | --- |
+| [junhoyeo/tokscale](https://github.com/junhoyeo/tokscale) | Rust | token-usage tracking from per-project `crush.db` |
+| [jhlee0409/claude-code-history-viewer](https://github.com/jhlee0409/claude-code-history-viewer) | Rust/Tauri | GUI history browser across `<project>/.crush/crush.db` |
+| [yigitkonur/cli-continues](https://github.com/yigitkonur/cli-continues) | TS | session handoff parser; maintains its own reverse-engineered docs of the format |
+| [Dicklesworthstone/coding_agent_session_search](https://github.com/Dicklesworthstone/coding_agent_session_search) (CASS) | Rust | cross-agent session search over `crush.db` |
+| [vshulcz/deja-vu](https://github.com/vshulcz/deja-vu) | Go | session search (vshulcz/deja-vu#2949) |
+| [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage) | Go | usage tracking from `.crush/crush.db` per project |
+| [perplexityai/numbat](https://github.com/perplexityai/numbat) | Go | agent monitoring with Crush support |
+| [Pilan-AI/mnemo](https://github.com/Pilan-AI/mnemo) | Go | indexes Crush sessions into its SQLite |
+| [superbasedapp/observer](https://github.com/superbasedapp/observer) | Go | agent observer via a `crush` adapter |
+| [taigrr/crunch](https://github.com/taigrr/crunch) | Go | LLM-generated daily summaries from `crush.db` scans |
+| [soyomarvaldezg/crush-tmux](https://github.com/soyomarvaldezg/crush-tmux) | Go | tmux status via read-only `crush.db` probing (#3531) |
+| [LarsArtmann/go-crush-data](https://github.com/LarsArtmann/go-crush-data) | Go | typed read-only library over `projects.json` + `crush.db` (mine; verified against v0.92.0 / 559ec80), plus crush-daily (private, mine) building daily per-project summaries on it |
 
-What we all currently reverse-engineer (no upstream docs):
+When even motivated third parties get misled — deja-vu's Crush parser
+notes: "It keeps sessions in SQLite, not in the JSON state file the
+README talks about" — that's a docs gap, not a tooling gap.
+
+What these tools all currently reverse-engineer (no upstream docs):
 
 - `<global>/projects.json` registry shape and location resolution
 - `crush.db`: `sessions` / `messages` / `read_files` tables (goose

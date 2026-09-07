@@ -9,7 +9,15 @@ import (
 	"testing"
 )
 
-func TestMessagesOrdersByCreatedAtThenID(t *testing.T) {
+// TestMessagesOrdersByInsertionOrder pins the rowid ordering contract:
+// messages come back in the order Crush wrote them. The fixture half
+// covers cross-second ordering; the tie half covers same-second groups,
+// where the contract matters most — Crush message IDs are UUIDv4
+// (random), so (created_at, id) would be deterministic but arbitrary
+// within a second and could sort a tool_result before its tool_call.
+// The tie IDs below sort in the exact reverse of insertion order, so
+// the old (created_at, id) ordering would fail this test.
+func TestMessagesOrdersByInsertionOrder(t *testing.T) {
 	t.Parallel()
 
 	db := openFixture(t, schemaCurrent)
@@ -23,8 +31,48 @@ func TestMessagesOrdersByCreatedAtThenID(t *testing.T) {
 		t.Fatalf("messages = %d, want 11", len(messages))
 	}
 
-	if messages[0].ID != "m_user" || messages[len(messages)-1].ID != "m_user_2" {
+	// m_future and m_user_2 share a created_at second; m_future was
+	// inserted later, so insertion order puts it last even though its ID
+	// sorts first.
+	if messages[0].ID != "m_user" || messages[len(messages)-1].ID != "m_future" {
 		t.Fatalf("order broken: first=%s last=%s", messages[0].ID, messages[len(messages)-1].ID)
+	}
+
+	tieIDs := []string{
+		"ffffffff-ffff-4fff-bfff-ffffffffffff",
+		"88888888-8888-4888-b888-888888888888",
+		"11111111-1111-4111-b111-111111111111",
+	}
+
+	dataDir := t.TempDir()
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(handle *sql.DB) {
+		insertSession(t, handle, "s1", "", "Session", len(tieIDs), fixtureBase, fixtureBase)
+
+		for _, id := range tieIDs {
+			insertMessage(t, handle, id, "s1", "assistant", `[]`, "", "", fixtureBase)
+		}
+	})
+
+	tieDB, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = tieDB.Close() }()
+
+	tied, err := tieDB.Messages(context.Background(), "s1")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	if len(tied) != len(tieIDs) {
+		t.Fatalf("same-second messages = %d, want %d", len(tied), len(tieIDs))
+	}
+
+	for i, id := range tieIDs {
+		if tied[i].ID != id {
+			t.Fatalf("same-second messages[%d].ID = %s, want %s (insertion order, not ID order)", i, tied[i].ID, id)
+		}
 	}
 }
 
