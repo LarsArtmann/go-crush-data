@@ -60,13 +60,19 @@ const (
 // keeping the well-formed siblings. Use [DecodeParts] directly for strict
 // all-or-nothing decoding.
 type Message struct {
-	ID         string
-	SessionID  string
-	Role       Role
-	Parts      []Part
-	Model      string
-	Provider   string
-	CreatedAt  time.Time
+	ID        string
+	SessionID string
+	Role      Role
+	Parts     []Part
+	Model     string
+	Provider  string
+
+	// CreatedAt and UpdatedAt are the row's creation and last-write times;
+	// both ride the initial messages schema, so every database has them.
+	// Upstream keeps UpdatedAt fresh with an AFTER UPDATE trigger.
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
 	FinishedAt time.Time
 }
 

@@ -107,7 +107,7 @@ func exerciseReadAPIs(t *testing.T, db *DB) {
 func TestPreTodosSchemaDegradesGracefully(t *testing.T) {
 	t.Parallel()
 
-	db := dropCapabilityFixture(t, "sessions DROP COLUMN todos")
+	db := dropCapabilityFixture(t, "ALTER TABLE sessions DROP COLUMN todos")
 
 	if missing := db.Schema().MissingColumns(); !slices.Contains(missing, "sessions.todos") {
 		t.Fatalf("MissingColumns = %v, want it to report sessions.todos", missing)
