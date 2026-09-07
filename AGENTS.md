@@ -131,9 +131,30 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 
-- Registry: `<global>/projects.json` — `{path, data_dir, last_accessed}`;
-  global dir = CRUSH_GLOBAL_DATA → XDG_DATA_HOME/crush → ~/.local/share/crush.
-- DB: `<data_dir>/crush.db`, tables sessions/messages/read_files.
+**Verified against charmbracelet/crush v0.92.0 (commit 559ec80, checked
+2026-09-07) by reading upstream source**: every fact below matches
+`internal/db/migrations/`, `internal/projects/projects.go`,
+`internal/config/load.go` (`GlobalConfigData`), `internal/session/session.go`
+(Todo/TodoStatus/CreateAgentToolSessionID), and `internal/message/message.go`
+(marshalParts/unmarshalParts). Upstream now pins its schema in-source via
+goose migrations + sqlc (`sqlc.yaml`, `internal/db/`), which supersedes
+migration-comment archaeology — the comments still claim milliseconds while
+the `update_*_updated_at` triggers write `strftime('%s','now')` (seconds)
+and the CLI renders `time.Unix(CreatedAt, 0)`.
+
+- Registry: `<global>/projects.json` — `{projects: [{path, data_dir,
+  last_accessed}]}` (RFC3339Nano timestamps); global dir =
+  CRUSH_GLOBAL_DATA → XDG_DATA_HOME/crush → ~/.local/share/crush (Windows:
+  %LOCALAPPDATA%\crush with USERPROFILE fallback), same order upstream uses.
+- DB: `<data_dir>/crush.db`, tables sessions/messages/read_files **plus
+  `files`** (initial migration: id, session_id, path, content, version,
+  created_at, updated_at — file snapshots, intentionally not exposed here).
+  Sessions also carry `summary_message_id`; messages carry
+  `is_summary_message` — both unread by this library (additive, harmless).
+- Parts envelope: `[{"type":..., "data":{...}}]` with 8 upstream
+  discriminators: reasoning, text, image_url, binary, tool_call,
+  tool_result, finish, shell_command. image_url/binary pass through as
+  [UnknownPart].
 - Agent child session IDs look like `messageID$$toolCallID`.
 - CLI `crush projects --json` prints JSON on **stderr**.
 - Todos column: JSON array of `{content, status, active_form}` items;
