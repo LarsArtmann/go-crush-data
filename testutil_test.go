@@ -35,7 +35,8 @@ const currentSchemaDDL = `
 		cost REAL NOT NULL DEFAULT 0.0,
 		updated_at INTEGER NOT NULL,
 		created_at INTEGER NOT NULL,
-		todos TEXT
+		todos TEXT,
+		summary_message_id TEXT
 	);
 	CREATE TABLE messages (
 		id TEXT PRIMARY KEY,
@@ -46,7 +47,8 @@ const currentSchemaDDL = `
 		provider TEXT,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL,
-		finished_at INTEGER
+		finished_at INTEGER,
+		is_summary_message INTEGER DEFAULT 0 NOT NULL
 	);
 	CREATE TABLE read_files (
 		session_id TEXT NOT NULL,

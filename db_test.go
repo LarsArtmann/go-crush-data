@@ -14,7 +14,7 @@ func TestOpenCurrentSchema(t *testing.T) {
 
 	db := openFixture(t, schemaCurrent)
 
-	if got := db.Schema(); !got.SessionsCost || !got.SessionsParentSessionID ||
+	if got := db.Schema(); !got.SessionsCost || !got.SessionsParentSessionID || !got.SessionsTodos ||
 		!got.MessagesModel || !got.MessagesProvider || !got.MessagesFinishedAt || !got.ReadFilesTable {
 		t.Fatalf("Schema = %+v, want all capabilities on the current schema", got)
 	}
