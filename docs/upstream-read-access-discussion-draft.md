@@ -55,7 +55,7 @@ What these tools all currently reverse-engineer (no upstream docs):
 - the message parts envelope (`[{"type":…, "data":{…}}]`, 8 discriminators)
 - agent child session IDs (`messageID$$toolCallID`)
 - unix-second timestamps (the migration comments say milliseconds — they
-  are not 🙂)
+  are not; comment fix pending in #3576)
 
 This works, but breaks silently on migrations. For example, #3580
 (compressing message parts) would break every JSON-parsing reader. As #2707's
