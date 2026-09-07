@@ -19,11 +19,31 @@ go test -race ./...   # CI runs this (CI adds -shuffle=on); add -count=2 to catc
 nix flake check       # build + format
 nix run .#lint        # golangci-lint (~90 linters; run per-file while writing tests)
 nix run .#test        # race test via nix
+CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard
 scripts/check-doc-links.sh    # markdown links + file:line citations in root docs resolve (runs in CI)
 ```
 
-Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabase` opens a real crush.db read-only. Re-run it after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
+## Upstream verification cadence
+
+On every new charmbracelet/crush **stable** release (not nightly):
+1. bump `crush_ref`/`crush_sha` at the top of `scripts/check-upstream-drift.sh`
+   to the new tag/commit,
+2. run the script (clones the pinned release and diffs its non-initial
+   migrations against the guard list in `schema_drift_test.go`),
+3. on drift: probe or document-exempt every new column/table, extend the
+   guard list, re-run `go test -run TestUpstreamMigrationColumnsAreProbedOrExempt .`,
+4. re-run the real-data sweeps (`TestAllAPIOnRealDatabase` on the largest
+   local registry DB) and update the last-verified tag below.
+
+Last verified: **v0.92.0 @ 559ec80** (2026-09-07, todos probe + guard + drift
+script added; upstream stats command read — its GetUsageByModel only counts
+message rows per model/provider and never sums session-level fields per
+model, so our model-breakdown CTE comment stands unchanged; files table
+confirmed still written by v0.92.0 via internal/history). A weekly CI job
+(`upstream-drift.yml`) runs the script.
+
+Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestSessionsOnRealDatabase|TestAllAPIOnRealDatabase'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Re-run both after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
 ## Architecture (single root package `crushdata`)
 
@@ -35,7 +55,7 @@ Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run TestSessionsOnRealDatabas
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL                                                                                                                                  |
 | parts.go    | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart)                                                   |
 | rows.go     | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses                                                                             |
-| messages.go | Messages(sessionID) ordered `created_at, id`; tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; ReadFiles |
+| messages.go | Messages(sessionID) ordered by insertion (`rowid` — NOT `created_at, id`: message IDs are UUIDv4 random, so id order is arbitrary within a same-second created_at tie; verified inversion-free against created_at on real DBs); tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; ReadFiles |
 | agents.go   | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column                                     |
 | stats.go    | day aggregates; model-breakdown CTE has the double-count trap — see comment there                                                                                                                                 |
 | todos.go    | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census                                                                                                                 |

@@ -1,0 +1,19 @@
+name: Upstream drift
+
+on:
+  schedule:
+    - cron: "47 3 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Pinned crush migrations vs capability guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Check upstream migration drift
+        run: scripts/check-upstream-drift.sh

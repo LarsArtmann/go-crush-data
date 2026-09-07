@@ -13,15 +13,43 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
-- Nothing yet.
+- `Schema.SessionsTodos` reports whether the `sessions.todos` column exists
+  (upstream added it on 2025-08-12). Databases frozen before that migration
+  no longer fail reads; `Session.Todos` is nil and `MissingColumns` lists
+  `sessions.todos`.
+- `Message.UpdatedAt` — the row's last-write time. The column rides the
+  initial messages schema (upstream keeps it fresh with an AFTER UPDATE
+  trigger), so no capability probe is needed.
 
 ### Fixed
 
-- Nothing yet.
+- `Sessions`, `Session`, and `AgentGraph` selected `sessions.todos`
+  unconditionally, so a database written by Crush between 2025-04-24 and
+  2025-08-12 that was never reopened by a newer Crush failed with
+  "no such column: todos" instead of degrading. The new todos capability
+  substitutes `NULL` for the absent column. Pinned by dropping the column
+  from a full-schema fixture and running the whole read API.
+- `Messages` and `IterMessages` now order by insertion (`rowid`) instead of
+  `(created_at, id)`. Crush generates message IDs with `uuid.New()` (UUIDv4,
+  random), so within a same-second `created_at` tie the old order was
+  deterministic but arbitrary — a `tool_result` could sort before its
+  `tool_call`. `rowid` is the insertion counter: unique, untieable, and the
+  actual order Crush wrote the rows. Verified inversion-free against
+  `created_at` on a 52,569-message production database (45% of messages sit
+  in same-second groups). Prompted by stump-wtf/agent-trace#22.
 
 ### Changed
 
-- Nothing yet.
+- `DB.ReadFiles` returns paths most recently read first
+  (`ORDER BY read_at DESC`), matching upstream's read_files listing; the
+  previous order was unspecified.
+- A capability-coverage guard pins the probe list mechanically: every
+  non-initial upstream migration column/table (pinned crush v0.92.0,
+  `559ec80`) must be probed or verifiably unread, enforced by dropping each
+  capability from a full-schema fixture and running the whole read API
+  (`TestUpstreamMigrationColumnsAreProbedOrExempt`).
+  `scripts/check-upstream-drift.sh` diffs a fresh clone of the pinned
+  release against that guard list; a weekly CI job runs it.
 
 ## [0.3.0] - 2026-08-16
 
