@@ -86,9 +86,18 @@ func sweepRealSession(t *testing.T, db *DB, session Session, totals *sweepTotals
 // database when one is present, proving Messages, IterMessages, Stats,
 // AgentGraph, ReadFiles, and todos decoding against live data instead of
 // fixtures — the ad-hoc verification sweep that verification sessions kept
-// rebuilding by hand. Skipped when no local database exists; set
-// CRUSH_DATA_REAL_DATA_DIR to point at one.
+// rebuilding by hand. Skipped when no local database exists (set
+// CRUSH_DATA_REAL_DATA_DIR to point at one) and under -short.
+//
+// Stats runs day-filtered on purpose: an all-time aggregation DISTINCTs
+// every message row ever written, which on a production-sized database
+// (700k+ messages) under a live Crush writer starves for minutes. The day
+// filter exercises the same SQL paths at bounded cost.
 func TestAllAPIOnRealDatabase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("real-data sweep (slow) in -short mode")
+	}
+
 	t.Parallel()
 
 	dataDir := os.Getenv("CRUSH_DATA_REAL_DATA_DIR")
@@ -125,14 +134,8 @@ func TestAllAPIOnRealDatabase(t *testing.T) {
 		sweepRealSession(t, db, session, &totals)
 	}
 
-	if _, err := db.Stats(ctx, StatsFilter{}); err != nil {
-		t.Fatalf("Stats(all time): %v", err)
-	}
-
-	if !sessions[0].CreatedAt.IsZero() {
-		if _, err := db.Stats(ctx, StatsFilter{Day: sessions[0].CreatedAt}); err != nil {
-			t.Fatalf("Stats(day): %v", err)
-		}
+	if _, err := db.Stats(ctx, StatsFilter{Day: sessions[0].CreatedAt}); err != nil {
+		t.Fatalf("Stats(day): %v", err)
 	}
 
 	if missing := db.Schema().MissingColumns(); len(missing) > 0 {
