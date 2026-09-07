@@ -132,15 +132,15 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 ## Storage facts (reverse-engineered, upstream has no docs)
 
 **Verified against charmbracelet/crush v0.92.0 (commit 559ec80, checked
-2026-09-07) by reading upstream source**: every fact below matches
-`internal/db/migrations/`, `internal/projects/projects.go`,
-`internal/config/load.go` (`GlobalConfigData`), `internal/session/session.go`
-(Todo/TodoStatus/CreateAgentToolSessionID), and `internal/message/message.go`
+2026-09-07) by reading upstream source**: every fact below matches the
+upstream internal/db/migrations, internal/projects/projects.go,
+internal/config/load.go (GlobalConfigData), internal/session/session.go
+(Todo/TodoStatus/CreateAgentToolSessionID), and internal/message/message.go
 (marshalParts/unmarshalParts). Upstream now pins its schema in-source via
-goose migrations + sqlc (`sqlc.yaml`, `internal/db/`), which supersedes
+goose migrations + sqlc (sqlc.yaml under internal/db), which supersedes
 migration-comment archaeology — the comments still claim milliseconds while
-the `update_*_updated_at` triggers write `strftime('%s','now')` (seconds)
-and the CLI renders `time.Unix(CreatedAt, 0)`.
+the update_sessions_updated_at trigger writes strftime('%s','now') (seconds)
+and the CLI renders time.Unix(CreatedAt, 0).
 
 - Registry: `<global>/projects.json` — `{projects: [{path, data_dir,
   last_accessed}]}` (RFC3339Nano timestamps); global dir =
@@ -154,7 +154,7 @@ and the CLI renders `time.Unix(CreatedAt, 0)`.
 - Parts envelope: `[{"type":..., "data":{...}}]` with 8 upstream
   discriminators: reasoning, text, image_url, binary, tool_call,
   tool_result, finish, shell_command. image_url/binary pass through as
-  [UnknownPart].
+  `UnknownPart`.
 - Agent child session IDs look like `messageID$$toolCallID`.
 - CLI `crush projects --json` prints JSON on **stderr**.
 - Todos column: JSON array of `{content, status, active_form}` items;
