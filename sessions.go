@@ -97,8 +97,8 @@ func (f SessionFilter) validate() error {
 // arguments, so every condition and its placeholder are appended in the same
 // branch and can never drift apart. Column expressions substitute literal
 // defaults for capabilities the database predates; stable identifiers come
-// from Crush's initial schema, and cost and parent_session_id arrived in
-// later migrations.
+// from Crush's initial schema, and cost, parent_session_id, and todos arrived
+// in later migrations.
 func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 	parentExpr := "NULL AS parent_session_id"
 	if db.schema.SessionsParentSessionID {
@@ -110,10 +110,16 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 		costExpr = costColumn
 	}
 
+	todosExpr := "NULL AS todos"
+	if db.schema.SessionsTodos {
+		todosExpr = "todos"
+	}
+
 	query := fmt.Sprintf(
-		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, todos FROM sessions",
+		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s FROM sessions",
 		parentExpr,
 		costExpr,
+		todosExpr,
 	)
 
 	var (

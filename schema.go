@@ -21,6 +21,10 @@ type Schema struct {
 	// a single node.
 	SessionsParentSessionID bool
 
+	// SessionsTodos reports whether sessions.todos exists (added upstream in
+	// 2025-08-12's migration). Absent: Session.Todos is always nil.
+	SessionsTodos bool
+
 	// MessagesModel reports whether messages.model exists. Absent: message
 	// and stats model fields are empty.
 	MessagesModel bool
@@ -50,6 +54,10 @@ func (s Schema) MissingColumns() []string {
 
 	if !s.SessionsParentSessionID {
 		missing = append(missing, "sessions.parent_session_id")
+	}
+
+	if !s.SessionsTodos {
+		missing = append(missing, "sessions.todos")
 	}
 
 	if !s.MessagesModel {
@@ -97,6 +105,10 @@ func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
 	if schema.SessionsParentSessionID, err = columnExists(
 		ctx, db, "sessions", "parent_session_id",
 	); err != nil {
+		return Schema{}, wrapProbeError(path, err)
+	}
+
+	if schema.SessionsTodos, err = columnExists(ctx, db, "sessions", "todos"); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
