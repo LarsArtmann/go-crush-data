@@ -119,12 +119,6 @@ renumbered, and deleting an item retires its ID for good.
 
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
-- [ ] **T3** After the `.github/workflows/flake-update.yml` permissions fix (`contents: write`,
-      2026-09-08 — the 2026-09-01 scheduled run failed with
-      "Permission to LarsArtmann/go-crush-data.git denied to the
-      github-actions bot") reaches origin: observe the first successful
-      flake-lock PR and that the vendorHash guard behaves. 5m —
-      `.github/workflows/flake-update.yml`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run
       (Mondays 03:47 UTC; first = 2026-09-14) — the workflow_dispatch
       run on 2026-09-08 was green (5s). 5m —
