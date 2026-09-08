@@ -113,33 +113,33 @@ harvest sessions; remaining threads live in TODO_LIST._
 Nothing shipped broken — the final state passes every local gate. The
 honest failures are process failures:
 
-1. **messages.go edit splice briefly broke the build.** My 3-edit batch
-   spliced a new function head onto the old closure body (one edit was a
-   no-op placeholder — sloppy construction). Severity: low (caught by the
-   immediate `go build`, fixed in one step). Root cause: composing a
-   large structural edit as find/replace instead of one precise edit.
-2. **goconst detour: ~6 wasted round trips.** The linter's first message
-   literally said "make it a constant"; I instead ran comment-rewording
-   archaeology, including a botched sed experiment that _disproved_ my
-   comment-counting theory while lint still reported 3 occurrences — and
-   I never established the real counting mechanism. The final fix was the
-   mechanical constant I could have applied first. Time burned, zero
-   knowledge gained. Lesson: **read the linter's remedy before
-   theorizing about its detector.**
-3. **I claimed fuzz coverage I had not wired.** Adding FuzzDecodeTodos +
-   a FEATURES row implying nightly coverage — without checking that
-   fuzz.yml's matrix hardcodes target names. Found only in this
-   self-review; fixed minutes ago. This is exactly the doc-drift class
-   this repo's tooling exists to catch, and I introduced it by hand.
-4. **Untargeted `golangci-lint fmt` mid-session.** I ran the repo-wide
-   rewriter when only my files needed it. Harmless only because master
-   was clean; it could have rewritten unrelated files in a dirty tree.
-5. **Stale LSP diagnostics ignored all session.** godox/goconst warnings
-   on todos.go appeared in every tool result after the CLI already passed
-   (the "A Todo is one entry…" reword happened at minute one; the
-   diagnostic never updated). I silently trusted the CLI — correct call,
-   but the LSP/CLI divergence was never investigated or reported until
-   now. Unknown cause; deserves one look (see e/4).
+1. ~~**messages.go edit splice briefly broke the build.** My 3-edit batch~~ done (lesson — compose structural edits as one precise edit; no recurrence since)
+   ~~spliced a new function head onto the old closure body (one edit was a~~
+   ~~no-op placeholder — sloppy construction). Severity: low (caught by the~~
+   ~~immediate `go build`, fixed in one step). Root cause: composing a~~
+   ~~large structural edit as find/replace instead of one precise edit.~~
+2. ~~**goconst detour: ~6 wasted round trips.** The linter's first message~~ done (root cause found 2026-09-08 — lint-binary version skew, not counting mechanics (AGENTS.md two-lint-binaries gotcha))
+   ~~literally said "make it a constant"; I instead ran comment-rewording~~
+   ~~archaeology, including a botched sed experiment that _disproved_ my~~
+   ~~comment-counting theory while lint still reported 3 occurrences — and~~
+   ~~I never established the real counting mechanism. The final fix was the~~
+   ~~mechanical constant I could have applied first. Time burned, zero~~
+   ~~knowledge gained. Lesson: **read the linter's remedy before~~
+   ~~theorizing about its detector.**~~
+3. ~~**I claimed fuzz coverage I had not wired.** Adding FuzzDecodeTodos +~~ done (fixed same session — fuzz.yml matrix updated; nightly fuzz green continuously since 2026-08-17)
+   ~~a FEATURES row implying nightly coverage — without checking that~~
+   ~~fuzz.yml's matrix hardcodes target names. Found only in this~~
+   ~~self-review; fixed minutes ago. This is exactly the doc-drift class~~
+   ~~this repo's tooling exists to catch, and I introduced it by hand.~~
+4. ~~**Untargeted `golangci-lint fmt` mid-session.** I ran the repo-wide~~ done (lesson recorded (e/5 targeted formatting))
+   ~~rewriter when only my files needed it. Harmless only because master~~
+   ~~was clean; it could have rewritten unrelated files in a dirty tree.~~
+5. ~~**Stale LSP diagnostics ignored all session.** godox/goconst warnings~~ done (root cause found 2026-09-08 — divergent nix-vs-go-tool lint binaries (AGENTS.md gotcha; resolved e/4))
+   ~~on todos.go appeared in every tool result after the CLI already passed~~
+   ~~(the "A Todo is one entry…" reword happened at minute one; the~~
+   ~~diagnostic never updated). I silently trusted the CLI — correct call,~~
+   ~~but the LSP/CLI divergence was never investigated or reported until~~
+   ~~now. Unknown cause; deserves one look (see e/4).~~
 
 ## e) WHAT WE SHOULD IMPROVE
 

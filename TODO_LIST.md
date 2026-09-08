@@ -54,10 +54,11 @@ renumbered, and deleting an item retires its ID for good.
       class the way the probe guard killed probe drift. 1–2h —
       `testutil_test.go` + `scripts/check-upstream-drift.sh`; source:
       docs/status/archived/2026-09-08_05-08_upstream-task-execution-and-harvest.md (f)6/(e)3
-- [ ] **T41** `scripts/check-upstream-status.sh`: one command printing the
-      merge state of openusage#357, mnemo#22, crush #3740/#3576/#3580/#3581
-      and a "G1/G2 UNBLOCKED" verdict — turns T35's daily pass from a
-      hand-rolled ritual into a single run. 30m — `scripts/`; source:
+- [ ] **T41** One-command upstream-status helper under `scripts/` (e.g.
+      `check-upstream-status`): prints the merge state of openusage#357,
+      mnemo#22, crush #3740/#3576/#3580/#3581 and a "G1/G2 UNBLOCKED"
+      verdict — turns T35's daily pass from a hand-rolled ritual into a
+      single run. 30m — `scripts/`; source:
       docs/status/2026-09-08_15-33_filing-campaign-status-and-self-review.md (c)4/(f)17
 - [ ] **T42** CI guard against root `package main` build-breakers: fail when
       a `package main` file exists outside `scripts/`/`cmd/` (the daemon
@@ -156,11 +157,11 @@ renumbered, and deleting an item retires its ID for good.
 ## External (waiting on GitHub UI, schedules, or upstream)
 
 - [ ] **T45** **Push master to origin — origin is RED**: CI and Benchmark
-      trend both fail on `33d454d` (root `censusprobe_main.go` package
-      clash, pushed 06:24 UTC 2026-09-08). The fix (`0842dd1`) and every
-      commit after it sit locally, all green (full gate re-verified by the
-      2026-09-08 docs-health pass). Never pushed without instruction —
-      user action. 5m — `git push`
+      trend both fail on `33d454d` (a root-level `package main` probe file
+      clashed with the library package, pushed 06:24 UTC 2026-09-08). The
+      fix (`0842dd1`) and every commit after it sit locally, all green
+      (full gate re-verified by the 2026-09-08 docs-health pass). Never
+      pushed without instruction — user action. 5m — `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run
