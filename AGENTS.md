@@ -293,3 +293,9 @@ and the CLI renders time.Unix(CreatedAt, 0).
   `ShellCommandPart`/`UnknownPart`) into
   `ProjectDailySummary.MessagePartStats`. Census-pinned shape is therefore
   exercised against production data, not just synthetic.
+- Data-dir quirk seen once (2026-07-28, trashed 2026-09-08): 0-byte files
+  named `crush.db?_loc=auto` / `crush.db?_loc=auto&_time_format=sqlite` —
+  some Go tool passed a mattn-style DSN string as a literal file path
+  (SQLite only parses `?params` with a `file:` prefix, so the whole string
+  became the filename). Harmless to this library, which builds proper URIs
+  (`file:%s?%s`, db.go); trash on sight.
