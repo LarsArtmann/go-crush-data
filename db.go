@@ -104,11 +104,18 @@ func checkDatabaseFile(path string) error {
 //
 // mode=ro tells the driver to use SQLite's read-only flag; the
 // _txlock=immediate hint matches Crush's own open path so concurrent readers
-// do not see torn WAL pages from the writer.
+// do not see torn WAL pages from the writer. busy_timeout(5000) makes reads
+// wait out a live writer's lock instead of failing fast with SQLITE_BUSY
+// (Crush writes with busy_timeout itself). query_only(1) is defense in
+// depth: mode=ro already blocks writes to this file, but query_only also
+// fails any accidental write statement issued through this connection
+// (including via attached databases).
 func openSQLite(path string) (*sql.DB, error) {
 	params := url.Values{}
 	params.Set("mode", "ro")
 	params.Set("_txlock", "immediate")
+	params.Add("_pragma", "busy_timeout(5000)")
+	params.Add("_pragma", "query_only(1)")
 	dsn := fmt.Sprintf("file:%s?%s", path, params.Encode())
 
 	handle, err := sql.Open("sqlite", dsn)
