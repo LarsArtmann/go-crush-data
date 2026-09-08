@@ -563,8 +563,7 @@ func TestDiscoverProjectsDedupeZeroTimestampOnlyEntryStillAppears(t *testing.T) 
 }
 
 // TestDiscoverProjectsOrderedByDataDir pins the documented ordering: results
-// are sorted by DataDir ascending across multiple projects.
-func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
+// are sorted by DataDir ascending across multiple projects.func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
 	t.Parallel()
 
 	globalDir := t.TempDir()

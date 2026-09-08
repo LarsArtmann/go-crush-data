@@ -39,7 +39,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct
+    - exhaustruct_v5
     - exptostd
     - fatcontext
     - forbidigo
@@ -148,9 +148,13 @@ linters:
         - fmt.Println
         - (*strings.Builder).WriteString
         - (*bytes.Buffer).WriteString
-    exhaustruct:
-      exclude:
-        - os/exec.Cmd
+    exhaustruct_v5:
+      # both types are constructed by field assignment (scanMessage), never
+      # literals; the partial literals that exist (zero-value error yields,
+      # focused filters) are intentional
+      ignore-patterns:
+        - '.*/go-crush-data\.Message'
+        - '.*/go-crush-data\.SessionFilter'
     funlen:
       lines: 200
       statements: 100
@@ -267,7 +271,7 @@ linters:
           - gosec
       - path: _test\.go
         linters:
-          - exhaustruct
+          - exhaustruct_v5
           - testpackage
           - gochecknoglobals
           - funlen

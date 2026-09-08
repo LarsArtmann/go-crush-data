@@ -234,7 +234,10 @@ func extractJSONObject(raw []byte) []byte {
 
 // dedupeProjects collapses discovered projects to one per existing crush.db.
 // The entry with the newest LastAccessed wins the Path; ties keep the first
-// entry, and entries with zero timestamps sort last.
+// entry, and entries with zero timestamps sort last. That matches upstream:
+// projects.Register() persists the registry sorted LastAccessed-descending
+// (internal/projects/projects.go, verified v0.92.0), so the newest path for
+// a shared data_dir is the one Crush itself would surface first.
 func dedupeProjects(projects []Project) []Project {
 	best := map[string]Project{}
 
