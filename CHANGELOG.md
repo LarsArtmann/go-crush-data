@@ -13,6 +13,20 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- `Session.SummaryMessageID` and `Message.IsSummaryMessage` — the summary
+  metadata Crush writes when compacting a session's context: the session
+  points at its summary message, and that message row is flagged. Both are
+  probe-gated (`Schema.SessionsSummaryMessageID`,
+  `Schema.MessagesIsSummaryMessage`, both listed by `MissingColumns` when
+  absent): databases frozen before the 2025-05/2025-08 migrations read ""
+  and false instead of failing. Rare on real data (~0.1% of messages,
+  ~3.6–4.1% of sessions across two production-sized databases), returned
+  like any other row — the flag exists so consumers can skip or specially
+  render summaries without changing any count.
+- `Schema.MissingCapabilities()` — the drift-warning list covering optional
+  tables as well as columns (a strict superset of `MissingColumns`: column
+  gaps first, then `read_files` when the table is absent). Pure addition;
+  `MissingColumns` is unchanged.
 - `Schema.SessionsTodos` reports whether the `sessions.todos` column exists
   (upstream added it on 2025-08-12). Databases frozen before that migration
   no longer fail reads; `Session.Todos` is nil and `MissingColumns` lists

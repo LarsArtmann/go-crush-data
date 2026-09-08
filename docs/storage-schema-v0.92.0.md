@@ -28,7 +28,7 @@ AGENTS.md cadence).
 | cost               | REAL    | probed capability            | reads (absent → 0)                   |
 | updated_at         | INTEGER | initial                      | reads                                |
 | created_at         | INTEGER | initial                      | reads                                |
-| summary_message_id | TEXT    | 2025-05-15 migration         | **unread** (additive upstream state) |
+| summary_message_id | TEXT    | 2025-05-15 migration         | probed capability — reads (`Session.SummaryMessageID`; absent → "") |
 | todos              | TEXT    | 2025-08-12 migration         | reads as raw JSON (`Session.Todos`)  |
 
 `parent_session_id` and `todos` ride the initial `CREATE TABLE` in the
@@ -48,7 +48,7 @@ covers databases frozen before those migrations landed.
 | updated_at         | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)          |
 | finished_at        | INTEGER | probed capability             | reads (absent → zero time)           |
 | provider           | TEXT    | 2025-06-27 migration          | reads (absent → "")                  |
-| is_summary_message | INTEGER | 2025-08-10 migration          | **unread** (additive upstream state) |
+| is_summary_message | INTEGER | 2025-08-10 migration          | probed capability — reads (`Message.IsSummaryMessage`; absent → false) |
 
 Message IDs are `uuid.New()` (UUIDv4): random, so insertion order is
 `rowid`, never `(created_at, id)` — this library orders by `rowid`.

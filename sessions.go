@@ -117,7 +117,7 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 
 	summaryExpr := "NULL AS summary_message_id"
 	if db.schema.SessionsSummaryMessageID {
-		summaryExpr = "summary_message_id"
+		summaryExpr = summaryMessageIDColumn
 	}
 
 	query := fmt.Sprintf(

@@ -41,18 +41,20 @@ infrastructure that fails loudly before shipping.
 
 ## Open questions (need a product-scope call)
 
-- **Summary fields and message timestamps**: should
-  `Session.SummaryMessageID` and `Message.IsSummaryMessage` become public
-  API (both exist since 2025-05/2025-08 migrations, both currently unread,
-  both would be probe-gated), or is the library deliberately minimal for
-  crush-daily's needs? `Message.UpdatedAt` already landed (initial-schema
-  column, no probe needed). Source: docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (g)2/(f)10.
-  Evidence 2026-09-08 (prevalence, two real DBs): summary messages are
-  ~0.1% of messages (750/703,387 and 14/13,790); ~3.6–4.1% of sessions
-  carry `summary_message_id`; spread over 71 distinct days. Counting
-  semantics already decided inclusive and pinned
-  (`TestSummaryMessagesAreCounted`); this question is only about
-  EXPOSING the fields.
+- None open. (The summary-fields question below was decided 2026-09-08 and
+  shipped; see CHANGELOG `[Unreleased]`.)
+
+## Recorded decisions
+
+- **Summary fields are public API (decided 2026-09-08, shipped same day).**
+  `Session.SummaryMessageID` and `Message.IsSummaryMessage` are exposed
+  probe-gated rather than keeping the surface minimal: the data is real but
+  rare (~0.1% of messages, ~3.6–4.1% of sessions on two production-sized
+  databases), consumers reconstructing context need exactly this pair to
+  skip or specially render compaction summaries, and counting semantics
+  stay inclusive (pinned by `TestSummaryMessagesAreCounted`) — the exposure
+  changes no numbers. Precedent question this closed:
+  docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (g)2/(f)10.
 
 ## Recorded non-decisions (anti-drift)
 

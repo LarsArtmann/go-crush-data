@@ -10,13 +10,8 @@ renumbered, and deleting an item retires its ID for good.
 
 ## Medium
 
-- [ ] **T15** `Schema.MissingColumns()` omits the read_files _table_;
-      consider `MissingCapabilities()` covering tables (small API break —
-      needs a user call). 30m — `schema.go`; source: same report (f)16.
-      Evidence 2026-09-08: a pure ADDITION (`MissingCapabilities()` new
-      method, `MissingColumns()` kept delegating) breaks nothing — the
-      "break" only exists if MissingColumns is replaced; recommendation
-      pending user call.
+(none open — T15 shipped 2026-09-08 as the pure addition
+`Schema.MissingCapabilities()`; see CHANGELOG `[Unreleased]`)
 
 ## Low
 
@@ -29,12 +24,15 @@ renumbered, and deleting an item retires its ID for good.
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
-- [ ] **T45** **Push master to origin — origin is RED**: CI and Benchmark
-      trend both fail on `33d454d` (a root-level `package main` probe file
-      clashed with the library package, pushed 06:24 UTC 2026-09-08). The
-      fix (`0842dd1`) and every commit after it sit locally, all green
-      (full gate re-verified by the 2026-09-08 docs-health pass). Never
-      pushed without instruction — user action. 5m — `git push`
+- [ ] **T45** **Push master to origin — origin still RED, new causes.**
+      The 2026-09-08 push landed (33d454d incident closed: runs now get
+      past build/test), but CI then failed on (a) the coverage gate —
+      69.5% because `scripts/` scratch packages entered the merged
+      profile at 0% (Go ≥1.22) — and (b) the vendor-hash guard
+      false-positiving on a daemon-split commit. Both fixed locally
+      2026-09-08 (CI scopes coverage via `-coverpkg=.`; guard advisory in
+      CI mode). Push the fix commits and verify green — user action. 5m —
+      `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run

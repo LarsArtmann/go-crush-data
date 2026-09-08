@@ -192,7 +192,17 @@ fmt.Print calls, and never put `package main` files in the repo root
 - **go.sum and flake.nix vendorHash are coupled**: refreshing dependencies
   without updating `vendorHash` breaks `nix flake check` (has bitten once on
   a dependency refresh). After `go get` / `go mod tidy`, update the hash
-  from the mismatch error's "got:" value.
+  from the mismatch error's "got:" value. `scripts/check-vendor-hash.sh`
+  FAILS on local working-tree drift but is ADVISORY in CI (`BASE_REV` arg):
+  the commit-range heuristic cannot distinguish real drift from legal
+  vendor-set-neutral go.sum edits or daemon-split commits — only the nix
+  flake CI job verifies the real hash (bit once: 2026-09-08, go.mod tidy
+  landed a commit after the vendorHash update, red at 8s).
+- **CI's coverage gate measures the library package only** (`-coverpkg=.`
+  in ci.yml): Go ≥1.22 emits no-test-file packages (our `scripts/`
+  scratch tooling) into `-coverprofile` at 0%, dragging the merged total
+  from 88.3% to ~69.5% (red CI, 2026-09-08). Do not remove the flag
+  without excluding scripts from the profile some other way.
 - **`nix flake check` only sees git-tracked files**: untracked `.go` files
   are invisible to the flake's source filter, producing misleading
   "undefined: ..." build errors. Commit new files before judging flake health.
@@ -265,7 +275,9 @@ and the CLI renders time.Unix(CreatedAt, 0).
   created_at, updated_at — file snapshots, intentionally not exposed here;
   the fixture DDL now declares it, guarded against the generated snapshot).
   Sessions also carry `summary_message_id`; messages carry
-  `is_summary_message` — both unread by this library (additive, harmless).
+  `is_summary_message` — both READ here since 2026-09-08 as probe-gated
+  `Session.SummaryMessageID` / `Message.IsSummaryMessage` (absent → "" /
+  false; ~0.1% of messages, ~3.6–4.1% of sessions on real data).
 - Parts envelope: `[{"type":..., "data":{...}}]` with 8 upstream
   discriminators: reasoning, text, image_url, binary, tool_call,
   tool_result, finish, shell_command. image_url/binary pass through as
