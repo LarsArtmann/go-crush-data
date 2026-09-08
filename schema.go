@@ -124,6 +124,11 @@ const costColumn = "cost"
 // agent-subtree queries.
 const todosColumn = "todos"
 
+// summaryMessageIDColumn names the sessions summary_message_id column shared
+// by the schema probe and the capability-substituted summary expressions of
+// the sessions and agent-subtree queries.
+const summaryMessageIDColumn = "summary_message_id"
+
 // messagesTable names the messages table shared by the required-table
 // check and the message-column probes.
 const messagesTable = "messages"
@@ -147,7 +152,7 @@ var columnProbes = []columnProbe{
 	{sessionsTable, costColumn, func(s *Schema, present bool) { s.SessionsCost = present }},
 	{sessionsTable, "parent_session_id", func(s *Schema, present bool) { s.SessionsParentSessionID = present }},
 	{sessionsTable, todosColumn, func(s *Schema, present bool) { s.SessionsTodos = present }},
-	{sessionsTable, "summary_message_id", func(s *Schema, present bool) { s.SessionsSummaryMessageID = present }},
+	{sessionsTable, summaryMessageIDColumn, func(s *Schema, present bool) { s.SessionsSummaryMessageID = present }},
 	{messagesTable, "model", func(s *Schema, present bool) { s.MessagesModel = present }},
 	{messagesTable, "provider", func(s *Schema, present bool) { s.MessagesProvider = present }},
 	{messagesTable, "finished_at", func(s *Schema, present bool) { s.MessagesFinishedAt = present }},

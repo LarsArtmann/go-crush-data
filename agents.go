@@ -115,8 +115,8 @@ func (db *DB) descendantSessions(ctx context.Context, rootID string) ([]Session,
 		recursiveTodosExpr = nullLiteral
 	}
 
-	summaryExpr := "summary_message_id"
-	recursiveSummaryExpr := "s.summary_message_id"
+	summaryExpr := summaryMessageIDColumn
+	recursiveSummaryExpr := "s." + summaryMessageIDColumn
 
 	if !db.schema.SessionsSummaryMessageID {
 		summaryExpr = nullLiteral
