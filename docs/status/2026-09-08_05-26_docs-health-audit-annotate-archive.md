@@ -30,6 +30,9 @@ fuzz/flake-update/upstream-drift ✓ · upstream-drift dispatched green
 
 ## Self-critique (asked directly)
 
+_Reflections, not action items — each lesson's landing spot is annotated
+in (d)/(e) below or lives in AGENTS.md process rules._
+
 **What did I forget?**
 
 1. **The skill's #1 annotation rule — violated on the first pass, and the
@@ -229,18 +232,18 @@ Verifiably complete this session; evidence cited.
 TODO_LIST.md (T1, T3, T6–T7, T10–T29, Parked) is the canonical backlog.
 Below are THIS session's genuinely new or re-ranked items:
 
-| #  | Task                                                                                                | Size |
-| -- | --------------------------------------------------------------------------------------------------- | ---- |
-| 1  | **Push master to origin** (audit diff + flake-update permissions fix; unblocks T3 verification)     | 5m   |
-| 2  | After push: dispatch `flake-update.yml`, observe green run + PR, retire T3                          | 10m  |
-| 3  | Decide: restore the ~15 compressed annotation bodies (02:13 b/c, 08:50 d/e5–e10, 04:20 b-tails) or accept git history as the record | 30m |
-| 4  | Archived→archived reference sweep (grep `docs/status/2026-`, `docs/planning/2026-` inside archived/) | 10m  |
-| 5  | Add `-cover` to the docs-health gate; refresh FEATURES' coverage number                              | 5m   |
-| 6  | Check recent bench.yml runs; refresh the "observed green" observation date in FEATURES               | 5m   |
-| 7  | Observe the first SCHEDULED upstream-drift run (Mon 03:47 UTC, 2026-09-14)                           | 5m   |
-| 8  | T1 Renovate install (user UI) — unblocks T7 and the action-SHA pinning audit                         | 5m   |
-| 9  | Consider a `docs-health` cadence rule in AGENTS.md (after every release / 50+-item session) — the 08-16 session proposed it; never landed | 15m |
-| 10 | Next docs-health pass: VERIFY-only is NOT safe (this pass found a Critical split brain 3 weeks after the last "full sync") — always at least HARVEST the external-observation items against live CI state | — |
+| #  | Task                                                                                                | Size | Resolution |
+| -- | --------------------------------------------------------------------------------------------------- | ---- | --- |
+| 1  | **Push master to origin** (audit diff + flake-update permissions fix; unblocks T3 verification)     | 5m   | Open — user action; origin RED on `33d454d` → TODO_LIST T45 |
+| 2  | After push: dispatch `flake-update.yml`, observe green run + PR, retire T3                          | 10m  | Done — 15-31 P1 (run 34191306038 green; fresh lock → no-PR correct; T3 retired) |
+| 3  | Decide: restore the ~15 compressed annotation bodies (02:13 b/c, 08:50 d/e5–e10, 04:20 b-tails) or accept git history as the record | 30m | Done — restored 2026-09-08 (T30 closed) |
+| 4  | Archived→archived reference sweep (grep `docs/status/2026-`, `docs/planning/2026-` inside archived/) | 10m  | Done — 8 refs repointed 2026-09-08 (T31 closed) |
+| 5  | Add `-cover` to the docs-health gate; refresh FEATURES' coverage number                              | 5m   | Done — 88.1% recorded + -cover line in AGENTS (T32 closed) |
+| 6  | Check recent bench.yml runs; refresh the "observed green" observation date in FEATURES               | 5m   | Done — refreshed 2026-09-08: trend red on `33d454d` (caught a real build-breaker), green through `575d1aa` |
+| 7  | Observe the first SCHEDULED upstream-drift run (Mon 03:47 UTC, 2026-09-14)                           | 5m   | Open — TODO_LIST T34 (Mon 2026-09-14) |
+| 8  | T1 Renovate install (user UI) — unblocks T7 and the action-SHA pinning audit                         | 5m   | Open — TODO_LIST T1 |
+| 9  | Consider a `docs-health` cadence rule in AGENTS.md (after every release / 50+-item session) — the 08-16 session proposed it; never landed | 15m | Open — TODO_LIST T33 |
+| 10 | Next docs-health pass: VERIFY-only is NOT safe (this pass found a Critical split brain 3 weeks after the last "full sync") — always at least HARVEST the external-observation items against live CI state | — | Standing lesson — folded into T33's rule text |
 
 (10 real items — stop at real value; the rest of the backlog is unchanged
 and lives in TODO_LIST.md.)
