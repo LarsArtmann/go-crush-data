@@ -20,7 +20,12 @@ go tool golangci-lint run --timeout=5m ./...  # THE lint command — byte-identi
 nix flake check       # build + format
 nix run .#lint        # convenience wrapper, DIFFERENT binary than CI's — do not gate on it alone (see tooling gotchas)
 nix run .#test        # race test via nix
-CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard
+CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard + schema snapshot
+scripts/check-upstream-drift.sh --self-test  # proves the drift negative path fires (doctored fixture)
+scripts/check-upstream-status.sh   # filing-campaign thread states + G1/G2 verdict (T35 daily pass)
+scripts/check-root-package-main.sh # no `package main` outside scripts//cmd/ (CI runs it too)
+scripts/verify-all.sh              # ONE command: full gate + drift guard + real-data sweeps (summary table)
+go run ./scripts/genschema -migrations <clone>/internal/db/migrations  # regen docs/storage-schema-*.sql after a pin bump
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard (run after every go get / go mod tidy)
 scripts/check-doc-links.sh    # markdown links + file:line citations in root docs resolve (runs in CI)
 go test -cover ./...         # coverage number for FEATURES.md (docs-health cadence)
@@ -40,16 +45,29 @@ On every new charmbracelet/crush **stable** release (not nightly):
    local registry DB, plus the parts-discriminator census:
    `CRUSH_DATA_REAL_REGISTRY=<global dir> go test -run
    TestPartDiscriminatorsCensusRegistry -timeout 30m .`) and update the
-   last-verified tag below.
+   last-verified tag below,
+5. refresh the schema snapshot and its doc:
+   `go run ./scripts/genschema -migrations <clone>/internal/db/migrations
+   > docs/storage-schema-<version>.sql` (rename to the new version), extend
+   the fixture DDL until `TestFixtureSchemaMatchesUpstreamSnapshot` passes,
+   and update `docs/storage-schema-<version>.md`.
+
+A weekly CI job (`.github/workflows/upstream-drift.yml`) runs the drift
+script, and its `release-notice` job opens a tracking issue automatically
+when a new stable release lands — the cadence has a trigger, not just a
+memory.
 
 Last verified: **v0.92.0 @ 559ec80** (2026-09-07, todos probe + guard + drift
 script added; upstream stats command read — its GetUsageByModel only counts
 message rows per model/provider and never sums session-level fields per
 model, so our model-breakdown CTE comment stands unchanged; files table
-confirmed still written by v0.92.0 via internal/history). A weekly CI job
-(`.github/workflows/upstream-drift.yml`) runs the script.
+confirmed still written by v0.92.0 via internal/history). The weekly CI job
+also self-tests the guard (`--self-test`) and diffs the generated schema
+snapshot. Note: our crush#3576 comment fix merged 2026-09-08 but AFTER the
+v0.92.0 cut — the corrected millis comments first ship in the next release
+(evidence: `docs/upstream-filings.md`).
 
-Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestSessionsOnRealDatabase|TestAllAPIOnRealDatabase'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Re-run both after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
+Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestAllAPIOnRealDatabase|TestStatsParityWithCrushDailySQLOnRealDatabase|TestPartDiscriminatorsCensusShape'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Or run everything at once via `scripts/verify-all.sh`. Re-run after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
 ## Docs-health cadence (T33)
 
@@ -77,10 +95,21 @@ documentation rots silently.
 | todos.go    | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census                                                                                                                                                                                                                                                                                                   |
 
 Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
-`.github/workflows/` (ci, release, fuzz, bench, flake-update — all
-tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
+`scripts/check-upstream-drift.sh` (migration-set + schema-snapshot guard,
+with `--self-test` doctored fixture), `scripts/genschema` (generates the
+schema snapshot from pinned migrations), `scripts/check-upstream-status.sh`
+(filing-campaign monitor), `scripts/check-upstream-release.sh` (opens the
+verification-cadence issue on new stable releases; driven by the
+upstream-drift workflow's release-notice job), `scripts/check-root-package-main.sh`
+(CI build-breaker guard), `scripts/verify-all.sh` (single-command full
+verification), `.github/workflows/` (ci, release, fuzz, bench,
+flake-update, upstream-drift — all tagged to pinned action SHAs),
+`docs/benchmarks/baseline-benchmarks.txt`
 (benchstat baseline for the bench.yml trend; regenerate via
 `go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples),
+`docs/storage-schema-v0.92.0.md` + `.sql` (per-release verified schema
+snapshot; guarded by `TestFixtureSchemaMatchesUpstreamSnapshot`),
+`docs/upstream-filings.md` (ledger of everything filed on other repos),
 `docs/ecosystem-implementation-review.md` (source-verified comparison of
 every known Go tool reading crush data — 2 of 6 inherited the
 milliseconds-comment lie as `time.UnixMilli` date bugs; both fixed by
@@ -92,7 +121,8 @@ parts-type canary; prints by design, registry path defaults to
 GlobalDataDir, override via CENSUSPROBE_REGISTRY) — it is
 path-excluded in `.golangci.yml` for print/style rules; do NOT "fix" its
 fmt.Print calls, and never put `package main` files in the repo root
-(they break the single-package `crushdata` build).
+(they break the single-package `crushdata` build —
+`scripts/check-root-package-main.sh` and CI now catch this).
 
 ## Critical decisions
 
@@ -134,6 +164,26 @@ fmt.Print calls, and never put `package main` files in the repo root
   `Session.Todos` change). Run `git show <sha>` before repeating any claim
   taken from a subject line. CHANGELOG.md, not `git log`, is the record of
   what shipped.
+- **Concurrent sessions are normal** (an auto-commit daemon plus multiple
+  agents work this tree simultaneously). Before editing a file, re-read it
+  (`git status` + view) — a stale read is the #1 edit-failure cause, and a
+  foreign diff is not yours to revert. Make surgical, additive edits;
+  never `git restore`/revert work you did not author; when two sessions
+  converge on the same task, keep the better result and integrate rather
+  than overwrite. `scripts/verify-all.sh` re-establishes a known-green
+  baseline after any interleaved foreign change.
+- **External-filing checklist** (every PR/Issue/Discussion/comment on
+  another repo; the filing campaign's hard-won rules):
+  1. verify-then-file — confirm every claim against source in THIS session
+     before writing it into the body;
+  2. no forward promises in bodies ("will follow up with X" rot the moment
+     priorities shift — link what exists or say nothing);
+  3. edit-after-posting is a required step: re-read the posted body and fix
+     rendering/description drift immediately;
+  4. re-verify every cross-claim (links, states of other PRs, numbers) in
+     the FINAL body immediately before posting;
+  5. record what was filed where in `docs/upstream-filings.md`, and track
+     responses via `scripts/check-upstream-status.sh` (TODO_LIST T35).
 
 ## Tooling gotchas
 
@@ -210,7 +260,8 @@ and the CLI renders time.Unix(CreatedAt, 0).
   %LOCALAPPDATA%\crush with USERPROFILE fallback), same order upstream uses.
 - DB: `<data_dir>/crush.db`, tables sessions/messages/read_files **plus
   `files`** (initial migration: id, session_id, path, content, version,
-  created_at, updated_at — file snapshots, intentionally not exposed here).
+  created_at, updated_at — file snapshots, intentionally not exposed here;
+  the fixture DDL now declares it, guarded against the generated snapshot).
   Sessions also carry `summary_message_id`; messages carry
   `is_summary_message` — both unread by this library (additive, harmless).
 - Parts envelope: `[{"type":..., "data":{...}}]` with 8 upstream

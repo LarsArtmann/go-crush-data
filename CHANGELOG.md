@@ -32,6 +32,35 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   fail-loud behavior in CI. Verified 2026-09-08 across 243 registry
   databases: 5,223,870 entries, zero unknown discriminators, zero
   unparseable rows.
+- Generated schema snapshot + fixture guard, killing the fixture-drift
+  class: `scripts/genschema` applies the pinned upstream migrations to a
+  throwaway database and dumps the resulting CREATE statements into the
+  checked-in `docs/storage-schema-v0.92.0.sql`; `scripts/check-upstream-drift.sh`
+  now diffs that snapshot on every run, and
+  `TestFixtureSchemaMatchesUpstreamSnapshot` requires the fixture DDL to
+  cover every table and column of it (the fixture gains the previously
+  missing `files` table). Human-readable companion:
+  `docs/storage-schema-v0.92.0.md`.
+- CI hardening against known failure classes: a root-`package main` guard
+  (`scripts/check-root-package-main.sh`, ubuntu CI leg) fails fast on the
+  build-breaker that kept CI and the benchmark trend red for hours on
+  2026-09-08; the weekly upstream-drift workflow runs the drift guard's
+  `--self-test` (checked-in doctored fixture proving the drift path fires
+  — an ad-hoc empty fixture once produced a vacuous "verified") and gains
+  a `release-notice` job that opens a tracking issue automatically when a
+  new crush stable release lands, driving the verification cadence.
+- `scripts/verify-all.sh`: one command running the canonical gate + the
+  drift guard (self-test and live) + the env-gated real-data sweeps with a
+  per-step summary table, so a session cannot stage verification piecemeal.
+  `scripts/check-upstream-status.sh` prints the filing-campaign thread
+  states and the G1/G2 verdict — the daily T35 pass as a single run
+  (2026-09-08 observation: crush#3576 merged; both fix PRs still open).
+- Real-data Stats parity, extending the verbatim-SQL contract from
+  fixtures to live databases: `TestStatsParityWithCrushDailySQLOnRealDatabase`
+  (env-gated like the other real-data tests, day-filtered on the newest
+  session) re-runs the collector SQL against the same database and
+  requires identical numbers; verified 2026-09-08 on the local registry.
+  The fixture parity check is extracted into a shared helper.
 
 ### Fixed
 
@@ -52,6 +81,10 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Changed
 
+- The flake `lint` app passes arguments through
+  (`nix run .#lint -- --timeout=5m` now applies the flag; it was silently
+  ignored — the false-belief trap hit two sessions), and the devShell gains
+  `shellcheck`, clean over `scripts/`.
 - The committed benchmark baseline regenerates for the first time since the
   AgentGraph `WITH RECURSIVE` rewrite: AgentGraph drops 78% vs the stale
   baseline, Messages reflects the rowid-order/tolerant-decode read path
