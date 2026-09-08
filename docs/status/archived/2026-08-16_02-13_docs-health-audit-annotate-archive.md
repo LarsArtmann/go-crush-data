@@ -71,12 +71,16 @@ artifacts structurally valid (tag-balance parser) ✓.
 _Resolved 2026-09-08: #1/#2 closed post-hoc same day; #3 shipped at
 `473f321`; #4 remains a deliberate provenance choice._
 
-1. ~~**HTML structural re-validation**~~ done — the tag-balance
-   validation ran post-hoc while writing the report: both VALID
-2. ~~**Real-DB smoke test after the `discover.go` edit**~~ done — run
-   post-hoc, PASS
-3. ~~**TODO_LIST routing** — 17 items in place, but they carry no stable
-   IDs~~ done at `473f321` — stable `T1…` IDs + citation convention
+1. ~~**HTML structural re-validation** — my edits were applied before any
+   structural check; the tag-balance validation ran only post-hoc while
+   writing this report (result: both VALID). Correct order would have been
+   edit → validate → then claim done.~~ done — post-hoc validation, both VALID
+2. ~~**Real-DB smoke test after the `discover.go` edit** — initially skipped
+   on a "comment-only change" rationalization; run post-hoc (PASS). The
+   rule I myself strengthened this session says ANY source change.~~ done — run post-hoc, PASS
+3. ~~**TODO_LIST routing** — 17 items in place, but they carry no stable IDs;
+   my annotations cite "TODO_LIST" generically instead of "TODO_LIST item
+   N". Cross-file precision suffers.~~ done at `473f321` — stable `T1…` IDs + citation convention
 4. **22-44 archived file's original banner** still reads
    "[ARCHIVED 2026-08-15]" (historically true for the 23:04 closure note)
    while the file moved to `archived/` on 08-16 — the move is recorded only
@@ -90,11 +94,14 @@ _Resolved 2026-09-08: #1/#2 closed post-hoc same day; #3 shipped at
 _Resolved 2026-09-08: #1 and #2 shipped same day; #3 superseded; #4
 routed to the live TODO_LIST._
 
-1. ~~Docs link/citation checking automation (`scripts/check-doc-links.sh`)~~
+1. ~~Docs link/citation checking automation (`scripts/check-doc-links.sh`) —
+   this session's link pass was grep-by-hand; nothing mechanical exists.~~
    done at `04901d6` — written, self-tested, wired into gate + CI
 2. ~~FEATURES.md header still carries the temporal line "Generated
-   2026-08-15 by a docs BUILD pass"~~ done at `0927fec` — dropped
-3. ~~Push of the ahead-1 commit (`7733d36`) and of this session's diff~~
+   2026-08-15 by a docs BUILD pass" — noticed during VERIFY, not cleaned.~~
+   done at `0927fec` — dropped
+3. ~~Push of the ahead-1 commit (`7733d36`) and of this session's diff —
+   never push without instruction; daemon pickup expected for the rest.~~
    superseded — pushes landed via the user's flow; master == origin
    held thereafter
 4. External/schedule-gated items (unchanged, live in TODO_LIST): Renovate
@@ -106,46 +113,46 @@ routed to the live TODO_LIST._
 
 ## d) TOTALLY FUCKED UP
 
-1. **Seven wasted edit round-trips from exact-match sloppiness**: an edit
-   attempted before Viewing the file (tool refused — system working, my
-   fault), a FEATURES multiedit built from _rendered_ `||` pipes instead of
-   raw `|`, a guessed table cell ("Todos untyped string" vs the actual
-   "untyped JSON string"), a RELEASING edit that swallowed a blank line
-   between numbered items (caught on read-back), and a wrong grep pattern
-   when counting my own resolution markers (`| done \` vs`done at \`).
-   All self-caught, zero repo damage — all preventable by View-before-edit,
-   every single time.
-2. **Wrote a rule, then immediately skirted it**: I widened the AGENTS
-   real-DB smoke rule to "after ANY source change" and then did not run the
-   smoke test after editing `discover.go`, rationalizing "comment-only".
-   The rationalization cost more deliberation than the 0.084s test. Caught
-   while writing this report; closed post-hoc (PASS).
-3. **Todo-list tool left stale**: the session tracker still showed
-   annotate/archive/gate as pending after they were finished — the same
-   lie-class as docs drift (claiming a state that isn't), just in tool
-   state instead of a file.
-4. **Annotated HTML without validating**: I treated C18's structural HTML
-   validation as a closed precedent, then edited two HTML files and never
-   re-ran that validation on my own edits until this report forced the
-   question. Precedent is not a substitute for re-verification after _my_
-   changes.
+1. ~~**Seven wasted edit round-trips from exact-match sloppiness**: an edit~~ done (all self-caught, zero repo damage — lesson recorded (e/2))
+   ~~attempted before Viewing the file (tool refused — system working, my~~
+   ~~fault), a FEATURES multiedit built from _rendered_ `||` pipes instead of~~
+   ~~raw `|`, a guessed table cell ("Todos untyped string" vs the actual~~
+   ~~"untyped JSON string"), a RELEASING edit that swallowed a blank line~~
+   ~~between numbered items (caught on read-back), and a wrong grep pattern~~
+   ~~when counting my own resolution markers (`| done \` vs`done at \`).~~
+   ~~All self-caught, zero repo damage — all preventable by View-before-edit,~~
+   ~~every single time.~~
+2. ~~**Wrote a rule, then immediately skirted it**: I widened the AGENTS~~ done (closed post-hoc (PASS) — the ANY-source-change rule now lives in AGENTS.md)
+   ~~real-DB smoke rule to "after ANY source change" and then did not run the~~
+   ~~smoke test after editing `discover.go`, rationalizing "comment-only".~~
+   ~~The rationalization cost more deliberation than the 0.084s test. Caught~~
+   ~~while writing this report; closed post-hoc (PASS).~~
+3. ~~**Todo-list tool left stale**: the session tracker still showed~~ done (lesson — session-tool state is the same lie-class as docs drift)
+   ~~annotate/archive/gate as pending after they were finished — the same~~
+   ~~lie-class as docs drift (claiming a state that isn't), just in tool~~
+   ~~state instead of a file.~~
+4. ~~**Annotated HTML without validating**: I treated C18's structural HTML~~ done (lesson — precedent is not re-verification (e/3))
+   ~~validation as a closed precedent, then edited two HTML files and never~~
+   ~~re-ran that validation on my own edits until this report forced the~~
+   ~~question. Precedent is not a substitute for re-verification after _my_~~
+   ~~changes.~~
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Mechanize the docs checks**: a `scripts/check-doc-links.sh` (markdown
-   links resolve; `file:line` citations point at real files) wired into the
-   gate would have caught the broken `[0.2.0]` ref and the stale FEATURES
-   citations for free — no session grep-heroics required.
-2. **View-before-edit is non-negotiable**: every wasted round-trip in d/1
-   was an "I knew what it looked like" edit. The discipline exists; apply
-   it when tired too.
-3. **Verify-then-annotate applies to MY OWN session claims**, not just
-   historical docs: d/2 and d/4 are both instances of claiming
-   completeness one step before the last verification existed.
-4. **Stable IDs for TODO_LIST items** (the old M/m scheme had this right):
-   annotations should cite "TODO_LIST item N", not "TODO_LIST".
-5. **One canonical place for archival provenance** — banner or appendix,
-   not both, when a historical file is annotated AND moved.
+1. ~~**Mechanize the docs checks**: a `scripts/check-doc-links.sh` (markdown~~ done at `04901d6`
+   ~~links resolve; `file:line` citations point at real files) wired into the~~
+   ~~gate would have caught the broken `[0.2.0]` ref and the stale FEATURES~~
+   ~~citations for free — no session grep-heroics required.~~
+2. ~~**View-before-edit is non-negotiable**: every wasted round-trip in d/1~~ done (standing discipline — re-taught 2026-09-08 (05-26 report d/2))
+   ~~was an "I knew what it looked like" edit. The discipline exists; apply~~
+   ~~it when tired too.~~
+3. ~~**Verify-then-annotate applies to MY OWN session claims**, not just~~ done (recorded as the AGENTS.md process rule (verify-then-annotate))
+   ~~historical docs: d/2 and d/4 are both instances of claiming~~
+   ~~completeness one step before the last verification existed.~~
+4. ~~**Stable IDs for TODO_LIST items** (the old M/m scheme had this right):~~ done at `473f321`
+   ~~annotations should cite "TODO_LIST item N", not "TODO_LIST".~~
+5. ~~**One canonical place for archival provenance** — banner or appendix,~~ done (convention adopted — single closure note at top; banner stays historical)
+   ~~not both, when a historical file is annotated AND moved.~~
 6. **Cadence for docs-health**: this much drift accumulated in ONE day of
    intense sessions. A docs-health audit gated on every release (and after
    any 50+ item session) keeps it bounded.

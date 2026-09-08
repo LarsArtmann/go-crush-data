@@ -363,48 +363,48 @@ Category: Bug/Feature/Quality/Cleanup/Documentation/Process. T-numbers
 reference TODO_LIST.md IDs (T10–T28 were harvested this session; T1–T9
 predate it).
 
-| #  | Task                                                                                                         | Impact   | Effort | Category      |
-| -- | ------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
-| 1  | T10 — part-discriminator census tripwire over real registry (UnknownPart silently swallows new types)        | High     | M      | Quality       |
-| 2  | T24 — refresh benchmarks baseline (due: todos probe, UpdatedAt scan, ReadFiles ORDER BY changed read paths)  | High     | M      | Quality       |
-| 3  | T16 — Stats parity cross-check vs crush-daily collector on the same DB                                       | High     | M      | Quality       |
-| 4  | N1 — flake.nix lint app: pass "$@" through (silent arg-drop trap hit twice this session)                     | High     | S      | Cleanup       |
-| 5  | N2 — drift script self-test mode (checked-in doctored fixture; negative path verified continuously)          | High     | S      | Quality       |
-| 6  | N3 — generate fixture DDL from pinned upstream migrations (single source of truth; kills fixture drift)      | High     | M      | Quality       |
-| 7  | T15 — MissingCapabilities() covering tables (small API break; needs user decision)                           | Medium   | S      | Feature       |
-| 8  | T13 — docs/storage-schema-v0.92.0.md snapshot (tables, columns, migrations as verified)                      | Medium   | S      | Documentation |
-| 9  | T14 — document parts envelope + 8 discriminators in doc.go                                                   | Medium   | S      | Documentation |
-| 10 | T12 — empty-registry CLI fixture (empty → empty result, no error)                                            | Medium   | S      | Quality       |
-| 11 | T11 — CRUSH_GLOBAL_DATA-is-a-directory fixture                                                               | Medium   | S      | Quality       |
-| 12 | T17 — GitHub Action opening an issue on new crush stable release (drives the AGENTS.md cadence)              | Medium   | M      | Quality       |
-| 13 | N4 — write down the concurrent-session convention in AGENTS.md (claims, ownership windows, pre-edit checks)  | Medium   | S      | Process       |
-| 14 | N5 — single verify-all entry point (gate + drift script + real-data sweeps in one command)                   | Medium   | S      | Process       |
-| 15 | T22 — exhaustruct → exhaustruct_v5 (deprecation warning on every lint run)                                   | Medium   | S      | Cleanup       |
-| 16 | T23 — `nix flake check --all-systems` in CI (aarch64/darwin currently unchecked; warning visible in gate)     | Medium   | M      | Quality       |
-| 17 | T28 — decide whether is_summary_message rows belong in day filters/stats; pin the answer                     | Medium   | S      | Quality       |
-| 18 | T18 — fuzz cadence: 30s DecodeParts + DecodeTodos per verification session                                   | Low      | S      | Quality       |
-| 19 | T19 — cite upstream Register() sort in the dedupe doc comment                                                | Low      | S      | Documentation |
-| 20 | T20 — upstream issue: migration comments claim milliseconds, triggers write seconds (verify-before-filing)   | Low      | S      | Documentation |
-| 21 | T21 — investigate crush.db?_loc=auto stray file in /home/lars/projects/.crush                                | Low      | S      | Cleanup       |
-| 22 | T25 — pin registry last_accessed UTC round-trip                                                              | Low      | S      | Quality       |
-| 23 | T26 — README schema-claims audit for the v0.92.0 annotations                                                 | Low      | S      | Documentation |
-| 24 | T27 — registry parse tolerates unknown top-level keys                                                        | Low      | S      | Quality       |
-| 25 | N6 — check-doc-links: convention for citing not-yet-created artifacts (T13's snapshot doc will trip it)      | Low      | S      | Process       |
-| 26 | Existing T8 — DSN hardening busy_timeout/query_only (IN PROGRESS by the parallel session)                    | Medium   | S      | Quality       |
-| 27 | Existing T1 — install/enable Renovate app                                                                    | Medium   | S      | Cleanup       |
-| 28 | Existing T2 — observe first nightly fuzz run; flip FEATURES row on green                                     | Low      | S      | Quality       |
-| 29 | Existing T3 — observe first monthly flake-lock PR; check vendorHash guard                                    | Low      | S      | Quality       |
-| 30 | Existing T4 — verify pkg.go.dev renders v0.3.0                                                               | Low      | S      | Documentation |
-| 31 | Existing T6 — mine nightly fuzz artifacts for corpus seeds                                                   | Low      | M      | Quality       |
-| 32 | Existing T7 — pin action versions via Renovate (depends T1)                                                  | Low      | S      | Cleanup       |
-| 33 | Existing T9 — report time.UnixMilli date bug to openusage and mnemo (needs go-ahead)                         | Low      | S      | Documentation |
-| 34 | ROADMAP — IterSessions (iterator parity for huge session lists)                                              | Low      | M      | Feature       |
-| 35 | ROADMAP — ReadFileVersions (expose files-table snapshots; only on consumer demand)                           | Low      | L      | Feature       |
-| 36 | ROADMAP/Open question — summary-field exposure (Session.SummaryMessageID, Message.IsSummaryMessage)          | Medium   | M      | Feature       |
-| 37 | Post-release — cut v0.4.0 from [Unreleased] once T8 lands (todos fix, UpdatedAt, ReadFiles order, rowid)     | Medium   | S      | Release       |
-| 38 | Re-verify — run the AGENTS.md cadence on the NEXT crush stable release (bump ref/sha, script, guard, sweeps)  | High     | S      | Quality       |
-| 39 | Consider — CI: run TestAllAPIOnRealDatabase against a seeded fixture DB in CI (sweep without local data)     | Low      | M      | Quality       |
-| 40 | Consider — collect the parallel session's rowid evidence (52,569-message inversion check) as a pinned test    | Low      | S      | Quality       |
+| #  | Task                                                                                                         | Impact   | Effort | Category      | Resolution |
+| -- | ------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- | --- |
+| 1  | T10 — part-discriminator census tripwire over real registry (UnknownPart silently swallows new types)        | High     | M      | Quality       | Open → TODO_LIST T10 (single-DB green; registry fix `7e8e60a`, green run pending) |
+| 2  | T24 — refresh benchmarks baseline (due: todos probe, UpdatedAt scan, ReadFiles ORDER BY changed read paths)  | High     | M      | Quality       | Open → TODO_LIST T24 |
+| 3  | T16 — Stats parity cross-check vs crush-daily collector on the same DB                                       | High     | M      | Quality       | Open → TODO_LIST T16 |
+| 4  | N1 — flake.nix lint app: pass "$@" through (silent arg-drop trap hit twice this session)                     | High     | S      | Cleanup       | Open → TODO_LIST T36 |
+| 5  | N2 — drift script self-test mode (checked-in doctored fixture; negative path verified continuously)          | High     | S      | Quality       | Open → TODO_LIST T37 |
+| 6  | N3 — generate fixture DDL from pinned upstream migrations (single source of truth; kills fixture drift)      | High     | M      | Quality       | Open → TODO_LIST T38 |
+| 7  | T15 — MissingCapabilities() covering tables (small API break; needs user decision)                           | Medium   | S      | Feature       | Open → TODO_LIST T15 (user call) |
+| 8  | T13 — docs/storage-schema-v0.92.0.md snapshot (tables, columns, migrations as verified)                      | Medium   | S      | Documentation | Open → TODO_LIST T13 |
+| 9  | T14 — document parts envelope + 8 discriminators in doc.go                                                   | Medium   | S      | Documentation | Open → TODO_LIST T14 |
+| 10 | T12 — empty-registry CLI fixture (empty → empty result, no error)                                            | Medium   | S      | Quality       | Open → TODO_LIST T12 |
+| 11 | T11 — CRUSH_GLOBAL_DATA-is-a-directory fixture                                                               | Medium   | S      | Quality       | Open → TODO_LIST T11 |
+| 12 | T17 — GitHub Action opening an issue on new crush stable release (drives the AGENTS.md cadence)              | Medium   | M      | Quality       | Open → TODO_LIST T17 |
+| 13 | N4 — write down the concurrent-session convention in AGENTS.md (claims, ownership windows, pre-edit checks)  | Medium   | S      | Process       | Open → TODO_LIST T39 |
+| 14 | N5 — single verify-all entry point (gate + drift script + real-data sweeps in one command)                   | Medium   | S      | Process       | Open → TODO_LIST T46 |
+| 15 | T22 — exhaustruct → exhaustruct_v5 (deprecation warning on every lint run)                                   | Medium   | S      | Cleanup       | Open → TODO_LIST T22 |
+| 16 | T23 — `nix flake check --all-systems` in CI (aarch64/darwin currently unchecked; warning visible in gate)     | Medium   | M      | Quality       | Open → TODO_LIST T23 (user call pending) |
+| 17 | T28 — decide whether is_summary_message rows belong in day filters/stats; pin the answer                     | Medium   | S      | Quality       | Open → TODO_LIST T28 |
+| 18 | T18 — fuzz cadence: 30s DecodeParts + DecodeTodos per verification session                                   | Low      | S      | Quality       | Cadence — 30s×2 run PASS 2026-09-08; standing rule open → TODO_LIST T18 |
+| 19 | T19 — cite upstream Register() sort in the dedupe doc comment                                                | Low      | S      | Documentation | Open → TODO_LIST T19 |
+| 20 | T20 — upstream issue: migration comments claim milliseconds, triggers write seconds (verify-before-filing)   | Low      | S      | Documentation | Closed — superseded: T20 retired; evidence posted on crush#3576 (2026-09-08 campaign) |
+| 21 | T21 — investigate crush.db?_loc=auto stray file in /home/lars/projects/.crush                                | Low      | S      | Cleanup       | Open → TODO_LIST T21 |
+| 22 | T25 — pin registry last_accessed UTC round-trip                                                              | Low      | S      | Quality       | Open → TODO_LIST T25 |
+| 23 | T26 — README schema-claims audit for the v0.92.0 annotations                                                 | Low      | S      | Documentation | Done — README drift-table row added by the 05-26 pass (T26 retired) |
+| 24 | T27 — registry parse tolerates unknown top-level keys                                                        | Low      | S      | Quality       | Open → TODO_LIST T27 |
+| 25 | N6 — check-doc-links: convention for citing not-yet-created artifacts (T13's snapshot doc will trip it)      | Low      | S      | Process       | Folded into TODO_LIST T13's entry (cite-convention note) |
+| 26 | Existing T8 — DSN hardening busy_timeout/query_only (IN PROGRESS by the parallel session)                    | Medium   | S      | Quality       | Done — DSN pragmas shipped, CHANGELOG [Unreleased]; T8 retired 05-26 |
+| 27 | Existing T1 — install/enable Renovate app                                                                    | Medium   | S      | Cleanup       | Open → TODO_LIST T1 (external) |
+| 28 | Existing T2 — observe first nightly fuzz run; flip FEATURES row on green                                     | Low      | S      | Quality       | Done — retired 05-26 (nightly fuzz green since 08-17; pkg.go.dev renders v0.3.0) |
+| 29 | Existing T3 — observe first monthly flake-lock PR; check vendorHash guard                                    | Low      | S      | Quality       | Done — closed by the 15-31 P1 pass (dispatch green; fresh lock → no-PR correct) |
+| 30 | Existing T4 — verify pkg.go.dev renders v0.3.0                                                               | Low      | S      | Documentation | Done — pkg.go.dev v0.3.0 verified by the 05-26 pass |
+| 31 | Existing T6 — mine nightly fuzz artifacts for corpus seeds                                                   | Low      | M      | Quality       | Open → TODO_LIST T6 |
+| 32 | Existing T7 — pin action versions via Renovate (depends T1)                                                  | Low      | S      | Cleanup       | Open → TODO_LIST T7 (depends T1) |
+| 33 | Existing T9 — report time.UnixMilli date bug to openusage and mnemo (needs go-ahead)                         | Low      | S      | Documentation | Done — superseded by fix PRs openusage#357 + mnemo#22 (T9 retired) |
+| 34 | ROADMAP — IterSessions (iterator parity for huge session lists)                                              | Low      | M      | Feature       | Routed → ROADMAP raw idea — lives there |
+| 35 | ROADMAP — ReadFileVersions (expose files-table snapshots; only on consumer demand)                           | Low      | L      | Feature       | Routed → ROADMAP raw idea — lives there |
+| 36 | ROADMAP/Open question — summary-field exposure (Session.SummaryMessageID, Message.IsSummaryMessage)          | Medium   | M      | Feature       | Routed → ROADMAP Open questions — lives there |
+| 37 | Post-release — cut v0.4.0 from [Unreleased] once T8 lands (todos fix, UpdatedAt, ReadFiles order, rowid)     | Medium   | S      | Release       | Parked — TODO_LIST Parked (v0.4.0, release-gated) |
+| 38 | Re-verify — run the AGENTS.md cadence on the NEXT crush stable release (bump ref/sha, script, guard, sweeps)  | High     | S      | Quality       | Done — AGENTS.md "Upstream verification cadence" (`804f0f0`) |
+| 39 | Consider — CI: run TestAllAPIOnRealDatabase against a seeded fixture DB in CI (sweep without local data)     | Low      | M      | Quality       | Routed → ROADMAP raw idea (added this pass) |
+| 40 | Consider — collect the parallel session's rowid evidence (52,569-message inversion check) as a pinned test    | Low      | S      | Quality       | Won't implement — ordering already pinned by fixture tests; the 52,569-msg check was one-off verification (CHANGELOG [Unreleased]) |
 
 Rows 1–6 are the must-do tier; 7–17 the should-do tier; 18–33 scheduled
 or small; 34–40 roadmap/considerations (docs-health rigor pass before

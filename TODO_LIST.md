@@ -156,6 +156,11 @@ renumbered, and deleting an item retires its ID for good.
       finish in 13–20s). Gated on the user's call (2026-09-08_15-31 report
       (g)1); if it is a crush bug it joins the filing campaign. 1–2h —
       investigation; source: same report (b)P3/(f)2
+- [ ] **T46** Single `verify-all` entry point: one command running the
+      canonical gate + `scripts/check-upstream-drift.sh` + the env-gated
+      real-data sweeps, so a session cannot stage verification piecemeal.
+      30m — `scripts/`; source:
+      docs/status/archived/2026-09-08_05-08_upstream-task-execution-and-harvest.md (f)14/(e) N5
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
