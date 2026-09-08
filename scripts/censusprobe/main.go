@@ -1,3 +1,9 @@
+// censusprobe is machine-local scratch tooling for parts-envelope census
+// investigations: it walks every database in a local Crush registry with a
+// per-DB 30s budget and prints any that are slow or failing. It is not part
+// of the library or any CI contract — keep package-main files under
+// scripts/, never in the repo root (a root-level package main breaks the
+// single-package build).
 package main
 
 import (
@@ -10,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/LarsArtmann/go-crush-data"
 	_ "modernc.org/sqlite"
 )
 
@@ -28,7 +35,12 @@ func must(err error) {
 }
 
 func main() {
-	raw, err := os.ReadFile("/home/lars/.local/share/crush/projects.json")
+	registryPath := os.Getenv("CENSUSPROBE_REGISTRY")
+	if registryPath == "" {
+		registryPath = filepath.Join(crushdata.GlobalDataDir(), crushdata.RegistryName)
+	}
+
+	raw, err := os.ReadFile(registryPath)
 	must(err)
 
 	var registry registryFile
@@ -52,7 +64,7 @@ func main() {
 // probeDir runs the per-dir census with a 30s timeout and prints the
 // report line when the dir was slow or the probe failed.
 func probeDir(dir string) {
-	dbPath := filepath.Join(dir, "crush.db")
+	dbPath := filepath.Join(dir, crushdata.DBName)
 	if _, statErr := os.Stat(dbPath); statErr != nil {
 		return
 	}

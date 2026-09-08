@@ -37,7 +37,10 @@ On every new charmbracelet/crush **stable** release (not nightly):
 3. on drift: probe or document-exempt every new column/table, extend the
    guard list, re-run `go test -run TestUpstreamMigrationColumnsAreProbedOrExempt .`,
 4. re-run the real-data sweeps (`TestAllAPIOnRealDatabase` on the largest
-   local registry DB) and update the last-verified tag below.
+   local registry DB, plus the parts-discriminator census:
+   `CRUSH_DATA_REAL_REGISTRY=<global dir> go test -run
+   TestPartDiscriminatorsCensusRegistry -timeout 30m .`) and update the
+   last-verified tag below.
 
 Last verified: **v0.92.0 @ 559ec80** (2026-09-07, todos probe + guard + drift
 script added; upstream stats command read — its GetUsageByModel only counts
@@ -75,7 +78,8 @@ our one-line PRs openusage#357 + mnemo#22 on 2026-09-08), and
 `docs/upstream-read-access-discussion-draft.md` (authored record of the
 posted charmbracelet/crush discussion #3740 — Ideas, 2026-09-08; do not
 re-post). `scripts/censusprobe/` is machine-local scratch tooling (T10
-parts-type canary; prints by design, hardcoded registry path) — it is
+parts-type canary; prints by design, registry path defaults to
+GlobalDataDir, override via CENSUSPROBE_REGISTRY) — it is
 path-excluded in `.golangci.yml` for print/style rules; do NOT "fix" its
 fmt.Print calls, and never put `package main` files in the repo root
 (they break the single-package `crushdata` build).
@@ -210,6 +214,17 @@ and the CLI renders time.Unix(CreatedAt, 0).
   items across all 287 DBs in the local registry (2026-08-16) — zero
   malformed, zero extra keys. When Crush changes the shape,
   `TestDecodeTodosCensusShape` is the tripwire.
+- Parts census (2026-09-08): across 243 readable registry DBs (50k-row /
+  256MiB ceilings per DB) — 5,223,870 entries, zero unparseable, zero
+  discriminators outside the 8 above (image_url never observed in recent
+  windows; shell_command is rare at 5). Standing tripwire:
+  `TestPartDiscriminatorsCensusShape` (per-DB) and
+  `TestPartDiscriminatorsCensusRegistry` (whole registry, env
+  `CRUSH_DATA_REAL_REGISTRY`, per-DB 60s timeout). Slow-DB note: a running
+  mindwalk holds ~250 registry DBs open; census calls overlapping its scan
+  windows stall (14 skipped 2026-09-08) — transient contention, not DB
+  pathologies (the same DBs census in under a second when idle, and
+  busy_timeout(5000) bounds pure lock waits).
 - Real consumer adoption: `crush-daily` decodes per-session todos
   (pending/in_progress/completed counts in `ProjectDailySummary.TodoStats`)
   and iterates messages via `DB.IterMessages` to count part kinds

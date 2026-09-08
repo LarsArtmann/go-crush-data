@@ -20,6 +20,18 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 - `Message.UpdatedAt` — the row's last-write time. The column rides the
   initial messages schema (upstream keeps it fresh with an AFTER UPDATE
   trigger), so no capability probe is needed.
+- Parts-envelope drift tripwire, the todos-census equivalent for the
+  `{type,data}` envelope: env-gated real-data tests census the raw part
+  discriminators of recent messages (before decode — a new upstream part
+  type would otherwise land in `UnknownPart` silently) and fail loudly on
+  any discriminator outside the pinned v0.92.0 set.
+  `TestPartDiscriminatorsCensusShape` covers one database
+  (`CRUSH_DATA_REAL_DATA_DIR`), `TestPartDiscriminatorsCensusRegistry`
+  sweeps a whole registry (`CRUSH_DATA_REAL_REGISTRY`, per-database 60s
+  timeout degrading contention to a skip), and a fixture negative test pins
+  fail-loud behavior in CI. Verified 2026-09-08 across 243 registry
+  databases: 5,223,870 entries, zero unknown discriminators, zero
+  unparseable rows.
 
 ### Fixed
 

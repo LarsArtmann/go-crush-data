@@ -154,6 +154,17 @@ the relevant subset for test-only changes) + the real-data rule for any
 | p3.7 | Docs: FEATURES row + AGENTS storage-facts line                                   | 8   |
 | p3.8 | → GATE + real-data                                                               | 12  |
 
+P3 executed 2026-09-08 (follow-up session): the final design streams raw
+parts rows `ORDER BY rowid DESC` (Go-side parse, payloads as
+json.RawMessage) under two ceilings (50k newest rows, 256MiB bytes) — the
+SQL-side json_each design died on the 5GB fallback DB (601s timeout), and
+the row budget alone could not cap payload I/O. Registry sweep green:
+243 databases, 5,223,870 entries, 0 unknown discriminators, 0 unparseable,
+14 contention-skips (per-DB 60s timeout + skip-and-log). Root cause of the
+hanging DBs: transient contention from a running mindwalk indexer holding
+~250 registry DBs open — not a crush bug (TODO_LIST T44 retired). Full gate
+green; T10 retired.
+
 ### P4 — benchmarks (60m) — now
 
 | ID  | Task                                                                            | Min |

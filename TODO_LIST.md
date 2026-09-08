@@ -8,19 +8,6 @@ Items carry stable IDs (`T1`, `T2`, …). Cite them as `TODO_LIST T3` in status
 reports and annotations. New items take the next free number; IDs are never
 renumbered, and deleting an item retires its ID for good.
 
-## High
-
-- [ ] **T10** Part-discriminator census tripwire — CLOSE OUT: single-DB
-      tripwire (`TestPartDiscriminatorsCensusShape`) green 2026-09-08
-      (128,208 entries, 0 unparseable, 8 known kinds); negative fixture test
-      runs in CI; registry census got per-DB 60s timeout + skip-and-log
-      (`7e8e60a`) after ~11 contention-hung DBs sank two 10-minute runs —
-      remaining: observe one green registry run, then land p3.7 docs
-      (FEATURES row + AGENTS storage-facts line) and the CHANGELOG entry.
-      Also consider one overnight `CRUSH_DATA_CENSUS_FULL=1` pass to pin the
-      all-time histogram. 1–2h — `realdata_test.go`; source:
-      docs/status/2026-09-08_15-31_pareto-execution-p1-p3-p4-progress.md (a)P3/(b)P3/(f)1
-
 ## Medium
 
 - [ ] **T11** Fixture test pinning `CRUSH_GLOBAL_DATA`-is-a-directory
@@ -143,11 +130,6 @@ renumbered, and deleting an item retires its ID for good.
       ledger (or a CHANGELOG policy note) so retired TODO items (T9/T20)
       keep a local record of what was filed where. 15m — `docs/` or
       `CHANGELOG.md`; source: 2026-09-08_15-33 report (b)4/(f)19
-- [ ] **T44** Root-cause the ~11 slow/hanging registry databases (WAL replay,
-      live-writer locks, or fat single rows — healthy DBs of the same size
-      finish in 13–20s). Gated on the user's call (2026-09-08_15-31 report
-      (g)1); if it is a crush bug it joins the filing campaign. 1–2h —
-      investigation; source: same report (b)P3/(f)2
 - [ ] **T46** Single `verify-all` entry point: one command running the
       canonical gate + `scripts/check-upstream-drift.sh` + the env-gated
       real-data sweeps, so a session cannot stage verification piecemeal.

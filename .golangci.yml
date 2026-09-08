@@ -288,6 +288,11 @@ linters:
           - nlreturn
           - wsl_v5
           - noctx
+      # reading a caller/env-supplied registry path is this probe's purpose
+      - path: ^scripts/censusprobe/
+        text: G703
+        linters:
+          - gosec
           - sqlclosecheck
           - modernize
     paths:
