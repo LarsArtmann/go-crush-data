@@ -10,13 +10,16 @@ renumbered, and deleting an item retires its ID for good.
 
 ## High
 
-- [ ] **T10** Part-discriminator census tripwire: census the `{type,data}`
-      envelope's discriminator kinds across real-registry messages when
-      `CRUSH_DATA_REAL_DATA_DIR` is set (the todos-shape census pattern) —
-      one new upstream part type currently lands in `UnknownPart`
-      silently, and `TestAllAPIOnRealDatabase` decodes but does not count
-      kinds. 1–2h — `parts_test.go`, `realdata_test.go`; source:
-      docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)8/(f)17
+- [ ] **T10** Part-discriminator census tripwire — CLOSE OUT: single-DB
+      tripwire (`TestPartDiscriminatorsCensusShape`) green 2026-09-08
+      (128,208 entries, 0 unparseable, 8 known kinds); negative fixture test
+      runs in CI; registry census got per-DB 60s timeout + skip-and-log
+      (`7e8e60a`) after ~11 contention-hung DBs sank two 10-minute runs —
+      remaining: observe one green registry run, then land p3.7 docs
+      (FEATURES row + AGENTS storage-facts line) and the CHANGELOG entry.
+      Also consider one overnight `CRUSH_DATA_CENSUS_FULL=1` pass to pin the
+      all-time histogram. 1–2h — `realdata_test.go`; source:
+      docs/status/2026-09-08_15-31_pareto-execution-p1-p3-p4-progress.md (a)P3/(b)P3/(f)1
 
 ## Medium
 
@@ -44,6 +47,23 @@ renumbered, and deleting an item retires its ID for good.
       lands (drives the AGENTS.md verification cadence; the weekly
       `.github/workflows/upstream-drift.yml` job already covers scheduled detection).
       1h — `.github/workflows/`; source: same report (f)33
+- [ ] **T38** Generate the test-fixture DDL from the pinned upstream
+      migrations instead of the hand-maintained approximation (still
+      missing the `files` table, indexes, triggers, CHECK constraints —
+      drifted once already). Single source of truth kills the fixture-drift
+      class the way the probe guard killed probe drift. 1–2h —
+      `testutil_test.go` + `scripts/check-upstream-drift.sh`; source:
+      docs/status/archived/2026-09-08_05-08_upstream-task-execution-and-harvest.md (f)6/(e)3
+- [ ] **T41** `scripts/check-upstream-status.sh`: one command printing the
+      merge state of openusage#357, mnemo#22, crush #3740/#3576/#3580/#3581
+      and a "G1/G2 UNBLOCKED" verdict — turns T35's daily pass from a
+      hand-rolled ritual into a single run. 30m — `scripts/`; source:
+      docs/status/2026-09-08_15-33_filing-campaign-status-and-self-review.md (c)4/(f)17
+- [ ] **T42** CI guard against root `package main` build-breakers: fail when
+      a `package main` file exists outside `scripts/`/`cmd/` (the daemon
+      committed one at 06:24 UTC and origin's CI + bench legs sat red for
+      hours until the fix was pushed). 30m — `.github/workflows/ci.yml`
+      or a check script; source: same report (e)5/(f)18
 
 ## Low
 
@@ -105,9 +125,46 @@ renumbered, and deleting an item retires its ID for good.
       release and any 50+-item session — proposed 2026-08-16, never
       landed; this audit found a Critical split brain 3 weeks after the
       last "full sync"). 15m — `AGENTS.md`; source: same report (f)9
+- [ ] **T36** flake.nix lint app drops extra arguments (`exec golangci-lint
+      run ./...` is hardcoded): pass `"$@"` through so `nix run .#lint --
+      <args>` stops silently ignoring them — the false-belief trap hit one
+      session twice. Mitigation already landed (AGENTS gates on the
+      go-tool lint); this closes the wrapper itself. 15m — `flake.nix`;
+      source: docs/status/archived/2026-09-08_05-08_upstream-task-execution-and-harvest.md (f)4/(e)6
+- [ ] **T37** Drift-script self-test: checked-in doctored fixture proving the
+      negative path fires (the ad-hoc /tmp doctoring once produced an empty
+      file and a vacuous "verified" pass). 30m —
+      `scripts/check-upstream-drift.sh`; source: same report (f)5/(e)4
+- [ ] **T39** AGENTS.md process-rule batch: (a) concurrent-session convention
+      (pre-edit `git log --since`/status check, surgical edits, never
+      revert foreign work); (b) external-filing checklist (no forward
+      promises in PR/Issue bodies, edit-after-posting as a required step,
+      re-verify every cross-claim in the FINAL body immediately before
+      posting). 30m — `AGENTS.md`; source: same report (f)13 +
+      2026-09-08_15-33 report (e)1/(e)2/(f)16/(f)23
+- [ ] **T40** censusprobe polish: generalize the hardcoded `/home/lars/...`
+      registry path to an env var and add a header comment marking
+      `scripts/censusprobe/` as the canonical location (public-repo
+      credibility; the campaign depends on it). 20m —
+      `scripts/censusprobe/main.go`; source: 2026-09-08_15-33 report (f)20/(f)21
+- [ ] **T43** Record the external-filing trace: a short docs/upstream-filings
+      ledger (or a CHANGELOG policy note) so retired TODO items (T9/T20)
+      keep a local record of what was filed where. 15m — `docs/` or
+      `CHANGELOG.md`; source: 2026-09-08_15-33 report (b)4/(f)19
+- [ ] **T44** Root-cause the ~11 slow/hanging registry databases (WAL replay,
+      live-writer locks, or fat single rows — healthy DBs of the same size
+      finish in 13–20s). Gated on the user's call (2026-09-08_15-31 report
+      (g)1); if it is a crush bug it joins the filing campaign. 1–2h —
+      investigation; source: same report (b)P3/(f)2
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
+- [ ] **T45** **Push master to origin — origin is RED**: CI and Benchmark
+      trend both fail on `33d454d` (root `censusprobe_main.go` package
+      clash, pushed 06:24 UTC 2026-09-08). The fix (`0842dd1`) plus six
+      more commits sit locally, all green (full gate re-verified by the
+      2026-09-08 docs-health pass). Never pushed without instruction —
+      user action. 5m — `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run
@@ -124,6 +181,9 @@ renumbered, and deleting an item retires its ID for good.
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 
+- Cut **v0.4.0** once `[Unreleased]` settles (census tripwire close-out
+  is the last code item); tags need explicit approval and a green origin
+  first (T45).
 - Upstream PR to cosmtrek/mindwalk for the `sdk/go-crush-data` branch
   (Stream X T24; needs user go-ahead to push).
 - charmbracelet/crush read-access Discussion: POSTED 2026-09-08 as
