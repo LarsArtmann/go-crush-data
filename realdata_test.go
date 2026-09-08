@@ -71,20 +71,42 @@ func (c partCensus) unknownKinds() []string {
 	return unknown
 }
 
+// partCensusWindow bounds the census to each database's most recent
+// messages: drift only enters through rows a newer Crush wrote, while an
+// unbounded walk of a multi-gigabyte database costs minutes of pure table
+// scan for zero extra signal (measured 2026-09-08 on the 5 GB local
+// registry database: full census > 10 min, recent-window census seconds).
+// Set CRUSH_DATA_CENSUS_FULL=1 to scan every row (archaeology mode).
+const partCensusWindow = 50_000
+
 // censusPartDiscriminators aggregates the raw `{type,data}` discriminators of
-// every parts entry in the database, entirely inside SQLite: the histogram
-// never ships message payloads across the driver boundary, so a census stays
-// cheap even on multi-gigabyte databases. Rows that are not valid JSON are
-// counted, not failed — corruption is a different problem than drift, and
-// DB.Messages already degrades such rows to nil Parts.
+// the parts entries in the database's most recent partCensusWindow messages
+// (every message when CRUSH_DATA_CENSUS_FULL=1), entirely inside SQLite: the
+// histogram never ships message payloads across the driver boundary. Rows
+// that are not valid JSON are counted, not failed — corruption is a different
+// problem than drift, and DB.Messages already degrades such rows to nil
+// Parts. messages.rowid is insertion order, so the rowid bound selects the
+// newest rows without scanning the rest of the table.
 func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, error) {
 	census := partCensus{kinds: make(map[string]int)}
+
+	var maxRowID int64
+	if err := handle.QueryRowContext(ctx, "SELECT COALESCE(MAX(rowid), 0) FROM messages").
+		Scan(&maxRowID); err != nil {
+		return partCensus{}, fmt.Errorf("find newest message row: %w", err)
+	}
+
+	// rowids start at 1, so a lower bound of 0 selects every row in full mode.
+	lowerBound := int64(0)
+	if os.Getenv("CRUSH_DATA_CENSUS_FULL") != "1" {
+		lowerBound = maxRowID - partCensusWindow
+	}
 
 	rows, err := handle.QueryContext(ctx, `
 		SELECT COALESCE(json_extract(entry.value, '$.type'), ''), COUNT(*)
 		FROM messages, json_each(messages.parts) AS entry
-		WHERE messages.parts IS NOT NULL AND json_valid(messages.parts)
-		GROUP BY 1`)
+		WHERE messages.rowid > ? AND json_valid(messages.parts)
+		GROUP BY 1`, lowerBound)
 	if err != nil {
 		return partCensus{}, fmt.Errorf("census part kinds: %w", err)
 	}
@@ -111,7 +133,7 @@ func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, 
 
 	if err := handle.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM messages
-		WHERE parts IS NOT NULL AND parts != '[]' AND NOT json_valid(parts)`).
+		WHERE rowid > ? AND parts IS NOT NULL AND parts != '[]' AND NOT json_valid(parts)`, lowerBound).
 		Scan(&census.unparseable); err != nil {
 		return partCensus{}, fmt.Errorf("count unparseable parts rows: %w", err)
 	}
@@ -307,11 +329,11 @@ func decodedPartKind(part Part) string {
 
 // TestPartDiscriminatorsCensusShape is the parts-envelope drift tripwire, the
 // TestDecodeTodosCensusShape equivalent for the `{type,data}` envelope: it
-// scans every parts entry of a real database raw, before decode — a new
-// upstream discriminator would decode as UnknownPart without a peep, which
-// is exactly the silent-drift hole this closes — and fails when a
-// discriminator outside the known set appears. Skipped without real data and
-// under -short.
+// scans the raw parts entries of a real database's most recent messages —
+// before decode, because a new upstream discriminator would decode as
+// UnknownPart without a peep, which is exactly the silent-drift hole this
+// closes — and fails when a discriminator outside the known set appears.
+// Skipped without real data and under -short.
 func TestPartDiscriminatorsCensusShape(t *testing.T) {
 	if testing.Short() {
 		t.Skip("real-data sweep (slow) in -short mode")
@@ -356,10 +378,12 @@ func TestPartDiscriminatorsCensusShape(t *testing.T) {
 
 // TestPartDiscriminatorsCensusRegistry runs the census across every database
 // in a real registry: set CRUSH_DATA_REAL_REGISTRY to the global data
-// directory holding projects.json. Heavy — the local registry's largest
-// database is multi-gigabyte — so it is intended for upstream-verification
-// sessions (the AGENTS.md cadence), not the standard real-data pass. Fails on
-// any unknown discriminator.
+// directory holding projects.json. Each database contributes its most
+// recent messages (see partCensusWindow; CRUSH_DATA_CENSUS_FULL=1 scans
+// everything), so even the local registry's multi-gigabyte database finishes
+// in seconds. Intended for upstream-verification sessions (the AGENTS.md
+// cadence), not the standard real-data pass. Fails on any unknown
+// discriminator.
 func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 	if testing.Short() {
 		t.Skip("registry census (slow) in -short mode")
