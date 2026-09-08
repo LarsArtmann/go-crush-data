@@ -92,3 +92,7 @@ The composition above was executed end-to-end on 2026-08-16 against a
 throwaway registry: baseline discovery returned 1 project, a registry
 rewrite (the way Crush registers a new project) fired the debounced
 projects.json event, and re-discovery returned 2 projects.
+
+Real consumer: crush-daily uses this library's `DiscoverProjects` +
+per-project reads behind the same pattern (registry-driven discovery, then
+open-and-read); the recipe above is the watching half of that loop.

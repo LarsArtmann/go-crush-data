@@ -22,12 +22,12 @@ infrastructure that fails loudly before shipping.
 - **`IterSessions`** — iterator parity with `IterMessages` for registries
   whose session lists are too large to materialize. Only worth it once a
   consumer hits thousands of sessions per data dir; `SessionFilter.Limit`
-  covers current consumers. Source: docs/status/2026-09-07_21-59…verification.md (f)19.
+  covers current consumers. Source: docs/status/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)19.
 - **Exposing `files`-table snapshots (`ReadFileVersions`)** — upstream still
   writes file snapshots (v0.92.0 internal/history/file.go), the initial
   migration carries the table, and this library deliberately does not read
   it. Graduate only when a consumer asks for versioned file content.
-  Source: same report (f)34.
+  Source: docs/status/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)34.
 
 ## Open questions (need a product-scope call)
 
@@ -36,7 +36,7 @@ infrastructure that fails loudly before shipping.
   API (both exist since 2025-05/2025-08 migrations, both currently unread,
   both would be probe-gated), or is the library deliberately minimal for
   crush-daily's needs? `Message.UpdatedAt` already landed (initial-schema
-  column, no probe needed). Source: docs/status/2026-09-07_21-59…verification.md (g)2/(f)10.
+  column, no probe needed). Source: docs/status/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (g)2/(f)10.
 
 ## Recorded non-decisions (anti-drift)
 
