@@ -81,13 +81,13 @@ fi
 
 echo
 echo "Phase G verdict (fix first, suggest second):"
-if [[ ${verdicts[janekbaraniewski/openusage#357]:-unknown} == MERGED ]]; then
+if [[ ${verdicts[janekbaraniewski / openusage#357]:-unknown} == MERGED ]]; then
 	echo "  G1 openusage: fix MERGED — adoption suggestion UNBLOCKED (post the plan's draft; re-verify claims first)"
 else
 	echo "  G1 openusage: fix PR not merged yet — suggestion stays blocked"
 fi
 
-if [[ ${verdicts[Pilan-AI/mnemo#22]:-unknown} == MERGED ]]; then
+if [[ ${verdicts[Pilan - AI / mnemo#22]:-unknown} == MERGED ]]; then
 	echo "  G2 mnemo: fix MERGED — adoption suggestion UNBLOCKED (post the plan's draft; re-verify claims first)"
 else
 	echo "  G2 mnemo: fix PR not merged yet — suggestion stays blocked"

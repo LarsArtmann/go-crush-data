@@ -382,6 +382,6 @@ active throughout and co-completed parts of the plan (attributed below).
 
 ---
 
-*Verify-then-annotate: every "green/PASS/verified" above corresponds to a
+_Verify-then-annotate: every "green/PASS/verified" above corresponds to a
 command that exited 0 this session, except where explicitly attributed to
-the concurrent session (a/16, a/17 authorship, a/24 fuzz numbers).*
+the concurrent session (a/16, a/17 authorship, a/24 fuzz numbers)._

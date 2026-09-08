@@ -177,9 +177,9 @@ Body:
 
 A1→B1→B2→B3→B4 ┐
 A2→C1→C2→C3→C4 ┴→ D1→D2→D3 → E1
-                                   E2, F1 independent of D
-                                   F2 after D3; F3 after B4/C4/D3
-                                   G1/G2 after B4/C4 merge; G3 anytime after D3
+E2, F1 independent of D
+F2 after D3; F3 after B4/C4/D3
+G1/G2 after B4/C4 merge; G3 anytime after D3
 
 ## Out of scope (tracked elsewhere)
 

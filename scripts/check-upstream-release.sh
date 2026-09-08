@@ -59,7 +59,8 @@ if gh issue list --state open --search "in:title \"$marker\"" | grep -q .; then
 	exit 0
 fi
 
-gh issue create --title "$marker — run the upstream verification cadence" --body "$(cat <<EOF
+gh issue create --title "$marker — run the upstream verification cadence" --body "$(
+	cat <<EOF
 A new charmbracelet/crush stable release (\`$latest\`) landed; this repo pins
 \`$pinned_ref\`. Run the AGENTS.md "Upstream verification cadence":
 

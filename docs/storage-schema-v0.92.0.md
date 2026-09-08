@@ -17,19 +17,19 @@ AGENTS.md cadence).
 
 ## sessions
 
-| column              | type    | added in                      | this library                          |
-| ------------------- | ------- | ----------------------------- | ------------------------------------- |
-| id                  | TEXT PK | initial (2025-04-24)          | reads                                 |
-| parent_session_id   | TEXT    | probed capability             | reads (agent graphs; absent → flat)   |
-| title               | TEXT    | initial                       | reads                                 |
-| message_count       | INTEGER | initial (trigger-maintained)  | reads                                 |
-| prompt_tokens       | INTEGER | initial                       | reads (stats)                         |
-| completion_tokens   | INTEGER | initial                       | reads (stats)                         |
-| cost                | REAL    | probed capability             | reads (absent → 0)                    |
-| updated_at          | INTEGER | initial                       | reads                                 |
-| created_at          | INTEGER | initial                       | reads                                 |
-| summary_message_id  | TEXT    | 2025-05-15 migration          | **unread** (additive upstream state)  |
-| todos               | TEXT    | 2025-08-12 migration          | reads as raw JSON (`Session.Todos`)   |
+| column             | type    | added in                     | this library                         |
+| ------------------ | ------- | ---------------------------- | ------------------------------------ |
+| id                 | TEXT PK | initial (2025-04-24)         | reads                                |
+| parent_session_id  | TEXT    | probed capability            | reads (agent graphs; absent → flat)  |
+| title              | TEXT    | initial                      | reads                                |
+| message_count      | INTEGER | initial (trigger-maintained) | reads                                |
+| prompt_tokens      | INTEGER | initial                      | reads (stats)                        |
+| completion_tokens  | INTEGER | initial                      | reads (stats)                        |
+| cost               | REAL    | probed capability            | reads (absent → 0)                   |
+| updated_at         | INTEGER | initial                      | reads                                |
+| created_at         | INTEGER | initial                      | reads                                |
+| summary_message_id | TEXT    | 2025-05-15 migration         | **unread** (additive upstream state) |
+| todos              | TEXT    | 2025-08-12 migration         | reads as raw JSON (`Session.Todos`)  |
 
 `parent_session_id` and `todos` ride the initial `CREATE TABLE` in the
 pinned source but were added by later migrations historically; the probe
@@ -37,29 +37,29 @@ covers databases frozen before those migrations landed.
 
 ## messages
 
-| column              | type    | added in                      | this library                          |
-| ------------------- | ------- | ----------------------------- | ------------------------------------- |
-| id                  | TEXT PK | initial (UUIDv4 — random!)    | reads                                 |
-| session_id          | TEXT    | initial (FK, indexed)         | reads                                 |
-| role                | TEXT    | initial                       | reads                                 |
-| parts               | TEXT    | initial                       | reads (the `{type,data}` envelope)    |
-| model               | TEXT    | probed capability             | reads (absent → "")                   |
-| created_at          | INTEGER | initial (indexed since 06-24) | reads                                 |
-| updated_at          | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)           |
-| finished_at         | INTEGER | probed capability             | reads (absent → zero time)            |
-| provider            | TEXT    | 2025-06-27 migration          | reads (absent → "")                   |
-| is_summary_message  | INTEGER | 2025-08-10 migration          | **unread** (additive upstream state)  |
+| column             | type    | added in                      | this library                         |
+| ------------------ | ------- | ----------------------------- | ------------------------------------ |
+| id                 | TEXT PK | initial (UUIDv4 — random!)    | reads                                |
+| session_id         | TEXT    | initial (FK, indexed)         | reads                                |
+| role               | TEXT    | initial                       | reads                                |
+| parts              | TEXT    | initial                       | reads (the `{type,data}` envelope)   |
+| model              | TEXT    | probed capability             | reads (absent → "")                  |
+| created_at         | INTEGER | initial (indexed since 06-24) | reads                                |
+| updated_at         | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)          |
+| finished_at        | INTEGER | probed capability             | reads (absent → zero time)           |
+| provider           | TEXT    | 2025-06-27 migration          | reads (absent → "")                  |
+| is_summary_message | INTEGER | 2025-08-10 migration          | **unread** (additive upstream state) |
 
 Message IDs are `uuid.New()` (UUIDv4): random, so insertion order is
 `rowid`, never `(created_at, id)` — this library orders by `rowid`.
 
 ## read_files (table added 2026-01-27; probed)
 
-| column     | type    | notes                                   |
-| ---------- | ------- | --------------------------------------- |
-| session_id | TEXT    | PK(path, session_id), FK to sessions    |
-| path       | TEXT    |                                         |
-| read_at    | INTEGER | seconds; this library sorts DESC on it  |
+| column     | type    | notes                                  |
+| ---------- | ------- | -------------------------------------- |
+| session_id | TEXT    | PK(path, session_id), FK to sessions   |
+| path       | TEXT    |                                        |
+| read_at    | INTEGER | seconds; this library sorts DESC on it |
 
 ## files (initial; intentionally not read)
 

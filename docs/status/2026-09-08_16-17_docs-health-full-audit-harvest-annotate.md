@@ -196,8 +196,8 @@ Verifiably complete this session; evidence cited.
 TODO_LIST.md (T1, T6–T7, T10–T46, Parked) is the canonical backlog.
 Session-borne items beyond it:
 
-| #  | Task                                                                                          | Size |
-| -- | --------------------------------------------------------------------------------------------- | ---- |
+| #  | Task                                                                                           | Size |
+| -- | ---------------------------------------------------------------------------------------------- | ---- |
 | 1  | **Push master (T45)** — origin red; local green; unblocks CI/bench and T3-class verification   | 5m   |
 | 2  | Annotate + archive the 15-31/15-33 reports once their sessions go quiet (docs-health ANNOTATE) | 30m  |
 | 3  | Ratify + land T33 (cadence rule) — then it self-enforces item 2                                | 15m  |

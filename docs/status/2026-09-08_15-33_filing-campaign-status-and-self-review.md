@@ -7,15 +7,15 @@ everything); both fix PRs still OPEN; no upstream responses yet.
 
 External links posted this session:
 
-| Filing                                                                  | State 2026-09-08 15:33 |
-| ----------------------------------------------------------------------- | ---------------------- |
-| [openusage#357](https://github.com/janekbaraniewski/openusage/pull/357) | OPEN, 0 reviews        |
-| [mnemo#22](https://github.com/Pilan-AI/mnemo/pull/22)                   | OPEN, 0 comments       |
-| [crush discussion #3740](https://github.com/charmbracelet/crush/discussions/3740) | LIVE, 0 comments, 0 reactions |
-| [crush#3576 comment](https://github.com/charmbracelet/crush/pull/3576#issuecomment-5580207131) | posted |
-| [crush#3580 comment](https://github.com/charmbracelet/crush/issues/3580#issuecomment-5580210380) | posted |
-| [deja-vu#2949 comment](https://github.com/vshulcz/deja-vu/issues/2949#issuecomment-5580229987) | posted |
-| [crunch#22](https://github.com/taigrr/crunch/issues/22)                 | OPEN, filed            |
+| Filing                                                                                           | State 2026-09-08 15:33        |
+| ------------------------------------------------------------------------------------------------ | ----------------------------- |
+| [openusage#357](https://github.com/janekbaraniewski/openusage/pull/357)                          | OPEN, 0 reviews               |
+| [mnemo#22](https://github.com/Pilan-AI/mnemo/pull/22)                                            | OPEN, 0 comments              |
+| [crush discussion #3740](https://github.com/charmbracelet/crush/discussions/3740)                | LIVE, 0 comments, 0 reactions |
+| [crush#3576 comment](https://github.com/charmbracelet/crush/pull/3576#issuecomment-5580207131)   | posted                        |
+| [crush#3580 comment](https://github.com/charmbracelet/crush/issues/3580#issuecomment-5580210380) | posted                        |
+| [deja-vu#2949 comment](https://github.com/vshulcz/deja-vu/issues/2949#issuecomment-5580229987)   | posted                        |
+| [crunch#22](https://github.com/taigrr/crunch/issues/22)                                          | OPEN, filed                   |
 
 ## a) FULLY DONE
 
@@ -162,8 +162,8 @@ External links posted this session:
 
 ## f) Up to 50 things to get done next
 
-*Brainstorm list, impact-sorted within blocks; most items are TODO_LIST /
-ROADMAP fuel and need docs-health HARVEST routing — not commitments.*
+_Brainstorm list, impact-sorted within blocks; most items are TODO_LIST /
+ROADMAP fuel and need docs-health HARVEST routing — not commitments._
 
 **Campaign follow-ups (highest impact, time-sensitive):**
 

@@ -103,22 +103,22 @@ Sorted by importance → impact → effort → customer value. "When" = what
 unblocks it. **All 27 TODO_LIST entries + Parked + the ROADMAP question map
 into P1–P14 with zero orphans** (mapping table at the end).
 
-| #   | Task                                                                                                                                                   | Tier     | Impact   | Effort | Customer value                                                                  | When                        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------- | ------ | -------------------------------------------------------------------------------- | --------------------------- |
-| P1  | **Post-push verification & T3 closure**: observe CI green on `f6cd473` (all legs); dispatch `flake-update.yml`; inspect the PR + vendorHash guard; retire T3 | 1%→51%   | MAX      | 30m    | Three weeks of fixes proven on origin; automation trusted                        | now (push done)             |
-| P3  | **T10 part-discriminator census tripwire**: census `{type,data}` kinds over the real registry (env-gated), pin the 8 known discriminators + fail-loud on new ones | 4%→64%   | HIGH     | 90m    | Last silent-drift hole closed; upstream part changes become loud                 | now                         |
-| P4  | **T24 benchmarks**: add `BenchmarkIterMessages`; regenerate `baseline-benchmarks.txt` (`-count=6` + benchstat); refresh bench.yml citations          | 4%→64%   | HIGH     | 60m    | Trend CI sees the streaming path; baseline current with new read paths           | now                         |
-| P5  | **Lint/tooling hygiene**: T22 `exhaustruct` → `exhaustruct_v5`; T29 shellcheck in devShell + over `scripts/`; T32 `-cover` gate line + refresh FEATURES coverage & bench dates | 20%→80%  | MED-HIGH | 45m    | Clean lint runs; shell scripts statically checked; docs claims fresh             | now                         |
-| P6  | **Docs truth pack**: T13 `docs/storage-schema-v0.92.0.md` snapshot; T14 parts envelope + 8 discriminators in `doc.go`; T19 `projects.Register()` sort citation; T33 docs-health cadence rule in AGENTS.md | 20%→80%  | MED-HIGH | 60m    | The reverse-engineered schema documented in-repo; drift audits become scheduled  | now                         |
-| P7  | **Fixture-test pack**: T11 `CRUSH_GLOBAL_DATA`-is-a-directory; T12 empty-registry CLI; T25 `last_accessed` UTC round-trip; T27 unknown top-level keys | 20%→80%  | MED      | 75m    | Discovery edges pinned; future upstream registry changes fail loudly            | now                         |
-| P2  | **Annotation fidelity + archived-ref sweep**: T30 restore ~15 compressed annotation bodies (or record the accept-decision); T31 archived→archived reference repoint | 20%      | MED      | 45m    | History truthfulness; citations resolve                                          | now (any time)              |
-| P8  | **T21 stray-file investigation**: identify the creator of `crush.db?_loc=auto` in `/home/lars/projects/.crush`; trash if safe; document          | 20%      | LOW-MED  | 30m    | Local hygiene; possible upstream tooling bug found                               | now                         |
-| P9  | **Product-scope decision bundle**: T15 `MissingCapabilities()` (small API break); T28 summary-messages in day filters/stats; ROADMAP summary-fields exposure (`Session.SummaryMessageID`, `Message.IsSummaryMessage`). Investigate real-data prevalence, present options, implement decided subset | 20%→100% | MED      | 60m+   | API surface decided deliberately, not by drift                                   | **user opinions gate** the implement half |
-| P10 | **T16 Stats consumer cross-check**: run this library's `Stats` and crush-daily's collector over the same real DB; require number parity (the contract behind the verbatim-SQL rule) | polish   | MED      | 90m    | Pararity contract proven on production data, not just fixtures                   | post-P6 (snapshot doc helps) |
-| P11 | **T17 release-watch Action**: open an issue when a new crush stable lands (drives the AGENTS cadence; weekly drift job already covers scheduled detection) | polish   | MED      | 60m    | Verification cadence automated end-to-end                                        | post-P1                     |
-| P12 | **Upstream reports** (needs go-ahead): T20 migration-comments milliseconds-vs-seconds issue; T9 `time.UnixMilli` date bug to openusage + mnemo. Verify-before-filing both | polish   | MED      | 60m    | Ecosystem fixes the census proved; upstream goodwill                             | **go-ahead**                |
-| P13 | **External follow-through**: T1 Renovate install (user UI) → T7 pin action SHAs → T6 first corpus-mining pass; T34 observe first scheduled drift run (Mon 2026-09-14); T18 30s fuzz runs per verification session | 20%→80%  | MED      | ext.   | Repo self-maintaining; observation debt cleared                                   | external/schedule            |
-| P14 | **Parked ecosystem** (needs go-ahead): mindwalk `sdk/go-crush-data` PR; charmbracelet/crush read-access Discussion post                                                | polish   | MED      | —      | Second/third consumer path opened                                                | **go-ahead**                |
+| #   | Task                                                                                                                                                                                                                                                                                               | Tier     | Impact   | Effort | Customer value                                                                  | When                                      |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------- | ------ | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| P1  | **Post-push verification & T3 closure**: observe CI green on `f6cd473` (all legs); dispatch `flake-update.yml`; inspect the PR + vendorHash guard; retire T3                                                                                                                                       | 1%→51%   | MAX      | 30m    | Three weeks of fixes proven on origin; automation trusted                       | now (push done)                           |
+| P3  | **T10 part-discriminator census tripwire**: census `{type,data}` kinds over the real registry (env-gated), pin the 8 known discriminators + fail-loud on new ones                                                                                                                                  | 4%→64%   | HIGH     | 90m    | Last silent-drift hole closed; upstream part changes become loud                | now                                       |
+| P4  | **T24 benchmarks**: add `BenchmarkIterMessages`; regenerate `baseline-benchmarks.txt` (`-count=6` + benchstat); refresh bench.yml citations                                                                                                                                                        | 4%→64%   | HIGH     | 60m    | Trend CI sees the streaming path; baseline current with new read paths          | now                                       |
+| P5  | **Lint/tooling hygiene**: T22 `exhaustruct` → `exhaustruct_v5`; T29 shellcheck in devShell + over `scripts/`; T32 `-cover` gate line + refresh FEATURES coverage & bench dates                                                                                                                     | 20%→80%  | MED-HIGH | 45m    | Clean lint runs; shell scripts statically checked; docs claims fresh            | now                                       |
+| P6  | **Docs truth pack**: T13 `docs/storage-schema-v0.92.0.md` snapshot; T14 parts envelope + 8 discriminators in `doc.go`; T19 `projects.Register()` sort citation; T33 docs-health cadence rule in AGENTS.md                                                                                          | 20%→80%  | MED-HIGH | 60m    | The reverse-engineered schema documented in-repo; drift audits become scheduled | now                                       |
+| P7  | **Fixture-test pack**: T11 `CRUSH_GLOBAL_DATA`-is-a-directory; T12 empty-registry CLI; T25 `last_accessed` UTC round-trip; T27 unknown top-level keys                                                                                                                                              | 20%→80%  | MED      | 75m    | Discovery edges pinned; future upstream registry changes fail loudly            | now                                       |
+| P2  | **Annotation fidelity + archived-ref sweep**: T30 restore ~15 compressed annotation bodies (or record the accept-decision); T31 archived→archived reference repoint                                                                                                                                | 20%      | MED      | 45m    | History truthfulness; citations resolve                                         | now (any time)                            |
+| P8  | **T21 stray-file investigation**: identify the creator of `crush.db?_loc=auto` in `/home/lars/projects/.crush`; trash if safe; document                                                                                                                                                            | 20%      | LOW-MED  | 30m    | Local hygiene; possible upstream tooling bug found                              | now                                       |
+| P9  | **Product-scope decision bundle**: T15 `MissingCapabilities()` (small API break); T28 summary-messages in day filters/stats; ROADMAP summary-fields exposure (`Session.SummaryMessageID`, `Message.IsSummaryMessage`). Investigate real-data prevalence, present options, implement decided subset | 20%→100% | MED      | 60m+   | API surface decided deliberately, not by drift                                  | **user opinions gate** the implement half |
+| P10 | **T16 Stats consumer cross-check**: run this library's `Stats` and crush-daily's collector over the same real DB; require number parity (the contract behind the verbatim-SQL rule)                                                                                                                | polish   | MED      | 90m    | Pararity contract proven on production data, not just fixtures                  | post-P6 (snapshot doc helps)              |
+| P11 | **T17 release-watch Action**: open an issue when a new crush stable lands (drives the AGENTS cadence; weekly drift job already covers scheduled detection)                                                                                                                                         | polish   | MED      | 60m    | Verification cadence automated end-to-end                                       | post-P1                                   |
+| P12 | **Upstream reports** (needs go-ahead): T20 migration-comments milliseconds-vs-seconds issue; T9 `time.UnixMilli` date bug to openusage + mnemo. Verify-before-filing both                                                                                                                          | polish   | MED      | 60m    | Ecosystem fixes the census proved; upstream goodwill                            | **go-ahead**                              |
+| P13 | **External follow-through**: T1 Renovate install (user UI) → T7 pin action SHAs → T6 first corpus-mining pass; T34 observe first scheduled drift run (Mon 2026-09-14); T18 30s fuzz runs per verification session                                                                                  | 20%→80%  | MED      | ext.   | Repo self-maintaining; observation debt cleared                                 | external/schedule                         |
+| P14 | **Parked ecosystem** (needs go-ahead): mindwalk `sdk/go-crush-data` PR; charmbracelet/crush read-access Discussion post                                                                                                                                                                            | polish   | MED      | —      | Second/third consumer path opened                                               | **go-ahead**                              |
 
 **Totals: 14 medium tasks, ~10.5h** (excluding external waits and
 decision-gated implementation).
@@ -133,26 +133,26 @@ the relevant subset for test-only changes) + the real-data rule for any
 
 ### P1 — post-push verification (30m) — now, first
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p1.1 | Observe CI on `f6cd473`: all three legs green on origin                          | 10  |
-| p1.2 | Dispatch `flake-update.yml` (workflow_dispatch)                                  | 2   |
-| p1.3 | Observe the run: green + PR opened on `deps/flake-lock-update`                   | 8   |
-| p1.4 | Inspect the PR diff (flake.lock only; vendorHash unchanged → guard consistent)   | 5   |
-| p1.5 | Retire T3 in TODO_LIST; note the observation result                              | 5   |
+| ID   | Task                                                                           | Min |
+| ---- | ------------------------------------------------------------------------------ | --- |
+| p1.1 | Observe CI on `f6cd473`: all three legs green on origin                        | 10  |
+| p1.2 | Dispatch `flake-update.yml` (workflow_dispatch)                                | 2   |
+| p1.3 | Observe the run: green + PR opened on `deps/flake-lock-update`                 | 8   |
+| p1.4 | Inspect the PR diff (flake.lock only; vendorHash unchanged → guard consistent) | 5   |
+| p1.5 | Retire T3 in TODO_LIST; note the observation result                            | 5   |
 
 ### P3 — part census tripwire (90m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p3.1 | Census harness: env-gated walk over registry messages counting `{type}` kinds    | 12  |
-| p3.2 | Run census on the local registry; record the discriminator histogram             | 10  |
-| p3.3 | Design tripwire: `TestPartDiscriminatorsCensusShape` (real-registry, env-gated, fail on unknown kind) | 12 |
-| p3.4 | Implement + wire next to `TestDecodeTodosCensusShape`                            | 12  |
-| p3.5 | Negative test: synthetic new discriminator → tripwire fails loudly               | 10  |
-| p3.6 | Count kinds inside `TestAllAPIOnRealDatabase` too (cheap synergy)                | 10  |
-| p3.7 | Docs: FEATURES row + AGENTS storage-facts line                                   | 8   |
-| p3.8 | → GATE + real-data                                                               | 12  |
+| ID   | Task                                                                                                  | Min |
+| ---- | ----------------------------------------------------------------------------------------------------- | --- |
+| p3.1 | Census harness: env-gated walk over registry messages counting `{type}` kinds                         | 12  |
+| p3.2 | Run census on the local registry; record the discriminator histogram                                  | 10  |
+| p3.3 | Design tripwire: `TestPartDiscriminatorsCensusShape` (real-registry, env-gated, fail on unknown kind) | 12  |
+| p3.4 | Implement + wire next to `TestDecodeTodosCensusShape`                                                 | 12  |
+| p3.5 | Negative test: synthetic new discriminator → tripwire fails loudly                                    | 10  |
+| p3.6 | Count kinds inside `TestAllAPIOnRealDatabase` too (cheap synergy)                                     | 10  |
+| p3.7 | Docs: FEATURES row + AGENTS storage-facts line                                                        | 8   |
+| p3.8 | → GATE + real-data                                                                                    | 12  |
 
 P3 executed 2026-09-08 (follow-up session): the final design streams raw
 parts rows `ORDER BY rowid DESC` (Go-side parse, payloads as
@@ -167,19 +167,19 @@ green; T10 retired.
 
 ### P4 — benchmarks (60m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p4.1 | Write `BenchmarkIterMessages` (mirror `BenchmarkMessages` fixture scale)         | 12  |
-| p4.2 | Lint the new file (CI-identical command) + quick test                            | 6   |
-| p4.3 | `go test -bench . -count=6 \| tee docs/benchmarks/baseline-benchmarks.txt`       | 12  |
-| p4.4 | benchstat parses; sanity-check deltas vs old baseline                            | 8   |
-| p4.5 | Update citations (FEATURES row, bench.yml if target list hardcoded)              | 8   |
-| p4.6 | → GATE                                                                           | 10  |
+| ID   | Task                                                                       | Min |
+| ---- | -------------------------------------------------------------------------- | --- |
+| p4.1 | Write `BenchmarkIterMessages` (mirror `BenchmarkMessages` fixture scale)   | 12  |
+| p4.2 | Lint the new file (CI-identical command) + quick test                      | 6   |
+| p4.3 | `go test -bench . -count=6 \| tee docs/benchmarks/baseline-benchmarks.txt` | 12  |
+| p4.4 | benchstat parses; sanity-check deltas vs old baseline                      | 8   |
+| p4.5 | Update citations (FEATURES row, bench.yml if target list hardcoded)        | 8   |
+| p4.6 | → GATE                                                                     | 10  |
 
 ### P5 — lint/tooling hygiene (45m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
+| ID   | Task                                                                             | Min |
+| ---- | -------------------------------------------------------------------------------- | --- |
 | p5.1 | `.golangci.yml`: `exhaustruct` → `exhaustruct_v5` (config + any settings rename) | 10  |
 | p5.2 | Verify: CI-identical lint 0 issues AND no deprecation warning in output          | 6   |
 | p5.3 | `flake.nix`: add shellcheck to the devShell                                      | 8   |
@@ -189,98 +189,98 @@ green; T10 retired.
 
 ### P6 — docs truth pack (60m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p6.1 | Write `docs/storage-schema-v0.92.0.md` (tables, columns, migrations, verified-at header) | 12 |
-| p6.2 | Cross-check against `schema_drift_test.go` guard list (no contradictions)        | 8   |
-| p6.3 | `doc.go`: parts envelope `{type,data}` + 8 discriminators paragraph              | 10  |
-| p6.4 | `discover.go`: cite upstream `projects.Register()` LastAccessed-desc in dedupe comment | 8 |
-| p6.5 | AGENTS.md: docs-health cadence rule (per release + 50+-item sessions)            | 8   |
-| p6.6 | → doc-links gate                                                                | 6   |
+| ID   | Task                                                                                     | Min |
+| ---- | ---------------------------------------------------------------------------------------- | --- |
+| p6.1 | Write `docs/storage-schema-v0.92.0.md` (tables, columns, migrations, verified-at header) | 12  |
+| p6.2 | Cross-check against `schema_drift_test.go` guard list (no contradictions)                | 8   |
+| p6.3 | `doc.go`: parts envelope `{type,data}` + 8 discriminators paragraph                      | 10  |
+| p6.4 | `discover.go`: cite upstream `projects.Register()` LastAccessed-desc in dedupe comment   | 8   |
+| p6.5 | AGENTS.md: docs-health cadence rule (per release + 50+-item sessions)                    | 8   |
+| p6.6 | → doc-links gate                                                                         | 6   |
 
 ### P7 — fixture-test pack (75m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p7.1 | T11: `CRUSH_GLOBAL_DATA` points at a directory → upstream `crush.json`-join semantics fixture | 12 |
-| p7.2 | T12: fake CLI + empty registry → empty result, no error                          | 10  |
-| p7.3 | T25: `last_accessed` UTC round-trip pin (RFC3339Nano → time → re-marshal)        | 10  |
-| p7.4 | T27: unknown top-level keys tolerated                                            | 8   |
-| p7.5 | Lint each new test file as written (CI-identical command)                        | 8   |
-| p7.6 | → GATE subset (build + test + lint)                                             | 10  |
+| ID   | Task                                                                                          | Min |
+| ---- | --------------------------------------------------------------------------------------------- | --- |
+| p7.1 | T11: `CRUSH_GLOBAL_DATA` points at a directory → upstream `crush.json`-join semantics fixture | 12  |
+| p7.2 | T12: fake CLI + empty registry → empty result, no error                                       | 10  |
+| p7.3 | T25: `last_accessed` UTC round-trip pin (RFC3339Nano → time → re-marshal)                     | 10  |
+| p7.4 | T27: unknown top-level keys tolerated                                                         | 8   |
+| p7.5 | Lint each new test file as written (CI-identical command)                                     | 8   |
+| p7.6 | → GATE subset (build + test + lint)                                                           | 10  |
 
 ### P2 — annotation fidelity + ref sweep (45m) — any time
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
+| ID   | Task                                                                              | Min |
+| ---- | --------------------------------------------------------------------------------- | --- |
 | p2.1 | Sweep archived files for numbered items without verdict markers (mechanical grep) | 8   |
-| p2.2 | Restore 02:13 b)1–3 + c)1–3 bodies from git history (strike + verdict)           | 12  |
-| p2.3 | Add per-item verdicts to 08:50 d)1–5 + e)5–10                                    | 10  |
-| p2.4 | Restore 04:20 b)-item dropped tails                                              | 8   |
-| p2.5 | T31: repoint archived→archived references; re-run doc-links                      | 7   |
+| p2.2 | Restore 02:13 b)1–3 + c)1–3 bodies from git history (strike + verdict)            | 12  |
+| p2.3 | Add per-item verdicts to 08:50 d)1–5 + e)5–10                                     | 10  |
+| p2.4 | Restore 04:20 b)-item dropped tails                                               | 8   |
+| p2.5 | T31: repoint archived→archived references; re-run doc-links                       | 7   |
 
 ### P8 — stray file (30m) — now
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p8.1 | Identify creator of `crush.db?_loc=auto` (stat/mtime; correlate with tool runs)  | 12  |
-| p8.2 | `trash` it; document finding (AGENTS or the investigating report)                | 8   |
+| ID   | Task                                                                            | Min |
+| ---- | ------------------------------------------------------------------------------- | --- |
+| p8.1 | Identify creator of `crush.db?_loc=auto` (stat/mtime; correlate with tool runs) | 12  |
+| p8.2 | `trash` it; document finding (AGENTS or the investigating report)               | 8   |
 | p8.3 | Retire T21                                                                      | 2   |
 
 ### P9 — decision bundle (60m investigation; implementation decision-gated)
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p9.1 | Real-data prevalence: how many sessions/messages carry `is_summary_message=1` / `summary_message_id` | 12 |
-| p9.2 | Prepare T28 evidence: day-filter behavior with summary rows (query, don't guess)  | 12  |
-| p9.3 | Draft the 3 decision options with tradeoffs (T15, T28, ROADMAP question)          | 12  |
-| p9.4 | **USER CALL** on each                                                            | —   |
-| p9.5 | Implement decided subset (each its own micro pass + gate)                         | 12× |
+| ID   | Task                                                                                                 | Min |
+| ---- | ---------------------------------------------------------------------------------------------------- | --- |
+| p9.1 | Real-data prevalence: how many sessions/messages carry `is_summary_message=1` / `summary_message_id` | 12  |
+| p9.2 | Prepare T28 evidence: day-filter behavior with summary rows (query, don't guess)                     | 12  |
+| p9.3 | Draft the 3 decision options with tradeoffs (T15, T28, ROADMAP question)                             | 12  |
+| p9.4 | **USER CALL** on each                                                                                | —   |
+| p9.5 | Implement decided subset (each its own micro pass + gate)                                            | 12× |
 
 ### P10 — Stats cross-check (90m) — post-P6
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
+| ID    | Task                                                                              | Min |
+| ----- | --------------------------------------------------------------------------------- | --- |
 | p10.1 | Cross-repo harness: run collector + `Stats` over the same real DB                 | 12  |
 | p10.2 | Compare aggregates; investigate any delta (session-level vs message-level counts) | 12  |
-| p10.3 | Pin parity as an env-gated test or documented recipe                             | 12  |
-| p10.4 | Repeat on a second DB (size class diversity)                                     | 10  |
-| p10.5 | Record result; retire T16                                                        | 8   |
+| p10.3 | Pin parity as an env-gated test or documented recipe                              | 12  |
+| p10.4 | Repeat on a second DB (size class diversity)                                      | 10  |
+| p10.5 | Record result; retire T16                                                         | 8   |
 
 ### P11 — release-watch Action (60m) — post-P1
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p11.1 | Workflow: daily `gh release list charmbracelet/crush` vs recorded latest; issue on new stable | 12 |
-| p11.2 | Pin action SHAs (consistent with the repo's convention)                          | 8   |
-| p11.3 | actionlint + dispatch once; observe the issue-or-noop behavior                   | 12  |
-| p11.4 | Wire the recorded-latest state file; retire T17                                  | 10  |
+| ID    | Task                                                                                          | Min |
+| ----- | --------------------------------------------------------------------------------------------- | --- |
+| p11.1 | Workflow: daily `gh release list charmbracelet/crush` vs recorded latest; issue on new stable | 12  |
+| p11.2 | Pin action SHAs (consistent with the repo's convention)                                       | 8   |
+| p11.3 | actionlint + dispatch once; observe the issue-or-noop behavior                                | 12  |
+| p11.4 | Wire the recorded-latest state file; retire T17                                               | 10  |
 
 ### P12 — upstream reports (60m) — needs go-ahead
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p12.1 | T20: verify-before-filing (upstream migrations re-read; claim re-verified)       | 12  |
-| p12.2 | File the ms-vs-seconds migration-comment issue                                   | 10  |
-| p12.3 | T9: verify the openusage/mnemo `time.UnixMilli` bugs still exist upstream        | 12  |
-| p12.4 | File both reports; retire T9/T20                                                 | 10  |
+| ID    | Task                                                                       | Min |
+| ----- | -------------------------------------------------------------------------- | --- |
+| p12.1 | T20: verify-before-filing (upstream migrations re-read; claim re-verified) | 12  |
+| p12.2 | File the ms-vs-seconds migration-comment issue                             | 10  |
+| p12.3 | T9: verify the openusage/mnemo `time.UnixMilli` bugs still exist upstream  | 12  |
+| p12.4 | File both reports; retire T9/T20                                           | 10  |
 
 ### P13 — external follow-through — external/schedule
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p13.1 | T1: install Renovate (user GitHub UI)                                            | 5   |
-| p13.2 | T7: after first Renovate PRs, pin/verify action SHAs policy                      | 10  |
-| p13.3 | T6: first corpus-mining pass over nightly artifacts                              | 30  |
-| p13.4 | T34: observe first scheduled drift run (Mon 2026-09-14 03:47 UTC)                | 5   |
-| p13.5 | T18: 30s `go test -fuzz=DecodeParts` + `-fuzz=DecodeTodos` each verification session | 10 |
+| ID    | Task                                                                                 | Min |
+| ----- | ------------------------------------------------------------------------------------ | --- |
+| p13.1 | T1: install Renovate (user GitHub UI)                                                | 5   |
+| p13.2 | T7: after first Renovate PRs, pin/verify action SHAs policy                          | 10  |
+| p13.3 | T6: first corpus-mining pass over nightly artifacts                                  | 30  |
+| p13.4 | T34: observe first scheduled drift run (Mon 2026-09-14 03:47 UTC)                    | 5   |
+| p13.5 | T18: 30s `go test -fuzz=DecodeParts` + `-fuzz=DecodeTodos` each verification session | 10  |
 
 ### P14 — parked ecosystem — needs go-ahead
 
-| ID  | Task                                                                            | Min |
-| --- | ------------------------------------------------------------------------------- | --- |
-| p14.1 | Push the mindwalk `sdk/go-crush-data` branch PR                                  | —   |
-| p14.2 | Post the crush read-access Discussion from the draft                             | —   |
+| ID    | Task                                                 | Min |
+| ----- | ---------------------------------------------------- | --- |
+| p14.1 | Push the mindwalk `sdk/go-crush-data` branch PR      | —   |
+| p14.2 | Post the crush read-access Discussion from the draft | —   |
 
 **Totals: 62 micro tasks, 14 medium tasks, ~10.5h.**
 
@@ -326,14 +326,14 @@ the user; P12–P14 wait on go-aheads, never on code.
 
 ## Mapping: TODO_LIST entry → medium task
 
-| TODO_LIST entry                                                                          | →              |
-| ----------------------------------------------------------------------------------------- | -------------- |
-| External: T1, T3, T34                                                                    | P13, P1, P13   |
-| High: T10                                                                                | P3             |
-| Medium: T11, T12, T13, T14, T15, T16, T17                                                | P7, P7, P6, P6, P9, P10, P11 |
-| Low: T6, T7, T9, T18, T19, T20, T21, T22, T24, T25, T27, T28, T29, T30, T31, T32, T33   | P13, P13, P12, P13, P6, P12, P8, P5, P4, P7, P7, P9, P5, P2, P2, P5, P6 |
-| Parked: mindwalk PR, crush Discussion                                                     | P14            |
-| ROADMAP open question: summary fields                                                     | P9             |
+| TODO_LIST entry                                                                       | →                                                                       |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| External: T1, T3, T34                                                                 | P13, P1, P13                                                            |
+| High: T10                                                                             | P3                                                                      |
+| Medium: T11, T12, T13, T14, T15, T16, T17                                             | P7, P7, P6, P6, P9, P10, P11                                            |
+| Low: T6, T7, T9, T18, T19, T20, T21, T22, T24, T25, T27, T28, T29, T30, T31, T32, T33 | P13, P13, P12, P13, P6, P12, P8, P5, P4, P7, P7, P9, P5, P2, P2, P5, P6 |
+| Parked: mindwalk PR, crush Discussion                                                 | P14                                                                     |
+| ROADMAP open question: summary fields                                                 | P9                                                                      |
 
 Every open TODO_LIST entry appears exactly once; no orphans.
 

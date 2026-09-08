@@ -165,26 +165,26 @@ Below are THIS session's genuinely new or re-ranked items.
 _Resolved 2026-09-08 (docs-health annotate pass): every item verdict'd
 inline; all shipped, closed, or re-routed to the live TODO_LIST._
 
-| #  | Task                                                                                      | Size    | Resolution (2026-09-08)                                        |
-| -- | ----------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------- |
-| 1  | ~~Clean the temporal "Generated 2026-08-15" header line from FEATURES.md~~                | 2m      | Done at `0927fec`                                               |
-| 2  | ~~`scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate~~ | 30m  | Done at `04901d6`                                               |
-| 3  | ~~Give TODO_LIST items stable IDs; annotations cite them~~                                | 15m     | Done at `473f321`                                               |
-| 4  | ~~Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now)~~     | 5m      | Done at `473f321`                                               |
-| 5  | ~~**Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note~~    | 30m     | Done at `7ff9e72` (tag), release + erratum verified             |
-| 6  | ~~Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external~~                       | 5m      | Done — green continuously since 2026-08-17 (observed 2026-09-08) |
-| 7  | Observe first monthly flake-update PR — TODO_LIST external                                | 5m      | Changed — first run FAILED 2026-09-01 (bot push 403); permissions fixed 2026-09-08, re-observation = TODO_LIST T3 |
-| 8  | Install Renovate app — TODO_LIST external (GitHub App UI)                                 | 5m      | Still open — TODO_LIST T1                                       |
-| 9  | ~~Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external~~    | 5m      | Done — crawl landed; page now renders through v0.3.0            |
-| 10 | ~~`TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High~~                   | 10m     | Done at `0927fec`                                               |
-| 11 | ~~`TestQuoteJSON` backslash-escape pin — TODO_LIST High~~                                 | 10m     | Done at `0927fec` (renamed `TestJSONString` at `63ad9a7`)        |
-| 12 | ~~Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High~~            | 45m     | Done at `697b337` (ran on the real windows runner)              |
-| 13 | ~~Platform-assumption audit of remaining tests — TODO_LIST High~~                         | 20m     | Done at `63ad9a7` (GOOS guards with reasons)                    |
-| 14 | ~~CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium~~                             | 7m      | Done at `d2d4634`                                               |
-| 15 | ~~Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium~~                        | 5m      | Done — trigger added; dry-run exercised (run 31919208017)        |
-| 16 | ~~gosec G701 upstream repro — TODO_LIST external~~                                        | 30m     | Done — data point posted on securego/gosec#1712 (no duplicate filed) |
-| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing                       | ongoing | Still open — TODO_LIST T6 (artifacts now exist)                  |
-| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external  | 5m      | **Won't implement — recorded ROADMAP non-decision "No branch protection on master"** |
+| #  | Task                                                                                          | Size    | Resolution (2026-09-08)                                                                                           |
+| -- | --------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1  | ~~Clean the temporal "Generated 2026-08-15" header line from FEATURES.md~~                    | 2m      | Done at `0927fec`                                                                                                 |
+| 2  | ~~`scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate~~ | 30m     | Done at `04901d6`                                                                                                 |
+| 3  | ~~Give TODO_LIST items stable IDs; annotations cite them~~                                    | 15m     | Done at `473f321`                                                                                                 |
+| 4  | ~~Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now)~~         | 5m      | Done at `473f321`                                                                                                 |
+| 5  | ~~**Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note~~        | 30m     | Done at `7ff9e72` (tag), release + erratum verified                                                               |
+| 6  | ~~Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external~~                           | 5m      | Done — green continuously since 2026-08-17 (observed 2026-09-08)                                                  |
+| 7  | Observe first monthly flake-update PR — TODO_LIST external                                    | 5m      | Changed — first run FAILED 2026-09-01 (bot push 403); permissions fixed 2026-09-08, re-observation = TODO_LIST T3 |
+| 8  | Install Renovate app — TODO_LIST external (GitHub App UI)                                     | 5m      | Still open — TODO_LIST T1                                                                                         |
+| 9  | ~~Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external~~        | 5m      | Done — crawl landed; page now renders through v0.3.0                                                              |
+| 10 | ~~`TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High~~                       | 10m     | Done at `0927fec`                                                                                                 |
+| 11 | ~~`TestQuoteJSON` backslash-escape pin — TODO_LIST High~~                                     | 10m     | Done at `0927fec` (renamed `TestJSONString` at `63ad9a7`)                                                         |
+| 12 | ~~Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High~~                | 45m     | Done at `697b337` (ran on the real windows runner)                                                                |
+| 13 | ~~Platform-assumption audit of remaining tests — TODO_LIST High~~                             | 20m     | Done at `63ad9a7` (GOOS guards with reasons)                                                                      |
+| 14 | ~~CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium~~                                 | 7m      | Done at `d2d4634`                                                                                                 |
+| 15 | ~~Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium~~                            | 5m      | Done — trigger added; dry-run exercised (run 31919208017)                                                         |
+| 16 | ~~gosec G701 upstream repro — TODO_LIST external~~                                            | 30m     | Done — data point posted on securego/gosec#1712 (no duplicate filed)                                              |
+| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing                           | ongoing | Still open — TODO_LIST T6 (artifacts now exist)                                                                   |
+| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external      | 5m      | **Won't implement — recorded ROADMAP non-decision "No branch protection on master"**                              |
 
 (18 real items — stop at real value; the remainder of the backlog is
 unchanged and lives in TODO_LIST.md.)

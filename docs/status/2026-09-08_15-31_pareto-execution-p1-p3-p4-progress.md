@@ -169,7 +169,7 @@ this session and can be cited).
    cannot collide** (rule now in AGENTS via the concurrent session).
 4. **Coordination with the concurrent session**: re-read `git log`/status
    before AND after each write batch (daemon races were known; concurrent
-   *content* changes were the surprise).
+   _content_ changes were the surprise).
 5. **Fix the AGENTS lint gotcha** (per-file linting of test files breaks)
    to "lint the whole package, or per-file for non-test files only".
 6. Canonical gate should run after each MEDIUM task, not be deferred to a
@@ -252,9 +252,9 @@ this session and can be cited).
 
 ---
 
-*Verify-then-annotate discipline: every "green/PASS" above corresponds to a
+_Verify-then-annotate discipline: every "green/PASS" above corresponds to a
 command that exited 0 in this session. The registry census failures are
-reported as failures.*
+reported as failures._
 
 ---
 

@@ -48,9 +48,9 @@ On every new charmbracelet/crush **stable** release (not nightly):
    last-verified tag below,
 5. refresh the schema snapshot and its doc:
    `go run ./scripts/genschema -migrations <clone>/internal/db/migrations
-   > docs/storage-schema-<version>.sql` (rename to the new version), extend
-   the fixture DDL until `TestFixtureSchemaMatchesUpstreamSnapshot` passes,
-   and update `docs/storage-schema-<version>.md`.
+   > docs/storage-schema-<version>.sql`(rename to the new version), extend
+   the fixture DDL until`TestFixtureSchemaMatchesUpstreamSnapshot`passes,
+   and update`docs/storage-schema-<version>.md`.
 
 A weekly CI job (`.github/workflows/upstream-drift.yml`) runs the drift
 script, and its `release-notice` job opens a tracking issue automatically
@@ -84,7 +84,7 @@ documentation rots silently.
 | File        | Role                                                                                                                                                                                                                                                                                                                                                                                                |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | discover.go | projects.json registry + `crush projects --json` CLI fallback (stderr capture) + dedupe (many paths → one data_dir)                                                                                                                                                                                                                                                                                 |
-| db.go       | read-only open (`mode=ro&_txlock=immediate` + `busy_timeout(5000)` + `query_only(1)` pragmas, 1 conn) + ErrDatabaseNotFound/ErrUnsupportedSchema                                                                                                                                                                                                                                                  |
+| db.go       | read-only open (`mode=ro&_txlock=immediate` + `busy_timeout(5000)` + `query_only(1)` pragmas, 1 conn) + ErrDatabaseNotFound/ErrUnsupportedSchema                                                                                                                                                                                                                                                    |
 | schema.go   | capability probing via pragma_table_info — THE drift defense                                                                                                                                                                                                                                                                                                                                        |
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL                                                                                                                                                                                                                                                                                                                    |
 | parts.go    | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart)                                                                                                                                                                                                                                     |
