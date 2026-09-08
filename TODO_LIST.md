@@ -28,11 +28,13 @@ renumbered, and deleting an item retires its ID for good.
       The 2026-09-08 push landed (33d454d incident closed: runs now get
       past build/test), but CI then failed on (a) the coverage gate —
       69.5% because `scripts/` scratch packages entered the merged
-      profile at 0% (Go ≥1.22) — and (b) the vendor-hash guard
-      false-positiving on a daemon-split commit. Both fixed locally
-      2026-09-08 (CI scopes coverage via `-coverpkg=.`; guard advisory in
-      CI mode). Push the fix commits and verify green — user action. 5m —
-      `git push`
+      profile at 0% (Go ≥1.22) — and (b) a REAL vendorHash drift: the
+      2026-09-08 daemon-split tidy (`214bb22`) changed the module set
+      without bumping the hash. Both fixed locally 2026-09-08 (CI scopes
+      coverage via `-coverpkg=.`; `vendorHash` refreshed to the correct
+      sha; the guard stays advisory in CI since only `nix flake check`
+      can prove drift). Push the fix commits and verify green — user
+      action. 5m — `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run

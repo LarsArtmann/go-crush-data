@@ -190,14 +190,14 @@ fmt.Print calls, and never put `package main` files in the repo root
 ## Tooling gotchas
 
 - **go.sum and flake.nix vendorHash are coupled**: refreshing dependencies
-  without updating `vendorHash` breaks `nix flake check` (has bitten once on
-  a dependency refresh). After `go get` / `go mod tidy`, update the hash
-  from the mismatch error's "got:" value. `scripts/check-vendor-hash.sh`
-  FAILS on local working-tree drift but is ADVISORY in CI (`BASE_REV` arg):
-  the commit-range heuristic cannot distinguish real drift from legal
-  vendor-set-neutral go.sum edits or daemon-split commits — only the nix
-  flake CI job verifies the real hash (bit once: 2026-09-08, go.mod tidy
-  landed a commit after the vendorHash update, red at 8s).
+  without updating `vendorHash` breaks `nix flake check` (bit twice:
+  2026-08 dependency refresh, and 2026-09-08 when a daemon-split
+  `go mod tidy` (`214bb22`) changed the module set without a hash bump —
+  caught by CI, fixed from the mismatch error's "got:" value).
+  `scripts/check-vendor-hash.sh` FAILS on local working-tree drift but is
+  ADVISORY in CI (`BASE_REV` arg): the range heuristic fires on real
+  drift AND on vendor-set-neutral go.mod edits, so only the nix flake CI
+  job proves it.
 - **CI's coverage gate measures the library package only** (`-coverpkg=.`
   in ci.yml): Go ≥1.22 emits no-test-file packages (our `scripts/`
   scratch tooling) into `-coverprofile` at 0%, dragging the merged total

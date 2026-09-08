@@ -382,6 +382,51 @@ active throughout and co-completed parts of the plan (attributed below).
 
 ---
 
+## Resolution (2026-09-08 ~18:00, follow-up session)
+
+g/2 and g/3 were decided and shipped under the session's standing
+"keep going until everything works" mandate; g/1 stayed gated as written.
+
+1. **g/1 push — happened, but NOT by this session**: someone pushed
+   master ~14:21–15:17 UTC (all commits through `214bb22`). The
+   `33d454d` incident is closed (runs get past build/test). But origin
+   then failed on two NEW causes, both root-caused and fixed locally
+   (push of the fixes still needs user authorization — TODO_LIST T45):
+   - **Coverage gate 69.5% vs ≥85%**: the library package measures
+     88.3%; `scripts/` scratch packages (no tests) entered the merged
+     `-coverprofile` total at 0% (Go ≥1.22). Fixed: CI scopes coverage
+     with `-coverpkg=.` (verified locally: total 88.3%).
+   - **VendorHash drift — REAL, not a false positive (corrected)**: the
+     daemon's tidy commit (`214bb22`) changed the Go module set without
+     bumping `vendorHash`; the flake check of this follow-up session
+     failed with the correct hash in the error and it was refreshed
+     (`sha256-iv414d…`). That means this report's end-state claim "nix
+     flake check GREEN" did not hold for the post-tidy tree — the a)-list
+     verification must have run before the tidy landed. The CI guard's
+     failure was therefore a true catch; it stays advisory in CI only
+     because the range heuristic ALSO fires on vendor-set-neutral go.mod
+     edits, and the nix flake CI job remains the proof.
+2. **g/2 T15 — shipped**: `Schema.MissingCapabilities()` as a pure
+   addition (strict superset: MissingColumns order, then `read_files`);
+   `MissingColumns` unchanged. Pinned by `TestSchemaMissingCapabilities`
+   plus both schema-fixture tests. TODO_LIST row retired.
+3. **g/3 summary fields — shipped, probe-gated**:
+   `Session.SummaryMessageID` ("" when absent/NULL) and
+   `Message.IsSummaryMessage` (false when absent), new Schema fields
+   `SessionsSummaryMessageID`/`MessagesIsSummaryMessage`, both drift-guard
+   rows flipped to probed, both queries + the agent-subtree CTE
+   substituted. Verified on real data: 4/33 local sessions carry a
+   summary pointer; a summary session holds exactly 3 flagged messages.
+   ROADMAP open question → recorded decision; probeSchema refactored to a
+   table-driven probe list (next capability = one row).
+4. f/34: release-watch (daily 04:23) vs flake-update (monthly 04:23)
+   co-fired once a month — flake-update staggered to 04:41. f/44:
+   `scripts/genschema` passes lint with zero exclusions (confirmed).
+5. Still gated on the user: push the CI/guard fixes (T45), tag v0.4.0,
+   dispatch release-watch, mindwalk PR.
+
+---
+
 _Verify-then-annotate: every "green/PASS/verified" above corresponds to a
 command that exited 0 this session, except where explicitly attributed to
 the concurrent session (a/16, a/17 authorship, a/24 fuzz numbers)._
