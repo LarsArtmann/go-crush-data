@@ -145,6 +145,7 @@ func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, 
 
 		if !full && census.bytes >= partCensusByteBudget {
 			census.truncated = true
+
 			break
 		}
 	}

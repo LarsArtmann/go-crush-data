@@ -69,9 +69,15 @@ tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 `go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples),
 `docs/ecosystem-implementation-review.md` (source-verified comparison of
 every known Go tool reading crush data — 2 of 6 inherited the
-milliseconds-comment lie as `time.UnixMilli` date bugs), and
-`docs/upstream-read-access-discussion-draft.md` (draft Discussion for
-charmbracelet/crush; post needs user go-ahead).
+milliseconds-comment lie as `time.UnixMilli` date bugs; both fixed by
+our one-line PRs openusage#357 + mnemo#22 on 2026-09-08), and
+`docs/upstream-read-access-discussion-draft.md` (authored record of the
+posted charmbracelet/crush discussion #3740 — Ideas, 2026-09-08; do not
+re-post). `scripts/censusprobe/` is machine-local scratch tooling (T10
+parts-type canary; prints by design, hardcoded registry path) — it is
+path-excluded in `.golangci.yml` for print/style rules; do NOT "fix" its
+fmt.Print calls, and never put `package main` files in the repo root
+(they break the single-package `crushdata` build).
 
 ## Critical decisions
 

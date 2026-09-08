@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -88,7 +89,7 @@ func probe(dir string) {
 
 	defer func() { _ = rows.Close() }()
 
-	typeReport := ""
+	var typeReport strings.Builder
 
 	for rows.Next() {
 		var (
@@ -98,7 +99,7 @@ func probe(dir string) {
 		)
 
 		must(rows.Scan(&typeName, &count, &maxLen))
-		typeReport += fmt.Sprintf(" %s=%d(maxLen=%d)", typeName, count, maxLen.Int64)
+		fmt.Fprintf(&typeReport, " %s=%d(maxLen=%d)", typeName, count, maxLen.Int64)
 	}
 	must(rows.Err())
 
@@ -116,7 +117,8 @@ func probe(dir string) {
 		blobPrefix = fmt.Sprintf(" blobSample=%q", s)
 	}
 
-	if typeReport != " text=2000(maxLen=0)" {
-		fmt.Printf("%s%s%s took %s\n", filepath.Base(filepath.Dir(dir)), typeReport, blobPrefix, time.Since(start).Round(time.Millisecond))
+	if typeReport.String() != " text=2000(maxLen=0)" {
+		fmt.Printf("%s%s%s took %s\n", filepath.Base(filepath.Dir(dir)), typeReport.String(), blobPrefix,
+			time.Since(start).Round(time.Millisecond))
 	}
 }
