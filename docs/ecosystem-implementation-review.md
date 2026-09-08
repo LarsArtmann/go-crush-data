@@ -80,10 +80,14 @@ on-disk format as of v0.92.0 (559ec80).
   tolerance). `.crush/crush.db` appears only as a documentation string.
 - Reclassify: hooks consumer, not an on-disk consumer.
 
-### deja-vu (vshulcz/deja-vu) — no Crush code on main
+### deja-vu (vshulcz/deja-vu) — Crush parser merged 2026-09-07
 
-- The Crush parser exists only as issue #2949 (proposal/patch); `main`
-  has zero crush references. Reclassify as "proposed, not shipped".
+- UPDATE 2026-09-08: their parser shipped after this review was compiled
+  (#2949 → PR #3158, merged 2026-09-07). Notable smarts: they
+  heuristic-guess timestamp units (`unixGuess`) instead of trusting
+  crush's lying migration comment — the exact trap that bit openusage
+  and mnemo. Registry-driven discovery, parts parsing incl. stripping
+  the `<cwd>` tag appended to tool_result content.
 
 ## Comparison verdicts vs go-crush-data
 

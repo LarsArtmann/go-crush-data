@@ -44,9 +44,12 @@ undocumented on-disk format (the Go six reviewed source-level on
 | [soyomarvaldezg/crush-tmux](https://github.com/soyomarvaldezg/crush-tmux)                                                | Go         | tmux status via read-only `crush.db` probing (#3531)                                                                                                                              |
 | [LarsArtmann/go-crush-data](https://github.com/LarsArtmann/go-crush-data)                                                | Go         | typed read-only library over `projects.json` + `crush.db` (mine; verified against v0.92.0 / 559ec80), plus crush-daily (private, mine) building daily per-project summaries on it |
 
-Adjacent, not on-disk readers: [perplexityai/numbat](https://github.com/perplexityai/numbat)
-integrates via the hooks surface; vshulcz/deja-vu has a Crush parser
-proposed (vshulcz/deja-vu#2949) but not merged on main.
+Adjacent: [perplexityai/numbat](https://github.com/perplexityai/numbat)
+integrates via the hooks surface. [vshulcz/deja-vu](https://github.com/vshulcz/deja-vu)
+merged a Crush parser ([#2949](https://github.com/vshulcz/deja-vu/issues/2949) →
+[PR #3158](https://github.com/vshulcz/deja-vu/pull/3158), 2026-09-07)
+shortly after this inventory was compiled — another JSON-parts reader
+(7th Go reader).
 
 When even motivated third parties get misled — deja-vu's Crush parser
 notes: "It keeps sessions in SQLite, not in the JSON state file the
