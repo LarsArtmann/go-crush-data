@@ -29,18 +29,18 @@ undocumented on-disk format (the Go six reviewed source-level on
 2026-09-07, see
 [the review](https://github.com/LarsArtmann/go-crush-data/blob/master/docs/ecosystem-implementation-review.md)):
 
-| Tool | Lang | What it does with the data |
-| --- | --- | --- |
-| [junhoyeo/tokscale](https://github.com/junhoyeo/tokscale) | Rust | token-usage tracking from per-project `crush.db` |
-| [jhlee0409/claude-code-history-viewer](https://github.com/jhlee0409/claude-code-history-viewer) | Rust/Tauri | GUI history browser across `<project>/.crush/crush.db` |
-| [yigitkonur/cli-continues](https://github.com/yigitkonur/cli-continues) | TS | session handoff parser; maintains its own reverse-engineered docs of the format |
-| [Dicklesworthstone/coding_agent_session_search](https://github.com/Dicklesworthstone/coding_agent_session_search) (CASS) | Rust | cross-agent session search over `crush.db` |
-| [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage) | Go | usage tracking from `.crush/crush.db` per project |
-| [Pilan-AI/mnemo](https://github.com/Pilan-AI/mnemo) | Go | indexes Crush sessions into its SQLite |
-| [superbasedapp/observer](https://github.com/superbasedapp/observer) | Go | agent observer via a `crush` adapter (deepest parser in the ecosystem) |
-| [taigrr/crunch](https://github.com/taigrr/crunch) | Go | LLM-generated daily summaries from `crush.db` scans |
-| [soyomarvaldezg/crush-tmux](https://github.com/soyomarvaldezg/crush-tmux) | Go | tmux status via read-only `crush.db` probing (#3531) |
-| [LarsArtmann/go-crush-data](https://github.com/LarsArtmann/go-crush-data) | Go | typed read-only library over `projects.json` + `crush.db` (mine; verified against v0.92.0 / 559ec80), plus crush-daily (private, mine) building daily per-project summaries on it |
+| Tool                                                                                                                     | Lang       | What it does with the data                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [junhoyeo/tokscale](https://github.com/junhoyeo/tokscale)                                                                | Rust       | token-usage tracking from per-project `crush.db`                                                                                                                                  |
+| [jhlee0409/claude-code-history-viewer](https://github.com/jhlee0409/claude-code-history-viewer)                          | Rust/Tauri | GUI history browser across `<project>/.crush/crush.db`                                                                                                                            |
+| [yigitkonur/cli-continues](https://github.com/yigitkonur/cli-continues)                                                  | TS         | session handoff parser; maintains its own reverse-engineered docs of the format                                                                                                   |
+| [Dicklesworthstone/coding_agent_session_search](https://github.com/Dicklesworthstone/coding_agent_session_search) (CASS) | Rust       | cross-agent session search over `crush.db`                                                                                                                                        |
+| [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage)                                              | Go         | usage tracking from `.crush/crush.db` per project                                                                                                                                 |
+| [Pilan-AI/mnemo](https://github.com/Pilan-AI/mnemo)                                                                      | Go         | indexes Crush sessions into its SQLite                                                                                                                                            |
+| [superbasedapp/observer](https://github.com/superbasedapp/observer)                                                      | Go         | agent observer via a `crush` adapter (deepest parser in the ecosystem)                                                                                                            |
+| [taigrr/crunch](https://github.com/taigrr/crunch)                                                                        | Go         | LLM-generated daily summaries from `crush.db` scans                                                                                                                               |
+| [soyomarvaldezg/crush-tmux](https://github.com/soyomarvaldezg/crush-tmux)                                                | Go         | tmux status via read-only `crush.db` probing (#3531)                                                                                                                              |
+| [LarsArtmann/go-crush-data](https://github.com/LarsArtmann/go-crush-data)                                                | Go         | typed read-only library over `projects.json` + `crush.db` (mine; verified against v0.92.0 / 559ec80), plus crush-daily (private, mine) building daily per-project summaries on it |
 
 Adjacent, not on-disk readers: [perplexityai/numbat](https://github.com/perplexityai/numbat)
 integrates via the hooks surface; vshulcz/deja-vu has a Crush parser
