@@ -73,7 +73,8 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   fixtures to live databases: `TestStatsParityWithCrushDailySQLOnRealDatabase`
   (env-gated like the other real-data tests, day-filtered on the newest
   session) re-runs the collector SQL against the same database and
-  requires identical numbers; verified 2026-09-08 on the local registry.
+  requires identical numbers; verified 2026-09-08 on a live local database
+  (the project's own 5 GB crush.db, day-filtered on its newest session).
   The fixture parity check is extracted into a shared helper.
 
 ### Fixed
