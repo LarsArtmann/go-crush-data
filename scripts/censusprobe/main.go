@@ -1,7 +1,3 @@
-// censusprobe is a one-off scratch probe (concurrent-session census work):
-// scans every registry data dir for messages.parts storage types (text vs
-// blob) over the newest 2000 rows, reporting anything that is not pure
-// text — a canary for upstream parts-format drift (e.g. compression).
 package main
 
 import (
@@ -47,78 +43,114 @@ func main() {
 		}
 
 		seen[dir] = true
-		probe(dir)
+		probeDir(dir)
 	}
 
 	fmt.Println("scanned", len(seen), "data dirs")
 }
 
-// probe reports on one data dir; defers are scoped per call so file
-// handles do not accumulate across the registry walk.
-func probe(dir string) {
+// probeDir runs the per-dir census with a 30s timeout and prints the
+// report line when the dir was slow or the probe failed.
+func probeDir(dir string) {
 	dbPath := filepath.Join(dir, "crush.db")
 	if _, statErr := os.Stat(dbPath); statErr != nil {
 		return
 	}
 
-	db, err := sql.Open("sqlite", "file:"+dbPath+"?mode=ro&_txlock=immediate")
-	if err != nil {
-		fmt.Println("open-fail", dir, err)
-
-		return
-	}
-
-	defer func() { _ = db.Close() }()
-
-	db.SetMaxOpenConns(1)
-
-	ctx := context.Background()
-
-	var maxRow int64
-	if err := db.QueryRowContext(ctx, "SELECT COALESCE(MAX(rowid),0) FROM messages").Scan(&maxRow); err != nil {
-		fmt.Println("query-fail", dir, err)
-
-		return
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 	start := time.Now()
 
-	rows, err := db.QueryContext(ctx, `SELECT typeof(parts), COUNT(*), MAX(LENGTH(parts))
-		FROM messages WHERE rowid > ? GROUP BY 1`, maxRow-2000)
-	must(err)
+	result := make(chan string, 1)
 
-	defer func() { _ = rows.Close() }()
+	go func() { result <- censusDir(ctx, dbPath) }()
 
-	var typeReport strings.Builder
+	var report string
+
+	select {
+	case report = <-result:
+	case <-ctx.Done():
+		report = "TIMEOUT >30s"
+	}
+
+	elapsed := time.Since(start).Round(time.Millisecond)
+	slow := elapsed > 2*time.Second
+	failed := strings.HasPrefix(report, "TIMEOUT") || strings.HasPrefix(report, "query") ||
+		strings.HasPrefix(report, "open") || strings.HasPrefix(report, "maxrow") ||
+		strings.HasPrefix(report, "rowserr") || strings.HasPrefix(report, "scan-fail")
+	if slow || failed {
+		fmt.Printf("%-60s %-30s %s\n", dir, report, elapsed)
+	}
+
+	cancel()
+}
+
+// censusDir walks the newest messages.parts rows of one crush.db and
+// returns a one-line report; the goroutine wrapper in main enforces the
+// 30s timeout per dir.
+func censusDir(ctx context.Context, dbPath string) string {
+	db, openErr := sql.Open("sqlite", "file:"+dbPath+"?mode=ro&_txlock=immediate")
+	if openErr != nil {
+		return "open-fail " + openErr.Error()
+	}
+
+	db.SetMaxOpenConns(1)
+
+	var maxRowID int64
+	if err := db.QueryRowContext(ctx, "SELECT COALESCE(MAX(rowid), 0) FROM messages").Scan(&maxRowID); err != nil {
+		_ = db.Close()
+
+		return "maxrow-fail " + err.Error()
+	}
+
+	rows, queryErr := db.QueryContext(ctx, `
+		SELECT parts FROM messages
+		WHERE rowid > ? AND parts IS NOT NULL AND parts != '[]'
+		ORDER BY rowid DESC`, maxRowID-50000)
+	if queryErr != nil {
+		_ = db.Close()
+
+		return "query-fail " + queryErr.Error()
+	}
+
+	bytesRead, entries, unparseable, rowCount := 0, 0, 0, 0
 
 	for rows.Next() {
-		var (
-			typeName string
-			count    int
-			maxLen   sql.NullInt64
-		)
+		var raw []byte
+		if err := rows.Scan(&raw); err != nil {
+			_ = rows.Close()
+			_ = db.Close()
 
-		must(rows.Scan(&typeName, &count, &maxLen))
-		fmt.Fprintf(&typeReport, " %s=%d(maxLen=%d)", typeName, count, maxLen.Int64)
-	}
-	must(rows.Err())
-
-	var blobSample sql.NullString
-	_ = db.QueryRowContext(ctx, `SELECT CAST(parts AS TEXT) FROM messages
-		WHERE rowid > ? AND typeof(parts)='blob' LIMIT 1`, maxRow-2000).Scan(&blobSample)
-
-	blobPrefix := ""
-	if blobSample.Valid {
-		s := blobSample.String
-		if len(s) > 40 {
-			s = s[:40]
+			return "scan-fail " + err.Error()
 		}
 
-		blobPrefix = fmt.Sprintf(" blobSample=%q", s)
+		bytesRead += len(raw)
+		rowCount++
+
+		var parsed []struct {
+			Type string `json:"type"`
+		}
+
+		if err := json.Unmarshal(raw, &parsed); err != nil {
+			unparseable++
+		} else {
+			entries += len(parsed)
+		}
+
+		if bytesRead >= 256<<20 {
+			break
+		}
 	}
 
-	if typeReport.String() != " text=2000(maxLen=0)" {
-		fmt.Printf("%s%s%s took %s\n", filepath.Base(filepath.Dir(dir)), typeReport.String(), blobPrefix,
-			time.Since(start).Round(time.Millisecond))
+	rowsErr := rows.Err()
+	_ = rows.Close()
+
+	if rowsErr != nil {
+		_ = db.Close()
+
+		return "rowserr " + rowsErr.Error()
 	}
+	_ = db.Close()
+
+	return fmt.Sprintf("rows=%d entries=%d unparseable=%d bytes=%dMB", rowCount, entries, unparseable, bytesRead>>20)
 }
