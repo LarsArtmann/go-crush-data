@@ -10,14 +10,15 @@ duplicated in crush-daily (collector) and the mindwalk fork (adapter/crush).
 # Canonical full gate — ALWAYS with pipefail; plain pipes mask lint exit codes
 set -o pipefail
 go build ./... && go vet ./... && go test -race -shuffle=on ./... \
-  && nix run .#lint && nix flake check && nix develop --command actionlint \
-  && scripts/check-doc-links.sh
+  && go tool golangci-lint run --timeout=5m ./... && nix flake check \
+  && nix develop --command actionlint && scripts/check-doc-links.sh
 
 go build ./...        # no GOEXPERIMENT needed (stdlib encoding/json v1 by design)
 go test ./...         # fixtures are generated per-test; no committed binary testdata
 go test -race ./...   # CI runs this (CI adds -shuffle=on); add -count=2 to catch order-dependent flakes
+go tool golangci-lint run --timeout=5m ./...  # THE lint command — byte-identical to CI's (go.mod tool pin)
 nix flake check       # build + format
-nix run .#lint        # golangci-lint (~90 linters; run per-file while writing tests)
+nix run .#lint        # convenience wrapper, DIFFERENT binary than CI's — do not gate on it alone (see tooling gotchas)
 nix run .#test        # race test via nix
 CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard (run after every go get / go mod tidy)
