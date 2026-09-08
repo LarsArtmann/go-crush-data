@@ -9,8 +9,9 @@ import (
 // Schema records which optional tables and columns a database carries.
 // Crush adds columns and tables in migrations; databases written by older
 // Crush versions lack them. Reads substitute zero values for absent columns
-// instead of failing, and consumers can use [Schema.MissingColumns] to warn
-// about reduced coverage.
+// instead of failing, and consumers can use [Schema.MissingColumns] (columns
+// only) or [Schema.MissingCapabilities] (columns and optional tables) to
+// warn about reduced coverage.
 type Schema struct {
 	// SessionsCost reports whether sessions.cost exists. Absent: CostUSD is
 	// always 0.
@@ -70,6 +71,21 @@ func (s Schema) MissingColumns() []string {
 
 	if !s.MessagesFinishedAt {
 		missing = append(missing, "messages.finished_at")
+	}
+
+	return missing
+}
+
+// MissingCapabilities lists everything this database lacks — well-known
+// columns and optional tables — in a stable order suitable for a user-facing
+// warning ("upgrade Crush for full coverage"). It is a strict superset of
+// [Schema.MissingColumns]: column gaps first (in MissingColumns order), then
+// missing optional tables.
+func (s Schema) MissingCapabilities() []string {
+	missing := s.MissingColumns()
+
+	if !s.ReadFilesTable {
+		missing = append(missing, "read_files")
 	}
 
 	return missing

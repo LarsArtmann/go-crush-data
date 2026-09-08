@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -21,6 +22,10 @@ func TestOpenCurrentSchema(t *testing.T) {
 
 	if len(db.Schema().MissingColumns()) != 0 {
 		t.Fatalf("MissingColumns = %v, want none", db.Schema().MissingColumns())
+	}
+
+	if len(db.Schema().MissingCapabilities()) != 0 {
+		t.Fatalf("MissingCapabilities = %v, want none", db.Schema().MissingCapabilities())
 	}
 }
 
@@ -85,6 +90,52 @@ func TestOpenLegacySchema(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("MissingColumns = %v, want %v", got, want)
 		}
+	}
+
+	wantCapabilities := append(slices.Clone(want), "read_files")
+	gotCapabilities := schema.MissingCapabilities()
+
+	if !slices.Equal(gotCapabilities, wantCapabilities) {
+		t.Fatalf("MissingCapabilities = %v, want %v", gotCapabilities, wantCapabilities)
+	}
+}
+
+func TestSchemaMissingCapabilities(t *testing.T) {
+	t.Parallel()
+
+	full := Schema{
+		SessionsCost:            true,
+		SessionsParentSessionID: true,
+		SessionsTodos:           true,
+		MessagesModel:           true,
+		MessagesProvider:        true,
+		MessagesFinishedAt:      true,
+		ReadFilesTable:          true,
+	}
+	if got := full.MissingCapabilities(); len(got) != 0 {
+		t.Fatalf("MissingCapabilities = %v, want none", got)
+	}
+
+	columnsOnly := full
+
+	columnsOnly.ReadFilesTable = false
+	if got, want := columnsOnly.MissingCapabilities(), []string{"read_files"}; !slices.Equal(got, want) {
+		t.Fatalf("MissingCapabilities = %v, want %v", got, want)
+	}
+
+	var empty Schema
+
+	wantAll := []string{
+		"sessions.cost",
+		"sessions.parent_session_id",
+		"sessions.todos",
+		"messages.model",
+		"messages.provider",
+		"messages.finished_at",
+		"read_files",
+	}
+	if got := empty.MissingCapabilities(); !slices.Equal(got, wantAll) {
+		t.Fatalf("MissingCapabilities = %v, want %v", got, wantAll)
 	}
 }
 
