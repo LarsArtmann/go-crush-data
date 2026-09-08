@@ -115,11 +115,17 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 		todosExpr = todosColumn
 	}
 
+	summaryExpr := "NULL AS summary_message_id"
+	if db.schema.SessionsSummaryMessageID {
+		summaryExpr = "summary_message_id"
+	}
+
 	query := fmt.Sprintf(
-		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s FROM sessions",
+		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s, %s FROM sessions",
 		parentExpr,
 		costExpr,
 		todosExpr,
+		summaryExpr,
 	)
 
 	var (
@@ -165,10 +171,11 @@ func scanSessions(rows *sql.Rows) ([]Session, error) {
 // scanSession lifts one row into a Session.
 func scanSession(rows *sql.Rows) (Session, error) {
 	var (
-		session       Session
-		parent, todos sql.NullString
-		createdAtUnix int64
-		updatedAtUnix int64
+		session            Session
+		parent, todos      sql.NullString
+		summaryMessageID   sql.NullString
+		createdAtUnix      int64
+		updatedAtUnix      int64
 	)
 
 	err := rows.Scan(
@@ -182,6 +189,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 		&updatedAtUnix,
 		&createdAtUnix,
 		&todos,
+		&summaryMessageID,
 	)
 	if err != nil {
 		return Session{}, fmt.Errorf("scan session row: %w", err)
@@ -190,6 +198,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 	session.ParentSessionID = parent.String
 	session.CreatedAt = unixTime(createdAtUnix)
 	session.UpdatedAt = unixTime(updatedAtUnix)
+	session.SummaryMessageID = summaryMessageID.String
 
 	if todos.Valid {
 		session.Todos = json.RawMessage(todos.String)

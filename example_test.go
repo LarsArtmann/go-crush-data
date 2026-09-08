@@ -153,9 +153,11 @@ func ExampleDB_Sessions() {
 	// Output:
 	// note: sessions.cost absent, some fields will be zero
 	// note: sessions.parent_session_id absent, some fields will be zero
+	// note: sessions.summary_message_id absent, some fields will be zero
 	// note: messages.model absent, some fields will be zero
 	// note: messages.provider absent, some fields will be zero
 	// note: messages.finished_at absent, some fields will be zero
+	// note: messages.is_summary_message absent, some fields will be zero
 	// s2 "Write the README" (0 messages)
 	// s1 "Refactor the collector" (1 messages)
 }

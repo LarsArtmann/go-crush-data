@@ -26,6 +26,11 @@ type Schema struct {
 	// 2025-08-12's migration). Absent: Session.Todos is always nil.
 	SessionsTodos bool
 
+	// SessionsSummaryMessageID reports whether sessions.summary_message_id
+	// exists (added upstream in 2025-05-15's migration). Absent:
+	// Session.SummaryMessageID is always "".
+	SessionsSummaryMessageID bool
+
 	// MessagesModel reports whether messages.model exists. Absent: message
 	// and stats model fields are empty.
 	MessagesModel bool
@@ -37,6 +42,11 @@ type Schema struct {
 	// MessagesFinishedAt reports whether messages.finished_at exists. Absent:
 	// Message.FinishedAt is the zero time.
 	MessagesFinishedAt bool
+
+	// MessagesIsSummaryMessage reports whether messages.is_summary_message
+	// exists (added upstream in 2025-08-10's migration). Absent:
+	// Message.IsSummaryMessage is always false.
+	MessagesIsSummaryMessage bool
 
 	// ReadFilesTable reports whether the read_files table exists. Absent:
 	// [DB.ReadFiles] returns an empty slice.
@@ -61,6 +71,10 @@ func (s Schema) MissingColumns() []string {
 		missing = append(missing, "sessions.todos")
 	}
 
+	if !s.SessionsSummaryMessageID {
+		missing = append(missing, "sessions.summary_message_id")
+	}
+
 	if !s.MessagesModel {
 		missing = append(missing, "messages.model")
 	}
@@ -71,6 +85,10 @@ func (s Schema) MissingColumns() []string {
 
 	if !s.MessagesFinishedAt {
 		missing = append(missing, "messages.finished_at")
+	}
+
+	if !s.MessagesIsSummaryMessage {
+		missing = append(missing, "messages.is_summary_message")
 	}
 
 	return missing
@@ -141,6 +159,12 @@ func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
+	if schema.SessionsSummaryMessageID, err = columnExists(
+		ctx, db, sessionsTable, "summary_message_id",
+	); err != nil {
+		return Schema{}, wrapProbeError(path, err)
+	}
+
 	if schema.MessagesModel, err = columnExists(ctx, db, messagesTable, "model"); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
@@ -151,6 +175,12 @@ func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
 
 	if schema.MessagesFinishedAt, err = columnExists(
 		ctx, db, messagesTable, "finished_at",
+	); err != nil {
+		return Schema{}, wrapProbeError(path, err)
+	}
+
+	if schema.MessagesIsSummaryMessage, err = columnExists(
+		ctx, db, messagesTable, "is_summary_message",
 	); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}

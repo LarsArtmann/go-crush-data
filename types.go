@@ -38,6 +38,12 @@ type Session struct {
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	Todos            json.RawMessage
+
+	// SummaryMessageID identifies the message that carries this session's
+	// context summary (written when Crush compacts a session); "" when the
+	// session has no summary or the database predates the column. That
+	// message is a normal messages row with [Message.IsSummaryMessage] set.
+	SummaryMessageID string
 }
 
 // Role is the author of a message. Crush currently writes "user",
@@ -66,6 +72,13 @@ type Message struct {
 	Parts     []Part
 	Model     string
 	Provider  string
+
+	// IsSummaryMessage marks rows Crush wrote when compacting a session's
+	// context into a replacement summary: rare (roughly 0.1% of message
+	// rows on real databases), one per compaction, carrying real content
+	// and model attribution. Databases that predate the column report
+	// false. They are returned like any other row; see [DB.Messages].
+	IsSummaryMessage bool
 
 	// CreatedAt and UpdatedAt are the row's creation and last-write times;
 	// both ride the initial messages schema, so every database has them.

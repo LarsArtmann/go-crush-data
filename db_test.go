@@ -76,9 +76,11 @@ func TestOpenLegacySchema(t *testing.T) {
 	want := []string{
 		"sessions.cost",
 		"sessions.parent_session_id",
+		"sessions.summary_message_id",
 		"messages.model",
 		"messages.provider",
 		"messages.finished_at",
+		"messages.is_summary_message",
 	}
 	got := schema.MissingColumns()
 
@@ -104,13 +106,15 @@ func TestSchemaMissingCapabilities(t *testing.T) {
 	t.Parallel()
 
 	full := Schema{
-		SessionsCost:            true,
-		SessionsParentSessionID: true,
-		SessionsTodos:           true,
-		MessagesModel:           true,
-		MessagesProvider:        true,
-		MessagesFinishedAt:      true,
-		ReadFilesTable:          true,
+		SessionsCost:              true,
+		SessionsParentSessionID:  true,
+		SessionsTodos:            true,
+		SessionsSummaryMessageID: true,
+		MessagesModel:            true,
+		MessagesProvider:         true,
+		MessagesFinishedAt:       true,
+		MessagesIsSummaryMessage: true,
+		ReadFilesTable:           true,
 	}
 	if got := full.MissingCapabilities(); len(got) != 0 {
 		t.Fatalf("MissingCapabilities = %v, want none", got)
@@ -129,9 +133,11 @@ func TestSchemaMissingCapabilities(t *testing.T) {
 		"sessions.cost",
 		"sessions.parent_session_id",
 		"sessions.todos",
+		"sessions.summary_message_id",
 		"messages.model",
 		"messages.provider",
 		"messages.finished_at",
+		"messages.is_summary_message",
 		"read_files",
 	}
 	if got := empty.MissingCapabilities(); !slices.Equal(got, wantAll) {

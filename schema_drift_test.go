@@ -175,16 +175,17 @@ func TestUpstreamMigrationColumnsAreProbedOrExempt(t *testing.T) {
 		probed bool
 	}
 
-	// Unread columns (summary_message_id, is_summary_message) stay in the
-	// list on purpose: dropping them must change nothing, and the moment a
-	// query starts reading one, its row must gain probed=true plus a Schema
-	// field — this test makes that omission loud.
+	// Currently-unread columns stay in the list with probed=false: dropping
+	// them must change nothing, and the moment a query starts reading one,
+	// its row must gain probed=true plus a Schema field — this test makes
+	// that omission loud. summary_message_id and is_summary_message were the
+	// first to make that journey (2026-09-08).
 	migrations := []migration{
 		{
 			table:  "sessions",
 			column: "summary_message_id",
 			file:   "20250515105448_add_summary_message_id.sql",
-			// unread; additive upstream metadata
+			probed: true,
 		},
 		{
 			table:  "messages",
@@ -196,7 +197,7 @@ func TestUpstreamMigrationColumnsAreProbedOrExempt(t *testing.T) {
 			table:  "messages",
 			column: "is_summary_message",
 			file:   "20250810000000_add_is_summary_message.sql",
-			// unread; additive upstream metadata
+			probed: true,
 		},
 		{
 			table:  "sessions",

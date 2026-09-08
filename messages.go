@@ -30,7 +30,9 @@ import (
 // session's context into a replacement summary) are returned like any other
 // row: they carry real content and model attribution, and filtering them
 // would break number parity with the collector SQL this library ports
-// verbatim. Pinned by TestSummaryMessagesAreCounted.
+// verbatim. Their [Message.IsSummaryMessage] flag (and the session's
+// [Session.SummaryMessageID] pointer) lets consumers skip or specially
+// render them. Pinned by TestSummaryMessagesAreCounted.
 func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := db.handle.QueryContext(ctx, db.buildMessagesQuery(), sessionID)
 	if err != nil {
@@ -102,6 +104,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		createdAtUnix   int64
 		updatedAtUnix   int64
 		finishedAt      sql.NullInt64
+		isSummary       sql.NullInt64
 	)
 
 	err := rows.Scan(
@@ -113,6 +116,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		&createdAtUnix,
 		&updatedAtUnix,
 		&finishedAt,
+		&isSummary,
 	)
 	if err != nil {
 		return Message{}, fmt.Errorf("scan message row: %w", err)
@@ -124,6 +128,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	message.CreatedAt = unixTime(createdAtUnix)
 	message.UpdatedAt = unixTime(updatedAtUnix)
 	message.FinishedAt = unixTime(finishedAt.Int64)
+	message.IsSummaryMessage = isSummary.Int64 != 0
 
 	decoded, err := decodeParts(parts, false)
 	if err != nil {
@@ -153,9 +158,14 @@ func (db *DB) buildMessagesQuery() string {
 		finishedExpr = "finished_at"
 	}
 
+	isSummaryExpr := "0 AS is_summary_message"
+	if db.schema.MessagesIsSummaryMessage {
+		isSummaryExpr = "is_summary_message"
+	}
+
 	return fmt.Sprintf(
-		"SELECT id, role, parts, %s, %s, created_at, updated_at, %s FROM messages WHERE session_id = ? ORDER BY rowid",
-		modelExpr, providerExpr, finishedExpr,
+		"SELECT id, role, parts, %s, %s, created_at, updated_at, %s, %s FROM messages WHERE session_id = ? ORDER BY rowid",
+		modelExpr, providerExpr, finishedExpr, isSummaryExpr,
 	)
 }
 

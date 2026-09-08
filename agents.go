@@ -111,21 +111,29 @@ func (db *DB) descendantSessions(ctx context.Context, rootID string) ([]Session,
 		recursiveTodosExpr = "NULL"
 	}
 
+	summaryExpr := "summary_message_id"
+	recursiveSummaryExpr := "s.summary_message_id"
+
+	if !db.schema.SessionsSummaryMessageID {
+		summaryExpr = "NULL"
+		recursiveSummaryExpr = "NULL"
+	}
+
 	// query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args
 	query := fmt.Sprintf(`
 		WITH RECURSIVE subtree AS (
-			SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, %s AS cost, updated_at, created_at, %s AS todos, 1 AS depth
+			SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, %s AS cost, updated_at, created_at, %s AS todos, %s AS summary_message_id, 1 AS depth
 			FROM sessions
 			WHERE parent_session_id = ?
 			UNION ALL
-			SELECT s.id, s.title, s.parent_session_id, s.message_count, s.prompt_tokens, s.completion_tokens, %s AS cost, s.updated_at, s.created_at, %s AS todos, subtree.depth + 1
+			SELECT s.id, s.title, s.parent_session_id, s.message_count, s.prompt_tokens, s.completion_tokens, %s AS cost, s.updated_at, s.created_at, %s AS todos, %s AS summary_message_id, subtree.depth + 1
 			FROM sessions s
 			JOIN subtree ON s.parent_session_id = subtree.id
 			WHERE subtree.depth < ?
 		)
-		SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at, todos
+		SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at, todos, summary_message_id
 		FROM subtree
-	`, costExpr, todosExpr, recursiveCostExpr, recursiveTodosExpr)
+	`, costExpr, todosExpr, summaryExpr, recursiveCostExpr, recursiveTodosExpr, recursiveSummaryExpr)
 
 	rows, err := db.handle.QueryContext(ctx, query, rootID, maxAgentDepth+1)
 	if err != nil {
