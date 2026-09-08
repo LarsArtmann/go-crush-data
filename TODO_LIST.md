@@ -125,7 +125,7 @@ renumbered, and deleting an item retires its ID for good.
       github-actions bot") reaches origin: observe the first successful
       flake-lock PR and that the vendorHash guard behaves. 5m —
       `.github/workflows/flake-update.yml`
-- [ ] **T34** Observe the first SCHEDULED `upstream-drift.yml` run
+- [ ] **T34** Observe the first SCHEDULED upstream-drift run
       (Mondays 03:47 UTC; first = 2026-09-14) — the workflow_dispatch
       run on 2026-09-08 was green (5s). 5m —
       `.github/workflows/upstream-drift.yml`
