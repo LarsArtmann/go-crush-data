@@ -94,6 +94,10 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T28** Decide whether summary messages (`is_summary_message = 1`)
       should count in day filters/stats, and pin the answer. 30m —
       `sessions.go`, `stats.go`; source: same report (f)38
+- [ ] **T29** Add shellcheck to the devShell and run it over `scripts/`
+      (three bash guard scripts, today only battle-tested by running
+      them). 20m — `flake.nix`, `scripts/`; source:
+      2026-08-16_04-20 report (e)4/(f)11
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
