@@ -23,6 +23,7 @@ nix run .#test        # race test via nix
 CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard
 scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard (run after every go get / go mod tidy)
 scripts/check-doc-links.sh    # markdown links + file:line citations in root docs resolve (runs in CI)
+go test -cover ./...         # coverage number for FEATURES.md (docs-health cadence)
 ```
 
 ## Upstream verification cadence
@@ -156,7 +157,11 @@ fmt.Print calls, and never put `package main` files in the repo root
   per-string counts shift as you extract constants (fixing `messages`
   pushed `sessions` over the threshold in the same run).
 - **Lint per file while writing tests** (`golangci-lint run <file>_test.go`),
-  not after a large batch; and never trust `cmd | tail` without `pipefail`.
+  not after a large batch — but NOT for multi-file test packages: per-file
+  linting splits cross-file helpers (typecheck "undefined: openFixture"
+  false positives), so lint the whole package when helpers are shared;
+  per-file is safe for non-test files. And never trust `cmd | tail`
+  without `pipefail`.
 - **golangci-lint's cache can serve ANOTHER tree's findings**: linting a
   copy of the repo (same module path) right after linting the original
   reported the original's absolute paths and findings as if they were the

@@ -215,8 +215,8 @@ Verifiably complete this session; evidence cited.
    grep each file for numbered items without a
    verdict marker (`done at` / `Won't` / `←` / `~~`). One command would
    have caught d/1's residuals.~~ done (mechanized 2026-09-08 — verdict-less-item sweep run before archiving)
-3. **Mass-archive needs a bidirectional reference sweep** — living→moved
-   AND archived→archived. Add to the docs-health muscle memory.
+3. ~~**Mass-archive needs a bidirectional reference sweep** — living→moved
+   AND archived→archived. Add to the docs-health muscle memory.~~ done (2026-09-08 — 8 archived-to-archived refs repointed; T31 closed)
 4. ~~**Two-writer protocol**: when a concurrent session is live, run
    `git status` before every write batch and prefer surgical edits over
    full-file writes (both my survived incidents were full-file writes).~~ done (standing protocol — surgical edits + pre-batch status checks throughout the 2026-09-08 pass)

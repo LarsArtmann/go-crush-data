@@ -80,10 +80,11 @@ renumbered, and deleting an item retires its ID for good.
       in the dedupe doc comment — justifies "most recent wins". 10m —
       `discover.go`; source: same report (f)22
 - [ ] **T21** Investigate the `crush.db?_loc=auto` stray file in
-      `/home/lars/projects/.crush` (present 2026-09-07; likely a tool
-      mishandling a SQLite URI; harmless to this library — it opens exact
-      paths). Trash once understood. 20m — local data dir; source: same
-      report (f)25
+      `/home/lars/projects/.crush` (present 2026-09-07, 0 bytes; a second
+      `crush.db?_loc=auto&_time_format=sqlite` appeared with it — likely a
+      tool mishandling a SQLite URI; harmless to this library — it opens
+      exact paths). Trash once understood. 20m — local data dir; source:
+      same report (f)25 + 2026-09-08_15-31 report (c)P8
 - [ ] **T22** `.golangci.yml` refresh: `exhaustruct` deprecated since
       v2.13 → `exhaustruct_v5` (deprecation warning on every lint run).
       15m — `.golangci.yml`; source: same report (f)26
@@ -94,7 +95,9 @@ renumbered, and deleting an item retires its ID for good.
       `docs/benchmarks/baseline-benchmarks.txt` — regeneration is due
       regardless (the todos probe, `Message.UpdatedAt` scan, and ReadFiles
       ORDER BY all touch read paths), and the iter path has never been in
-      the trend. 1h — `go test -bench . -count=6 | tee …` + benchstat;
+      the trend. Benchmark function written 2026-09-08 (stress_test.go);
+      baseline regen + benchstat + citation refresh remain. 1h —
+      `go test -bench . -count=6 | tee …` + benchstat;
       source: same report (f)29 + docs/status/archived/2026-08-16_08-50_todo-t8-adoption-in-crush-daily.md (f)4/(f)47
 - [ ] **T25** Pin registry `last_accessed` UTC round-trip with a test
       (upstream writes `time.Now().UTC()`). 15m — `discover_test.go`;
@@ -109,18 +112,6 @@ renumbered, and deleting an item retires its ID for good.
       (three bash guard scripts, today only battle-tested by running
       them). 20m — `flake.nix`, `scripts/`; source:
       docs/status/archived/2026-08-16_04-20_v0.2.1-release-plan-execution-and-self-review.md (e)4/(f)11
-- [ ] **T30** Restore the ~15 compressed annotation bodies in archived
-      reports to full original-text strikethrough form (02:13 b/c,
-      08:50 d/e5–e10, 04:20 b-tails; originals in git history) — or
-      record the accept-decision and close. 30m — `docs/*/archived/`;
-      source: 2026-09-08_05-26 report (d)1/(f)3
-- [ ] **T31** Archived→archived reference sweep: grep `docs/status/2026-`,
-      `docs/planning/2026-` inside archived/ and repoint at `archived/`
-      paths. 10m — `docs/*/archived/`; source: same report (f)4
-- [ ] **T32** Add `-cover` to the docs-health gate line; refresh the
-      FEATURES coverage number and the bench.yml "observed green" date
-      (both stale since 2026-08-15/16). 15m — `AGENTS.md`, `FEATURES.md`;
-      source: same report (e)5/(f)5/(f)6
 - [ ] **T33** Add the docs-health cadence rule to AGENTS.md (after every
       release and any 50+-item session — proposed 2026-08-16, never
       landed; this audit found a Critical split brain 3 weeks after the
@@ -166,8 +157,8 @@ renumbered, and deleting an item retires its ID for good.
 
 - [ ] **T45** **Push master to origin — origin is RED**: CI and Benchmark
       trend both fail on `33d454d` (root `censusprobe_main.go` package
-      clash, pushed 06:24 UTC 2026-09-08). The fix (`0842dd1`) plus six
-      more commits sit locally, all green (full gate re-verified by the
+      clash, pushed 06:24 UTC 2026-09-08). The fix (`0842dd1`) and every
+      commit after it sit locally, all green (full gate re-verified by the
       2026-09-08 docs-health pass). Never pushed without instruction —
       user action. 5m — `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until

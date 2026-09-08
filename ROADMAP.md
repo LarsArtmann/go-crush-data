@@ -15,7 +15,7 @@ infrastructure that fails loudly before shipping.
 - Two live candidates below (`IterSessions`, `ReadFileVersions`). The last
   three graduates (typed todos decoding, streaming message iteration,
   registry watching) landed on 2026-08-16: the first two as `DecodeTodos`
-  and `DB.IterMessages` (CHANGELOG `[Unreleased]`), the third as a
+  and `DB.IterMessages` (CHANGELOG `[0.3.0]`), the third as a
   documented consumer-side pattern
   ([recipes/registry-watching](docs/recipes/registry-watching.md)).
 
@@ -28,6 +28,16 @@ infrastructure that fails loudly before shipping.
   migration carries the table, and this library deliberately does not read
   it. Graduate only when a consumer asks for versioned file content.
   Source: docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)34.
+- **Filing-campaign playbook** — distill the 2026-09-08 campaign
+  (fork → fix → PR → receipts → Discussion → adoption, with the
+  verify-before-filing gates) into a reusable doc. Graduates when a
+  second campaign actually starts; until then the campaign plan file
+  is the record. Source:
+  docs/status/2026-09-08_filing-campaign-plan.md.
+- **CI real-data sweep against a seeded fixture DB** — run the
+  `TestAllAPIOnRealDatabase` sweep shape in CI against a checked-in
+  fixture so the sweep logic is exercised without local data. Source:
+  docs/status/archived/2026-09-08_05-08_upstream-task-execution-and-harvest.md (f)39.
 
 ## Open questions (need a product-scope call)
 
@@ -54,15 +64,9 @@ new information.
   Decided 2026-08-16; the sub-module variant explicitly re-rejected same
   day after evaluating it. Revisit when a real consumer wants a live loop
   (e.g. agent-trace adopting this library for tailing).
-
 - **No DOMAIN_LANGUAGE.md.** The domain is small and fully captured in
   doc.go plus type doc comments; a separate glossary would drift from them.
   Revisit if the type count doubles.
-- **No AgentGraph CTE rewrite.** The recursive per-parent query is O(depth)
-  queries; a recursive CTE would collapse it to one. Graphs are shallow
-  (≤3 levels in practice) and the read is microseconds — the rewrite is
-  complexity without a measured bottleneck. Revisit only when a consumer
-  profiles AgentGraph hot on a deep graph.
 - **No stats-SQL rewrite, ever unilaterally.** The parity contract with
   crush-daily is law; see CONTRIBUTING.md before touching `stats.go`.
 - **No new dependencies.** The whole point is being the cheap, boring,

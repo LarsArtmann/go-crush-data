@@ -2,7 +2,7 @@
 
 **Input state:** TODO_LIST.md (T1, T3, T6, T7, T9, T10–T34, Parked) + the
 2026-09-08 docs-health audit's findings
-(`docs/status/2026-09-08_05-26_docs-health-audit-annotate-archive.md`) +
+(`docs/status/archived/2026-09-08_05-26_docs-health-audit-annotate-archive.md`) +
 the ROADMAP "Open questions" entry (summary fields). Head `f6cd473`,
 tree clean, **master == origin** (pushed this session).
 
