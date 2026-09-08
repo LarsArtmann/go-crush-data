@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 // realDataDir resolves the real database directory for the env-gated tests:
@@ -395,14 +397,27 @@ func TestPartDiscriminatorsCensusShape(t *testing.T) {
 	)
 }
 
+// registryCensusDBTimeout bounds the per-database budget of the registry
+// census. Healthy databases finish the byte-budgeted scan in well under 30 s
+// (measured 2026-09-08: 256 MB in ~13–20 s), but registry databases are
+// shared local state — a running consumer such as the mindwalk indexer holds
+// every registry database open and periodically scans them, and a census
+// that overlaps such a window can stall for minutes. A database that exceeds
+// the budget is skipped with a log line, never a failure: the tripwire
+// tolerates transient contention from local consumers while still failing
+// loudly on actual drift.
+const registryCensusDBTimeout = 60 * time.Second
+
 // TestPartDiscriminatorsCensusRegistry runs the census across every database
 // in a real registry: set CRUSH_DATA_REAL_REGISTRY to the global data
 // directory holding projects.json. Each database contributes its most
 // recent messages (see partCensusWindow; CRUSH_DATA_CENSUS_FULL=1 scans
 // everything), so even the local registry's multi-gigabyte database finishes
 // in seconds. Intended for upstream-verification sessions (the AGENTS.md
-// cadence), not the standard real-data pass. Fails on any unknown
-// discriminator.
+// cadence), not the standard real-data pass; budget enough wall time for the
+// whole registry (go test -timeout 30m for 300+ databases). Fails on any
+// unknown discriminator, and fails rather than pass vacuously when not a
+// single database could be read.
 func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 	if testing.Short() {
 		t.Skip("registry census (slow) in -short mode")
@@ -423,20 +438,46 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 	}
 
 	aggregate := partCensus{kinds: make(map[string]int)}
-	databases := 0
+	databases, skipped := 0, 0
 
 	for _, project := range projects {
-		db, err := Open(project.DataDir)
+		dbCtx, cancel := context.WithTimeout(ctx, registryCensusDBTimeout)
+
+		db, err := OpenContext(dbCtx, project.DataDir)
 		if err != nil {
-			t.Logf("skipping %s: %v", project.DataDir, err)
+			cancel()
+
+			if errors.Is(err, context.DeadlineExceeded) {
+				skipped++
+
+				t.Logf("skipping %s: open exceeded %s (likely local-consumer contention)",
+					project.DataDir, registryCensusDBTimeout)
+			} else {
+				t.Logf("skipping %s: %v", project.DataDir, err)
+			}
 
 			continue
 		}
 
-		census, err := censusPartDiscriminators(ctx, db.handle)
+		census, err := censusPartDiscriminators(dbCtx, db.handle)
+
+		cancel()
+
 		_ = db.Close()
 
 		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				skipped++
+
+				t.Logf(
+					"skipping %s: census exceeded %s (likely local-consumer contention)",
+					project.DataDir,
+					registryCensusDBTimeout,
+				)
+
+				continue
+			}
+
 			t.Fatalf("census %s: %v", project.DataDir, err)
 		}
 
@@ -451,18 +492,28 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 		}
 	}
 
+	if databases == 0 {
+		t.Fatalf(
+			"census read no databases under %s (skipped %d) — a vacuous pass would defeat the tripwire",
+			globalDir,
+			skipped,
+		)
+	}
+
 	if unknown := aggregate.unknownKinds(); len(unknown) > 0 {
 		t.Fatalf(
-			"unknown part discriminators %v across %d databases — Crush added part types this library does not decode; extend decodePart and knownPartKinds",
+			"unknown part discriminators %v across %d databases (skipped %d) — Crush added part types this library does not decode; extend decodePart and knownPartKinds",
 			unknown,
 			databases,
+			skipped,
 		)
 	}
 
 	t.Logf(
-		"registry census at %s: %d databases, %d entries, kinds %s, %d unparseable rows, %d bytes, complete=%t",
+		"registry census at %s: %d databases (skipped %d), %d entries, kinds %s, %d unparseable rows, %d bytes, complete=%t",
 		globalDir,
 		databases,
+		skipped,
 		aggregate.entries,
 		sortedHistogram(aggregate.kinds),
 		aggregate.unparseable,
