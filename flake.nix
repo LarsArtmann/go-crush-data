@@ -36,17 +36,17 @@
         in
         {
           devShells.default = pkgs.mkShellNoCC {
-          packages = builtins.attrValues {
-          inherit (pkgs)
-          go_1_26
-          golangci-lint
-          govulncheck
-          golines
-          nixfmt
-          actionlint
-          shellcheck
-          ;
-          };
+            packages = builtins.attrValues {
+              inherit (pkgs)
+                go_1_26
+                golangci-lint
+                govulncheck
+                golines
+                nixfmt
+                actionlint
+                shellcheck
+                ;
+            };
 
             GOTOOLCHAIN = "local";
           };
@@ -87,7 +87,7 @@
 
             lint = {
               type = "app";
-              meta.description = "Run golangci-lint";
+              meta.description = "Run golangci-lint (args land before ./…)";
               program = "${
                 pkgs.writeShellApplication {
                   name = "lint";
@@ -97,7 +97,7 @@
                   ];
                   text = ''
                     export GOTOOLCHAIN=local
-                    exec golangci-lint run ./...
+                    exec golangci-lint run "$@" ./...
                   '';
                 }
               }/bin/lint";

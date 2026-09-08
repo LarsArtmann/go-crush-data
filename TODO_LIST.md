@@ -73,14 +73,6 @@ renumbered, and deleting an item retires its ID for good.
       tool mishandling a SQLite URI; harmless to this library — it opens
       exact paths). Trash once understood. 20m — local data dir; source:
       same report (f)25 + 2026-09-08_15-31 report (c)P8
-- [ ] **T24** Benchmarks: add `BenchmarkIterMessages` and regenerate
-      `docs/benchmarks/baseline-benchmarks.txt` — regeneration is due
-      regardless (the todos probe, `Message.UpdatedAt` scan, and ReadFiles
-      ORDER BY all touch read paths), and the iter path has never been in
-      the trend. Benchmark function written 2026-09-08 (stress_test.go);
-      baseline regen + benchstat + citation refresh remain. 1h —
-      `go test -bench . -count=6 | tee …` + benchstat;
-      source: same report (f)29 + docs/status/archived/2026-08-16_08-50_todo-t8-adoption-in-crush-daily.md (f)4/(f)47
 - [ ] **T25** Pin registry `last_accessed` UTC round-trip with a test
       (upstream writes `time.Now().UTC()`). 15m — `discover_test.go`;
       source: same report (f)30

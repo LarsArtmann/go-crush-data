@@ -603,7 +603,7 @@ func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
 // load.go does filepath.Join(crushData, "crush.json") — meaning the variable
 // names a DIRECTORY, never a file. Discovery must look for projects.json
 // inside that directory exactly like upstream does.
-func TestDiscoverProjectsGlobalDataDirEnvIsADirectory(t *testing.T) { //nolint:paralleltest // t.Setenv
+func TestDiscoverProjectsGlobalDataDirEnvIsADirectory(t *testing.T) {
 	globalDir := t.TempDir()
 	dataDir := t.TempDir()
 	makeProjectDB(t, dataDir)

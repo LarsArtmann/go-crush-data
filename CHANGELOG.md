@@ -52,6 +52,12 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Changed
 
+- The committed benchmark baseline regenerates for the first time since the
+  AgentGraph `WITH RECURSIVE` rewrite: AgentGraph drops 78% vs the stale
+  baseline, Messages reflects the rowid-order/tolerant-decode read path
+  (-32% allocs), SessionsList carries the newer capability columns, and
+  `BenchmarkIterMessages` enters the trend for the first time (streaming
+  at ~4.15ms/op vs ~4.33ms/op materialized on the same fixture).
 - The `golangci-lint` tool pin bumps v2.12.2 → v2.13.2 and `exhaustruct`
   renames to `exhaustruct_v5` (v5 schema: `ignore-patterns` covers the two
   structs this library constructs by field assignment, never literals).
