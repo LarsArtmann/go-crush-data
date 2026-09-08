@@ -391,6 +391,54 @@ func BenchmarkMessages(b *testing.B) {
 	}
 }
 
+// BenchmarkIterMessages measures the streaming counterpart of
+// BenchmarkMessages over the same fixture: one message at a time through the
+// iter.Seq2 path instead of materialising the whole slice.
+func BenchmarkIterMessages(b *testing.B) {
+	dataDir := b.TempDir()
+
+	createDBAt(b, dataDir+"/"+DBName, schemaCurrent, func(db *sql.DB) {
+		insertSession(b, db, "bench-msgs", "", "bench", 2000, fixtureBase, fixtureBase)
+
+		for i := range 2000 {
+			insertMessage(
+				b, db,
+				fmt.Sprintf("bench-msg-%04d", i),
+				"bench-msgs",
+				"assistant",
+				`[{"data":{"text":"step"},"type":"text"}]`,
+				fixtureModel, "",
+				fixtureBase+int64(i),
+			)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	b.ReportAllocs()
+
+	for b.Loop() {
+		parts := 0
+
+		for message, err := range db.IterMessages(context.Background(), "bench-msgs") {
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			parts += len(message.Parts)
+		}
+
+		if parts == 0 {
+			b.Fatal("no parts streamed")
+		}
+	}
+}
+
 func BenchmarkAgentGraph(b *testing.B) {
 	dataDir := b.TempDir()
 
