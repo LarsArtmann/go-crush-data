@@ -563,7 +563,8 @@ func TestDiscoverProjectsDedupeZeroTimestampOnlyEntryStillAppears(t *testing.T) 
 }
 
 // TestDiscoverProjectsOrderedByDataDir pins the documented ordering: results
-// are sorted by DataDir ascending across multiple projects.func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
+// are sorted by DataDir ascending across multiple projects.
+func TestDiscoverProjectsOrderedByDataDir(t *testing.T) {
 	t.Parallel()
 
 	globalDir := t.TempDir()
@@ -593,5 +594,125 @@ func TestDiscoverProjectsDedupeZeroTimestampOnlyEntryStillAppears(t *testing.T) 
 	if projects[0].DataDir != dirA || projects[1].DataDir != dirB || projects[2].DataDir != dirC {
 		got := []string{projects[0].DataDir, projects[1].DataDir, projects[2].DataDir}
 		t.Fatalf("DataDirs not sorted ascending: %v", got)
+	}
+}
+
+// TestDiscoverProjectsGlobalDataDirEnvIsADirectory pins the CRUSH_GLOBAL_DATA
+// contract by running the real GlobalDataDir resolution (no test override):
+// upstream joins file names into the env value's path — internal/config/
+// load.go does filepath.Join(crushData, "crush.json") — meaning the variable
+// names a DIRECTORY, never a file. Discovery must look for projects.json
+// inside that directory exactly like upstream does.
+func TestDiscoverProjectsGlobalDataDirEnvIsADirectory(t *testing.T) { //nolint:paralleltest // t.Setenv
+	globalDir := t.TempDir()
+	dataDir := t.TempDir()
+	makeProjectDB(t, dataDir)
+
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/repo/envdir","data_dir":`+jsonString(dataDir)+`,"last_accessed":"2026-08-15T10:00:00Z"}
+	]}`)
+
+	t.Setenv("CRUSH_GLOBAL_DATA", globalDir)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 || projects[0].Path != "/repo/envdir" || projects[0].DataDir != dataDir {
+		t.Fatalf("projects = %+v, want the registry entry inside CRUSH_GLOBAL_DATA", projects)
+	}
+}
+
+// TestRegistryLastAccessedUTCRoundTrip pins the registry timestamp contract:
+// upstream Register() stamps every entry with time.Now().UTC() and writes
+// RFC3339Nano (internal/projects/projects.go, verified v0.92.0), so real
+// registries carry UTC timestamps, often with nanosecond precision.
+// Discovery must round-trip such values exactly and normalize offset
+// timestamps to UTC without shifting the instant.
+func TestRegistryLastAccessedUTCRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	nanoDir := t.TempDir()
+	offsetDir := t.TempDir()
+	makeProjectDB(t, nanoDir)
+	makeProjectDB(t, offsetDir)
+
+	writeRegistry(t, globalDir, `{"projects":[
+		{"path":"/repo/nano","data_dir":`+jsonString(nanoDir)+`,"last_accessed":"2026-08-15T10:00:00.491439042Z"},
+		{"path":"/repo/offset","data_dir":`+jsonString(offsetDir)+`,"last_accessed":"2026-08-15T12:00:00+02:00"}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	byPath := make(map[string]time.Time, len(projects))
+	for _, project := range projects {
+		byPath[project.Path] = project.LastAccessed
+	}
+
+	wantNano := time.Date(2026, 8, 15, 10, 0, 0, 491439042, time.UTC)
+	if got := byPath["/repo/nano"]; !got.Equal(wantNano) {
+		t.Fatalf("nanosecond UTC timestamp = %v, want %v", got, wantNano)
+	}
+
+	wantOffset := time.Date(2026, 8, 15, 10, 0, 0, 0, time.UTC)
+	if got := byPath["/repo/offset"]; !got.Equal(wantOffset) {
+		t.Fatalf("offset timestamp = %v, want the same instant normalized to UTC (%v)", got, wantOffset)
+	}
+}
+
+// TestDiscoverProjectsToleratesUnknownRegistryKeys pins forward
+// compatibility: upstream owns projects.json and may grow top-level or
+// entry-level fields in any release; a registry from a newer Crush must not
+// break Discovery on this version.
+func TestDiscoverProjectsToleratesUnknownRegistryKeys(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	dataDir := t.TempDir()
+	makeProjectDB(t, dataDir)
+
+	writeRegistry(t, globalDir, `{"version":3,"cached_at":"2026-08-15T10:00:00Z","projects":[
+		{"path":"/repo/future","data_dir":`+jsonString(dataDir)+`,"last_accessed":"2026-08-15T10:00:00Z","pinned":true}
+	]}`)
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 1 || projects[0].Path != "/repo/future" {
+		t.Fatalf("projects = %+v, want the entry despite unknown keys", projects)
+	}
+}
+
+// TestDiscoverProjectsCLIFallbackEmptyRegistry pins the real-CLI shape for an
+// empty registry: `crush projects --json` exits 0 with an empty result, and
+// discovery surfaces that as an empty slice without error — through the
+// actual exec/fallback path (fakeCLI re-executes this test binary), not the
+// registry path.
+func TestDiscoverProjectsCLIFallbackEmptyRegistry(t *testing.T) { //nolint:paralleltest // t.Setenv
+	globalDir := t.TempDir() // no registry written → the CLI fallback must run
+
+	for name, payload := range map[string]string{
+		"empty projects array": `{"projects":[]}`,
+		"no output at all":     "",
+	} {
+		projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+			GlobalDataDir: globalDir,
+			CLIFallback:   true,
+			CLIBinary:     fakeCLI(t, payload, 0),
+		})
+		if err != nil {
+			t.Fatalf("%s: DiscoverProjects: %v", name, err)
+		}
+
+		if len(projects) != 0 {
+			t.Fatalf("%s: projects = %+v, want none", name, projects)
+		}
 	}
 }

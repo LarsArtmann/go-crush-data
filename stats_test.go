@@ -135,22 +135,21 @@ func TestStatsModelBreakdownDoubleCountTrap(t *testing.T) {
 	}
 }
 
-// TestStatsParityWithCrushDailySQL re-runs the exact SQL crush-daily's
-// collector used before this library existed, against the same fixture, and
-// requires identical numbers. The queries are copied verbatim (modulo
-// formatting) from crush-daily internal/collector/collector.go so a refactor
-// here can never silently change the analytics.
-func TestStatsParityWithCrushDailySQL(t *testing.T) {
-	t.Parallel()
+// assertCrushDailyCollectorParity requires this library's Stats numbers to
+// match the exact SQL crush-daily's collector ran before this library
+// existed, re-run raw against the same database. The queries are copied
+// verbatim (modulo formatting) from crush-daily internal/collector/
+// collector.go so a refactor here can never silently change the analytics.
+// Shared by the fixture parity test and the real-data cross-check.
+func assertCrushDailyCollectorParity(t *testing.T, db *DB, day time.Time) {
+	t.Helper()
 
-	db := openFixture(t, schemaCurrent)
-
-	stats, err := db.Stats(context.Background(), StatsFilter{Day: fixtureDay()})
+	stats, err := db.Stats(context.Background(), StatsFilter{Day: day})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	day := fixtureDay().Format("2006-01-02")
+	dayText := day.Format("2006-01-02")
 
 	var (
 		sessionCount     int
@@ -169,7 +168,7 @@ func TestStatsParityWithCrushDailySQL(t *testing.T) {
 			COALESCE(SUM(cost), 0)
 		FROM sessions
 		WHERE date(created_at, 'unixepoch') = ?
-	`, day).Scan(&sessionCount, &messageCount, &promptTokens, &completionTokens, &costUSD)
+	`, dayText).Scan(&sessionCount, &messageCount, &promptTokens, &completionTokens, &costUSD)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +187,7 @@ func TestStatsParityWithCrushDailySQL(t *testing.T) {
 		WHERE session_id IN (
 			SELECT id FROM sessions WHERE date(created_at, 'unixepoch') = ?
 		) AND model IS NOT NULL AND model != ''
-	`, day)
+	`, dayText)
 
 	if len(models) != len(stats.Models) {
 		t.Fatalf("models = %v, stats.Models = %v", models, stats.Models)
@@ -199,7 +198,7 @@ func TestStatsParityWithCrushDailySQL(t *testing.T) {
 		WHERE date(created_at, 'unixepoch') = ? AND title IS NOT NULL
 		ORDER BY message_count DESC
 		LIMIT 20
-	`, day)
+	`, dayText)
 
 	if len(titles) != len(stats.SessionTitles) {
 		t.Fatalf("titles = %v, stats.SessionTitles = %v", titles, stats.SessionTitles)
@@ -233,7 +232,7 @@ func TestStatsParityWithCrushDailySQL(t *testing.T) {
 		GROUP BY model
 		ORDER BY cost DESC
 		LIMIT 20
-	`, day)
+	`, dayText)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -269,6 +268,55 @@ func TestStatsParityWithCrushDailySQL(t *testing.T) {
 			t.Fatalf("breakdown[%d] = %+v, stats = %+v", i, legacy[i], stats.ModelBreakdown[i])
 		}
 	}
+}
+
+// TestStatsParityWithCrushDailySQL runs the collector-parity assertion
+// against the standard fixture; TestStatsParityWithCrushDailySQLOnRealDatabase
+// runs it against live data.
+func TestStatsParityWithCrushDailySQL(t *testing.T) {
+	t.Parallel()
+
+	db := openFixture(t, schemaCurrent)
+
+	assertCrushDailyCollectorParity(t, db, fixtureDay())
+}
+
+// TestStatsParityWithCrushDailySQLOnRealDatabase is the real-data half of the
+// consumer contract behind the verbatim-SQL rule: this library's Stats and
+// the old collector SQL must produce identical numbers on a live database,
+// not just on fixtures. Day-filtered on purpose and pinned to the day of the
+// newest session so the comparison is never vacuous (all-time Stats
+// DISTINCTs every message row and starves on production-sized databases —
+// see TestAllAPIOnRealDatabase). Skipped without real data and under -short.
+func TestStatsParityWithCrushDailySQLOnRealDatabase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("real-data sweep (slow) in -short mode")
+	}
+
+	t.Parallel()
+
+	dataDir, ok := realDataDir(t)
+	if !ok {
+		t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
+	}
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatalf("Open real database: %v", err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	sessions, err := db.Sessions(context.Background(), SessionFilter{Limit: 1})
+	if err != nil {
+		t.Fatalf("Sessions: %v", err)
+	}
+
+	if len(sessions) == 0 {
+		t.Skip("real database holds no sessions — nothing to compare")
+	}
+
+	assertCrushDailyCollectorParity(t, db, sessions[0].CreatedAt)
 }
 
 func collectStrings(t *testing.T, db *DB, query string, args ...any) []string {
@@ -531,5 +579,75 @@ func TestStatsCapsAt20(t *testing.T) {
 
 	if stats.ModelBreakdown[0].Model != "model-24" {
 		t.Fatalf("ModelBreakdown[0].Model = %q, want the highest-cost model first", stats.ModelBreakdown[0].Model)
+	}
+}
+
+// TestSummaryMessagesAreCounted pins the is_summary_message decision (the
+// messages.go/stats.go doc comments restate it): summary rows — upstream
+// writes them via message.Create with IsSummaryMessage when compacting a
+// session's context — carry real content and model attribution, so they are
+// counted everywhere regular messages are. Here the summary row is the ONLY
+// attributed message of its session: any filtering would silently empty
+// Models and ModelBreakdown. Excluding summaries would also break number
+// parity with the crush-daily collector SQL (assertCrushDailyCollectorParity),
+// whose queries never filtered the flag either.
+func TestSummaryMessagesAreCounted(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(handle *sql.DB) {
+		insertSession(t, handle, "s1", "", "Compacted session", 2, fixtureBase, fixtureBase+9)
+		insertMessage(t, handle, "m1", "s1", "user", `[{"type":"text","data":{"text":"long prefix"}}]`,
+			"", "", fixtureBase)
+
+		_, err := handle.ExecContext(context.Background(), `
+			INSERT INTO messages (id, session_id, role, parts, model, provider, created_at, updated_at, is_summary_message)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+		`, "m2", "s1", "assistant", `[{"type":"text","data":{"text":"summary of the prefix"}}]`,
+			fixtureModel, "", fixtureBase+1, fixtureBase+1)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	messages, err := db.Messages(context.Background(), "s1")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	if len(messages) != 2 {
+		t.Fatalf("messages = %d, want 2 (the summary row is returned like any other)", len(messages))
+	}
+
+	if text, ok := messages[1].Parts[0].(TextPart); !ok || text.Text != "summary of the prefix" {
+		t.Fatalf("messages[1].Parts[0] = %#v, want the summary TextPart", messages[1].Parts[0])
+	}
+
+	stats, err := db.Stats(context.Background(), StatsFilter{Day: fixtureDay()})
+	if err != nil {
+		t.Fatalf("Stats: %v", err)
+	}
+
+	if len(stats.Models) != 1 || stats.Models[0] != fixtureModel {
+		t.Fatalf("Models = %v, want the summary row's %q counted", stats.Models, fixtureModel)
+	}
+
+	if len(stats.ModelBreakdown) != 1 || stats.ModelBreakdown[0].Model != fixtureModel {
+		t.Fatalf("ModelBreakdown = %+v, want the summary-attributed session", stats.ModelBreakdown)
+	}
+
+	if stats.ModelBreakdown[0].MessageCount != 2 {
+		t.Fatalf(
+			"MessageCount = %d, want 2 (all messages of the attributed session, matching the historical subquery)",
+			stats.ModelBreakdown[0].MessageCount,
+		)
 	}
 }

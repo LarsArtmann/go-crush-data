@@ -73,12 +73,6 @@ renumbered, and deleting an item retires its ID for good.
       tool mishandling a SQLite URI; harmless to this library — it opens
       exact paths). Trash once understood. 20m — local data dir; source:
       same report (f)25 + 2026-09-08_15-31 report (c)P8
-- [ ] **T22** `.golangci.yml` refresh: `exhaustruct` deprecated since
-      v2.13 → `exhaustruct_v5` (deprecation warning on every lint run).
-      15m — `.golangci.yml`; source: same report (f)26
-- [ ] **T23** Consider `nix flake check --all-systems` in CI (gate currently
-      omits aarch64/darwin). 1h — `.github/workflows/ci.yml`; source: same
-      report (f)28
 - [ ] **T24** Benchmarks: add `BenchmarkIterMessages` and regenerate
       `docs/benchmarks/baseline-benchmarks.txt` — regeneration is due
       regardless (the todos probe, `Message.UpdatedAt` scan, and ReadFiles

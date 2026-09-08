@@ -25,6 +25,10 @@ type StatsFilter struct {
 // completion_tokens, cost) come from the sessions table, while the model
 // breakdown joins messages to attribute sessions to models and counts
 // message rows there — the two message counts are intentionally different.
+//
+// Summary messages (is_summary_message = 1) are counted everywhere regular
+// messages are, because the collector SQL never filtered the flag either;
+// TestSummaryMessagesAreCounted pins the decision.
 func (db *DB) Stats(ctx context.Context, filter StatsFilter) (Stats, error) {
 	day := ""
 	if !filter.Day.IsZero() {

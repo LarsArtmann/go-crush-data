@@ -35,4 +35,28 @@
 // match the UTC calendar day of created_at against the filter value formatted
 // in its own location: pass a time in the zone whose day boundary you want
 // (usually local midnight). See [SessionFilter.Day] for the exact semantics.
+//
+// # The parts envelope
+//
+// A message's content is stored as a JSON array in the messages.parts
+// column. Each entry is an envelope of the shape {"type": ..., "data": {...}}
+// where type selects the part kind and data carries its payload. Crush
+// v0.92.0 writes eight discriminators:
+//
+//	text          → [TextPart]
+//	reasoning     → [ReasoningPart]
+//	tool_call     → [ToolCallPart]
+//	tool_result   → [ToolResultPart]
+//	finish        → [FinishPart]
+//	shell_command → [ShellCommandPart]
+//	image_url     → [UnknownPart] (attachment pass-through; not decoded)
+//	binary        → [UnknownPart] (attachment pass-through; not decoded)
+//
+// Decoding is deliberately tolerant: an entry with an unknown discriminator
+// or a malformed payload degrades to [UnknownPart] carrying the discriminator
+// and raw payload instead of failing the whole message (strict all-or-nothing
+// decoding is available via [DecodeParts]). Typeless entries (empty type with
+// null data) are skipped — Crush has always written them. The known set is
+// pinned against real databases by the census tripwires in realdata_test.go,
+// which fail loudly when an upstream release adds a ninth discriminator.
 package crushdata

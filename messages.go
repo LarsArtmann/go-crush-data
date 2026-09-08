@@ -25,6 +25,12 @@ import (
 // wholly unparseable gets nil Parts — either way one corrupted row never
 // hides the rest of the session. Callers needing strict all-or-nothing
 // validation can use [DecodeParts] on the raw column via their own query.
+//
+// Summary messages (is_summary_message = 1, written when Crush compacts a
+// session's context into a replacement summary) are returned like any other
+// row: they carry real content and model attribution, and filtering them
+// would break number parity with the collector SQL this library ports
+// verbatim. Pinned by TestSummaryMessagesAreCounted.
 func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := db.handle.QueryContext(ctx, db.buildMessagesQuery(), sessionID)
 	if err != nil {

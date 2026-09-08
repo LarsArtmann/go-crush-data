@@ -336,3 +336,12 @@ the user; P12–P14 wait on go-aheads, never on code.
 | ROADMAP open question: summary fields                                                     | P9             |
 
 Every open TODO_LIST entry appears exactly once; no orphans.
+
+**Correction 2026-09-08 (follow-up session):** the claim above was wrong —
+T23 (`nix flake check --all-systems` in CI) was missing from this mapping.
+Evaluated and **declined**: the flake builds only for the dev system; adding
+`--all-systems` would cross-compile aarch64/x86_64-darwin legs of a pure-Go,
+read-only library with no platform-specific code beyond path handling,
+doubling nix CI minutes for low marginal value. Recorded non-decision (same
+class as "no new dependencies"); revisit only if a platform-specific bug
+class ever appears. T23 retired.

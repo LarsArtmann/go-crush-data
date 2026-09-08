@@ -125,6 +125,7 @@ for doc in ./*.md; do
 	' <<<"$prose")
 
 	# --- check 3: backtick file citations with optional :line
+	# shellcheck disable=SC2016 # in the pipeline below, the $ is a regex anchor, not an expansion
 	while IFS= read -r cite; do
 		if ! is_citable "$cite"; then
 			continue

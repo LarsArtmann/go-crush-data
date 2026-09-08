@@ -36,16 +36,17 @@
         in
         {
           devShells.default = pkgs.mkShellNoCC {
-            packages = builtins.attrValues {
-              inherit (pkgs)
-                go_1_26
-                golangci-lint
-                govulncheck
-                golines
-                nixfmt
-                actionlint
-                ;
-            };
+          packages = builtins.attrValues {
+          inherit (pkgs)
+          go_1_26
+          golangci-lint
+          govulncheck
+          golines
+          nixfmt
+          actionlint
+          shellcheck
+          ;
+          };
 
             GOTOOLCHAIN = "local";
           };
@@ -54,7 +55,7 @@
             pname = "go-crush-data";
             version = self.rev or self.dirtyRev or "dev";
             src = ./.;
-            vendorHash = "sha256-Y/AXDwpVAKlKolb9fIkOkekLsk3/ylmMpdKpGf3LiJ8=";
+            vendorHash = "sha256-mqcNWmaXFr7coms6LJxUsBqy1NlOTFvkefrDZ60Aza4=";
 
             meta = with lib; {
               description = "Typed, read-only Go access to Crush local session data";
