@@ -5,7 +5,15 @@ reading the goose migrations under `internal/db/migrations/` — the same
 pinned set `scripts/check-upstream-drift.sh` clones. This file is the
 human-readable snapshot of what this library reads; the machine-enforced
 truth lives in `schema_drift_test.go` (`TestUpstreamMigrationColumnsAreProbedOrExempt`).
-Regenerate this document on every verified release (see AGENTS.md cadence).
+The schema is also pinned mechanically since 2026-09-08:
+`scripts/genschema` applies the pinned migrations to a throwaway SQLite
+database and dumps the resulting CREATE statements into the checked-in
+[storage-schema-v0.92.0.sql](storage-schema-v0.92.0.sql);
+`scripts/check-upstream-drift.sh` diffs that snapshot on every run, and
+`TestFixtureSchemaMatchesUpstreamSnapshot` (schema_snapshot_test.go)
+requires the test-fixture DDL to cover every table and column of it.
+Regenerate this document and the snapshot on every verified release (see
+AGENTS.md cadence).
 
 ## sessions
 
