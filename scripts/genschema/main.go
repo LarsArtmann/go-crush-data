@@ -32,6 +32,7 @@ import (
 
 func main() {
 	migrationsDir := flag.String("migrations", "", "directory of goose .sql migrations (required)")
+
 	flag.Parse()
 
 	if *migrationsDir == "" {
@@ -71,8 +72,6 @@ func main() {
 // kept whole — triggers and multi-line bodies contain embedded semicolons —
 // while loose statements are split on their terminating semicolon.
 func upStatements(raw string) []string {
-	lines := strings.Split(raw, "\n")
-
 	inUp := false
 	inBlock := false
 
@@ -89,7 +88,8 @@ func upStatements(raw string) []string {
 			statements = append(statements, strings.TrimSuffix(text, ";"))
 		}
 	}
-	for _, line := range lines {
+
+	for line := range strings.SplitSeq(raw, "\n") {
 		trimmed := strings.TrimSpace(line)
 
 		switch {
@@ -97,14 +97,17 @@ func upStatements(raw string) []string {
 			inUp = true
 		case strings.HasPrefix(trimmed, "-- +goose Down"):
 			flush()
+
 			inUp = false
 		case !inUp:
 			continue
 		case strings.HasPrefix(trimmed, "-- +goose StatementBegin"):
 			flush()
+
 			inBlock = true
 		case strings.HasPrefix(trimmed, "-- +goose StatementEnd"):
 			flush()
+
 			inBlock = false
 		case strings.HasPrefix(trimmed, "--"):
 			// plain SQL comment, drop it
@@ -112,6 +115,7 @@ func upStatements(raw string) []string {
 			current = append(current, line)
 		case strings.HasSuffix(trimmed, ";"):
 			current = append(current, line)
+
 			flush()
 		default:
 			current = append(current, line)

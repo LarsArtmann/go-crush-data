@@ -202,3 +202,29 @@ if [[ ! -d $migrations_dir ]]; then
 fi
 
 run_guard "$migrations_dir" "crush $crush_ref @ ${crush_sha:0:7}"
+
+# Schema-snapshot check: the checked-in docs/storage-schema-<version>.sql
+# must be exactly what scripts/genschema produces from the pinned
+# migrations, and the fixture DDL guard test keeps testutil_test.go in
+# sync with the snapshot (fixture-drift defense, TODO T38 heritage).
+snapshot=$(find docs -maxdepth 1 -name 'storage-schema-*.sql')
+if [[ $(printf '%s\n' "$snapshot" | wc -l) -ne 1 ]]; then
+	echo "check-upstream-drift: expected exactly one docs/storage-schema-*.sql snapshot, found: ${snapshot:-none}" >&2
+	exit 2
+fi
+
+if ! go run ./scripts/genschema -migrations "$migrations_dir" | diff -u "$snapshot" -; then
+	cat >&2 <<EOF
+check-upstream-drift: schema snapshot $snapshot does not match the pinned migrations.
+
+Fix:
+  1. regenerate: go run ./scripts/genschema -migrations <clone>/internal/db/migrations > $snapshot
+  2. extend currentSchemaDDL in testutil_test.go until
+     TestFixtureSchemaMatchesUpstreamSnapshot passes
+  3. when the pin bumped to a new release, rename the snapshot to the new
+     version and refresh docs/storage-schema-<version>.md
+EOF
+	exit 1
+fi
+
+echo "check-upstream-drift: schema snapshot OK ($snapshot)"

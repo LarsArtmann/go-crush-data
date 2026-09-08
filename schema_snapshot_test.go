@@ -35,7 +35,7 @@ func tableColumns(t *testing.T, ddl string) map[string][]string {
 
 	columns := make(map[string][]string)
 
-	for _, statement := range strings.Split(ddl, ";") {
+	for statement := range strings.SplitSeq(ddl, ";") {
 		if table, body, ok := createTableBody(statement); ok {
 			columns[table] = columnNames(body)
 		}
@@ -46,11 +46,10 @@ func tableColumns(t *testing.T, ddl string) map[string][]string {
 
 // createTableBody finds the CREATE TABLE in a statement fragment and returns
 // the table name plus the text between the outermost parentheses.
-func createTableBody(statement string) (table, body string, ok bool) {
-	lines := strings.Split(statement, "\n")
-
+func createTableBody(statement string) (string, string, bool) {
 	nameLine := ""
-	for _, line := range lines {
+
+	for line := range strings.SplitSeq(statement, "\n") {
 		clean := stripLineComment(line)
 
 		if strings.Contains(strings.ToUpper(clean), "CREATE TABLE") {
@@ -64,7 +63,7 @@ func createTableBody(statement string) (table, body string, ok bool) {
 		return "", "", false
 	}
 
-	table = lastWord(strings.TrimSpace(strings.Split(nameLine, "(")[0]))
+	table := lastWord(strings.TrimSpace(strings.Split(nameLine, "(")[0]))
 	if table == "" || !strings.Contains(statement, "(") {
 		return "", "", false
 	}
@@ -97,14 +96,14 @@ func columnNames(body string) []string {
 		fragment  strings.Builder
 		depth     int
 		flushFunc = func() {
-			definition := firstWord(stripLineComment(fragment.String()))
+			clean := stripLineComment(fragment.String())
 			fragment.Reset()
 
-			if definition == "" {
+			if clean == "" {
 				return
 			}
 
-			upper := strings.ToUpper(definition)
+			upper := strings.ToUpper(clean)
 
 			switch {
 			case strings.HasPrefix(upper, "FOREIGN KEY"),
@@ -115,7 +114,7 @@ func columnNames(body string) []string {
 				return
 			}
 
-			names = append(names, definition)
+			names = append(names, firstWord(clean))
 		}
 	)
 
