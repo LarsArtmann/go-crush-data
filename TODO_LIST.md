@@ -11,7 +11,7 @@ renumbered, and deleting an item retires its ID for good.
 ## Medium
 
 (none open — T15 shipped 2026-09-08 as the pure addition
-`Schema.MissingCapabilities()`; see CHANGELOG `[Unreleased]`)
+`Schema.MissingCapabilities()`; released in CHANGELOG `[0.4.0]`)
 
 ## Low
 
@@ -24,17 +24,6 @@ renumbered, and deleting an item retires its ID for good.
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
-- [ ] **T45** **Push master to origin — origin still RED, new causes.**
-      The 2026-09-08 push landed (33d454d incident closed: runs now get
-      past build/test), but CI then failed on (a) the coverage gate —
-      69.5% because `scripts/` scratch packages entered the merged
-      profile at 0% (Go ≥1.22) — and (b) a REAL vendorHash drift: the
-      2026-09-08 daemon-split tidy (`214bb22`) changed the module set
-      without bumping the hash. Both fixed locally 2026-09-08 (CI scopes
-      coverage via `-coverpkg=.`; `vendorHash` refreshed to the correct
-      sha; the guard stays advisory in CI since only `nix flake check`
-      can prove drift). Push the fix commits and verify green — user
-      action. 5m — `git push`
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
 - [ ] **T34** Observe the first SCHEDULED upstream-drift run
@@ -51,9 +40,6 @@ renumbered, and deleting an item retires its ID for good.
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 
-- Cut **v0.4.0** once `[Unreleased]` settles (census tripwire close-out
-  is the last code item); tags need explicit approval and a green origin
-  first (T45).
 - Upstream PR to cosmtrek/mindwalk for the `sdk/go-crush-data` branch
   (Stream X T24; needs user go-ahead to push).
 - charmbracelet/crush read-access Discussion: POSTED 2026-09-08 as
