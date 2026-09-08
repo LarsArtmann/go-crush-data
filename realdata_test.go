@@ -3,6 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -34,12 +35,15 @@ func realDataDir(t *testing.T) (string, bool) {
 }
 
 // partCensus is the result of scanning raw parts entries on disk: how often
-// each discriminator appears, how many entries were seen, and how many rows
-// could not be parsed as arrays at all.
+// each discriminator appears, how many entries were seen, how many rows could
+// not be parsed as arrays at all, and whether the byte budget stopped the
+// scan before the window ended.
 type partCensus struct {
 	kinds       map[string]int
 	entries     int
 	unparseable int
+	bytes       int64
+	truncated   bool
 }
 
 // knownPartKinds is the complete discriminator set Crush v0.92.0 writes
@@ -72,22 +76,28 @@ func (c partCensus) unknownKinds() []string {
 	return unknown
 }
 
-// partCensusWindow bounds the census to each database's most recent
-// messages: drift only enters through rows a newer Crush wrote, while an
-// unbounded walk of a multi-gigabyte database costs minutes of pure table
-// scan for zero extra signal (measured 2026-09-08 on the 5 GB local
-// registry database: full census > 10 min, recent-window census seconds).
-// Set CRUSH_DATA_CENSUS_FULL=1 to scan every row (archaeology mode).
-const partCensusWindow = 50_000
+// The census walks the most recent partCensusWindow messages per database
+// (every message when CRUSH_DATA_CENSUS_FULL=1) and stops early once
+// partCensusByteBudget of raw parts JSON has been read, newest rows first.
+// Two ceilings because rows vary by four orders of magnitude: the row window
+// bounds the rowid-index walk, while the byte budget bounds payload I/O —
+// registry databases carry recent messages of up to multiple megabytes each
+// (measured 2026-09-08: a 2000-row tail of one project database held
+// 100–200 MB of parts), so rows alone cannot cap the cost.
+const (
+	partCensusWindow     = 50_000
+	partCensusByteBudget = 256 << 20
+)
 
 // censusPartDiscriminators aggregates the raw `{type,data}` discriminators of
-// the parts entries in the database's most recent partCensusWindow messages
-// (every message when CRUSH_DATA_CENSUS_FULL=1), entirely inside SQLite: the
-// histogram never ships message payloads across the driver boundary. Rows
-// that are not valid JSON are counted, not failed — corruption is a different
-// problem than drift, and DB.Messages already degrades such rows to nil
-// Parts. messages.rowid is insertion order, so the rowid bound selects the
-// newest rows without scanning the rest of the table.
+// a database's most recent parts entries, parsing in Go rather than through
+// SQLite's json_each (whose per-element rendering in the transpiled driver is
+// the slow path) and decoding payloads as json.RawMessage, so cost tracks
+// bytes read, not payload depth. Rows that are not valid JSON are counted,
+// not failed — corruption is a different problem than drift, and
+// DB.Messages already degrades such rows to nil Parts. messages.rowid is
+// insertion order, so the rowid bound and the DESC scan select the newest
+// rows without walking the rest of the table.
 func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, error) {
 	census := partCensus{kinds: make(map[string]int)}
 
@@ -99,15 +109,15 @@ func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, 
 
 	// rowids start at 1, so a lower bound of 0 selects every row in full mode.
 	lowerBound := int64(0)
-	if os.Getenv("CRUSH_DATA_CENSUS_FULL") != "1" {
+	full := os.Getenv("CRUSH_DATA_CENSUS_FULL") == "1"
+	if !full {
 		lowerBound = maxRowID - partCensusWindow
 	}
 
 	rows, err := handle.QueryContext(ctx, `
-		SELECT COALESCE(json_extract(entry.value, '$.type'), ''), COUNT(*)
-		FROM messages, json_each(messages.parts) AS entry
-		WHERE messages.rowid > ? AND json_valid(messages.parts)
-		GROUP BY 1`, lowerBound)
+		SELECT parts FROM messages
+		WHERE rowid > ? AND parts IS NOT NULL AND parts != '[]'
+		ORDER BY rowid DESC`, lowerBound)
 	if err != nil {
 		return partCensus{}, fmt.Errorf("census part kinds: %w", err)
 	}
@@ -115,28 +125,31 @@ func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, 
 	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
-		var (
-			kind  string
-			count int
-		)
-
-		if err := rows.Scan(&kind, &count); err != nil {
-			return partCensus{}, fmt.Errorf("scan census row: %w", err)
+		var raw []byte
+		if err := rows.Scan(&raw); err != nil {
+			return partCensus{}, fmt.Errorf("scan parts row: %w", err)
 		}
 
-		census.kinds[kind] = count
-		census.entries += count
+		census.bytes += int64(len(raw))
+
+		var entries []rawPart
+		if err := json.Unmarshal(raw, &entries); err != nil {
+			census.unparseable++
+		} else {
+			for _, entry := range entries {
+				census.kinds[entry.Type]++
+				census.entries++
+			}
+		}
+
+		if !full && census.bytes >= partCensusByteBudget {
+			census.truncated = true
+			break
+		}
 	}
 
 	if err := rows.Err(); err != nil {
 		return partCensus{}, fmt.Errorf("census part kinds: %w", err)
-	}
-
-	if err := handle.QueryRowContext(ctx, `
-		SELECT COUNT(*) FROM messages
-		WHERE rowid > ? AND parts IS NOT NULL AND parts != '[]' AND NOT json_valid(parts)`, lowerBound).
-		Scan(&census.unparseable); err != nil {
-		return partCensus{}, fmt.Errorf("count unparseable parts rows: %w", err)
 	}
 
 	return census, nil
@@ -370,11 +383,13 @@ func TestPartDiscriminatorsCensusShape(t *testing.T) {
 	}
 
 	t.Logf(
-		"parts census at %s: %d entries, kinds %s, %d unparseable rows",
+		"parts census at %s: %d entries, kinds %s, %d unparseable rows, %d bytes, complete=%t",
 		dataDir,
 		census.entries,
 		sortedHistogram(census.kinds),
 		census.unparseable,
+		census.bytes,
+		!census.truncated,
 	)
 }
 
@@ -426,6 +441,8 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 		databases++
 		aggregate.entries += census.entries
 		aggregate.unparseable += census.unparseable
+		aggregate.bytes += census.bytes
+		aggregate.truncated = aggregate.truncated || census.truncated
 
 		for kind, count := range census.kinds {
 			aggregate.kinds[kind] += count
@@ -441,12 +458,14 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 	}
 
 	t.Logf(
-		"registry census at %s: %d databases, %d entries, kinds %s, %d unparseable rows",
+		"registry census at %s: %d databases, %d entries, kinds %s, %d unparseable rows, %d bytes, complete=%t",
 		globalDir,
 		databases,
 		aggregate.entries,
 		sortedHistogram(aggregate.kinds),
 		aggregate.unparseable,
+		aggregate.bytes,
+		!aggregate.truncated,
 	)
 }
 

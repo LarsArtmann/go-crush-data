@@ -80,8 +80,10 @@ Status markers: [ ] todo · [x] done.
 - [x] **F2** Update TODO_LIST: T9 superseded by fix-PRs (B4/C4); T20
       superseded by crush PR #3576; posted Discussion linked in Parked;
       T35 added for monitoring + Phase G gating. 8m
-- [ ] **F3** Batched response-monitoring pass over both PRs + the
-      Discussion (repeat daily). 10m/pass
+- [x] **F3** Batched response-monitoring pass over both PRs + the
+      Discussion (repeat daily). 10m/pass — first pass 2026-09-08:
+      no responses yet (posted minutes earlier); PRs open, discussion
+      live at 0 reactions. Recurring duty now tracked as TODO_LIST T35.
 
 ## Phase G — Ecosystem adoption suggestions (after fix PRs merge)
 
@@ -100,9 +102,76 @@ ecosystem review where on-topic.
       adoption costs zero driver change; replaces their hardcoded
       columns + ~/.crush/crush.db path with probed, registry-driven
       reads. 12m
-- [ ] **G3** crunch + crush-tmux: lightweight suggestion Issues
+- [x] **G3** crunch + crush-tmux: lightweight suggestion Issues
       (crunch gains registry discovery instead of filesystem walks;
       crush-tmux marginal — send only if a natural thread exists). 12m
+      — crunch: [taigrr/crunch#22](https://github.com/taigrr/crunch/issues/22)
+      filed 2026-09-08 (timestamp handling verified correct first —
+      unix-seconds in SQL, no third bug). crush-tmux: SKIPPED — zero
+      open/closed issues exist, no natural thread (per this plan's own
+      condition); revisit if one appears.
+
+### G1/G2 status 2026-09-08
+
+Gated on openusage#357 + mnemo#22 merging (both OPEN at session end;
+external maintainer action). Posting before merge would break the
+fix-first-then-suggest strategy. Drafts below are ready to post;
+**re-verify claims at post time** (note: openusage's cgo claim was
+corrected — their Cursor/telemetry stores also use mattn, so adopting
+go-crush-data for the crush provider alone does not drop the cgo
+dependency; the honest angle is "no new cgo surface + drift probing").
+
+#### G1 draft (openusage Issue, post after openusage#357 merges)
+
+Title: Idea: crush provider — schema-drift probing via go-crush-data?
+
+Body:
+
+> Following up on #357 (now merged): the deeper risk it exposed isn't
+> the one-line bug — it's that the crush schema is an undocumented,
+> moving target. Two concrete upcoming examples from upstream:
+> message-parts compression (charmbracelet/crush#3580/#3581) would
+> break every JSON-parsing reader silently, and goose migrations evolve
+> the schema invisibly to readers.
+>
+> If you ever want the crush provider to degrade gracefully instead of
+> breaking, [go-crush-data](https://github.com/LarsArtmann/go-crush-data)
+> (MIT, mine) exists for exactly this: capability probing via
+> pragma_table_info (strict error split: "recognized schema, missing
+> columns" vs corrupt DB), correct registry resolution
+> (CRUSH_GLOBAL_DATA → XDG → LOCALAPPDATA, plus `crush projects --json`
+> fallback), tolerant parts decoding, tested against crush v0.92.0 and
+> 287 real databases. It uses modernc.org/sqlite (pure Go) — no new
+> cgo surface, though I realize Cursor/telemetry keep mattn regardless,
+> so this isn't a cgo-elimination pitch.
+>
+> Purely a suggestion — the provider works as-is. Context: upstream
+> Discussion about supported read access for ecosystem tools:
+> https://github.com/charmbracelet/crush/discussions/3740
+
+#### G2 draft (mnemo Issue, post after mnemo#22 merges)
+
+Title: Idea: registry-driven crush discovery + schema probing via go-crush-data?
+
+Body:
+
+> Following up on #22 (now merged): the fix was one line, but the
+> surrounding surface is still hand-rolled — hardcoded column lists,
+> the ~/.crush/crush.db path, and no drift detection.
+>
+> [go-crush-data](https://github.com/LarsArtmann/go-crush-data) (MIT,
+> mine) packages the same knowledge: registry-driven discovery
+> (projects.json: every project ever opened, incl. custom data_dir
+> locations and CRUSH_GLOBAL_DATA/XDG/LOCALAPPDATA resolution — more
+> complete than enumerating candidate paths), schema capability probing
+> so migrations degrade gracefully instead of panicking the indexer,
+> tolerant parts decoding, tested against crush v0.92.0 and 287 real
+> databases. It uses modernc.org/sqlite — same driver mnemo already
+> ships, so adoption costs zero driver change.
+>
+> Purely a suggestion — happy to help if it's interesting. Context:
+> upstream Discussion about supported read access for ecosystem tools:
+> https://github.com/charmbracelet/crush/discussions/3740
 
 ## Dependency chain
 
