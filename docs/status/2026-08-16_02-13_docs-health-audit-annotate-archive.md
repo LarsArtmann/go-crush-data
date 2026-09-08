@@ -68,36 +68,41 @@ artifacts structurally valid (tag-balance parser) ✓.
 
 ## b) PARTIALLY DONE
 
-1. **HTML structural re-validation** — my edits were applied before any
-   structural check; the tag-balance validation ran only post-hoc while
-   writing this report (result: both VALID). Correct order would have been
-   edit → validate → then claim done.
-2. **Real-DB smoke test after the `discover.go` edit** — initially skipped
-   on a "comment-only change" rationalization; run post-hoc (PASS). The
-   rule I myself strengthened this session says ANY source change.
-3. **TODO_LIST routing** — 17 items in place, but they carry no stable IDs;
-   my annotations cite "TODO_LIST" generically instead of "TODO_LIST item
-   N". Cross-file precision suffers.
+_Resolved 2026-09-08: #1/#2 closed post-hoc same day; #3 shipped at
+`473f321`; #4 remains a deliberate provenance choice._
+
+1. ~~**HTML structural re-validation**~~ done — the tag-balance
+   validation ran post-hoc while writing the report: both VALID
+2. ~~**Real-DB smoke test after the `discover.go` edit**~~ done — run
+   post-hoc, PASS
+3. ~~**TODO_LIST routing** — 17 items in place, but they carry no stable
+   IDs~~ done at `473f321` — stable `T1…` IDs + citation convention
 4. **22-44 archived file's original banner** still reads
    "[ARCHIVED 2026-08-15]" (historically true for the 23:04 closure note)
    while the file moved to `archived/` on 08-16 — the move is recorded only
    in the resolution appendix. Split provenance, deliberately left (history
    preserved), but it should have been one conscious choice documented in
-   one place.
+   one place. _(verdict: deliberate leave — history preserved; documented
+   here as that one place)_
 
 ## c) NOT STARTED
 
-1. Docs link/citation checking automation (`scripts/check-doc-links.sh`) —
-   this session's link pass was grep-by-hand; nothing mechanical exists.
-2. FEATURES.md header still carries the temporal line "Generated
-   2026-08-15 by a docs BUILD pass" — noticed during VERIFY, not cleaned.
-3. Push of the ahead-1 commit (`7733d36`) and of this session's diff —
-   never push without instruction; daemon pickup expected for the rest.
+_Resolved 2026-09-08: #1 and #2 shipped same day; #3 superseded; #4
+routed to the live TODO_LIST._
+
+1. ~~Docs link/citation checking automation (`scripts/check-doc-links.sh`)~~
+   done at `04901d6` — written, self-tested, wired into gate + CI
+2. ~~FEATURES.md header still carries the temporal line "Generated
+   2026-08-15 by a docs BUILD pass"~~ done at `0927fec` — dropped
+3. ~~Push of the ahead-1 commit (`7733d36`) and of this session's diff~~
+   superseded — pushes landed via the user's flow; master == origin
+   held thereafter
 4. External/schedule-gated items (unchanged, live in TODO_LIST): Renovate
-   app install, first nightly fuzz observation (03:17 UTC — not yet fired
-   at report time), first monthly flake-update PR, pkg.go.dev v0.2.0 crawl
-   (page still rendered v0.1.1 docs at audit time), gosec G701 upstream
-   repro.
+   app install, first nightly fuzz observation, first monthly flake-update
+   PR, pkg.go.dev v0.2.0 crawl, gosec G701 upstream repro. ← all since
+   resolved or re-routed: fuzz observed green, pkg.go.dev crawled, gosec
+   data point posted (#1712); Renovate still open (T1); flake-update's
+   first run failed and was fixed 2026-09-08 (T3)
 
 ## d) TOTALLY FUCKED UP
 
@@ -148,47 +153,46 @@ artifacts structurally valid (tag-balance parser) ✓.
 ## f) Up to 50 things we should get done next
 
 TODO_LIST.md is the canonical list (17 open items, verified this session).
-Below are THIS session's genuinely new or re-ranked items:
+Below are THIS session's genuinely new or re-ranked items.
 
-| #  | Task                                                                                      | Size    |
-| -- | ----------------------------------------------------------------------------------------- | ------- |
-| 1  | Clean the temporal "Generated 2026-08-15" header line from FEATURES.md                    | 2m      |
-| 2  | `scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate | 30m     |
-| 3  | Give TODO_LIST items stable IDs; annotations cite them                                    | 15m     |
-| 4  | Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now)         | 5m      |
-| 5  | **Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note        | 30m     |
-| 6  | Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external                           | 5m      |
-| 7  | Observe first monthly flake-update PR — TODO_LIST external                                | 5m      |
-| 8  | Install Renovate app — TODO_LIST external (GitHub App UI)                                 | 5m      |
-| 9  | Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external        | 5m      |
-| 10 | `TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High                       | 10m     |
-| 11 | `TestQuoteJSON` backslash-escape pin — TODO_LIST High                                     | 10m     |
-| 12 | Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High                | 45m     |
-| 13 | Platform-assumption audit of remaining tests — TODO_LIST High                             | 20m     |
-| 14 | CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium                                 | 7m      |
-| 15 | Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium                            | 5m      |
-| 16 | gosec G701 upstream repro — TODO_LIST external                                            | 30m     |
-| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing                       | ongoing |
-| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external  | 5m      |
+_Resolved 2026-09-08 (docs-health annotate pass): every item verdict'd
+inline; all shipped, closed, or re-routed to the live TODO_LIST._
+
+| #  | Task                                                                                      | Size    | Resolution (2026-09-08)                                        |
+| -- | ----------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| 1  | ~~Clean the temporal "Generated 2026-08-15" header line from FEATURES.md~~                | 2m      | Done at `0927fec`                                               |
+| 2  | ~~`scripts/check-doc-links.sh` (links + `file:line` citations resolve) + wire into the gate~~ | 30m  | Done at `04901d6`                                               |
+| 3  | ~~Give TODO_LIST items stable IDs; annotations cite them~~                                | 15m     | Done at `473f321`                                               |
+| 4  | ~~Rename `docs/benchmarks/baseline-benchmark-sessions.txt` (holds 3 benchmarks now)~~     | 5m      | Done at `473f321`                                               |
+| 5  | ~~**Cut v0.2.1** (standing user decision — see g/2) incl. v0.2.0-Windows errata note~~    | 30m     | Done at `7ff9e72` (tag), release + erratum verified             |
+| 6  | ~~Observe first nightly fuzz run (03:17 UTC) — TODO_LIST external~~                       | 5m      | Done — green continuously since 2026-08-17 (observed 2026-09-08) |
+| 7  | Observe first monthly flake-update PR — TODO_LIST external                                | 5m      | Changed — first run FAILED 2026-09-01 (bot push 403); permissions fixed 2026-09-08, re-observation = TODO_LIST T3 |
+| 8  | Install Renovate app — TODO_LIST external (GitHub App UI)                                 | 5m      | Still open — TODO_LIST T1                                       |
+| 9  | ~~Verify pkg.go.dev crawled v0.2.0 (still v0.1.1 at audit time) — TODO_LIST external~~    | 5m      | Done — crawl landed; page now renders through v0.3.0            |
+| 10 | ~~`TestParseProjectsOutput`: `}` in noise AFTER JSON — TODO_LIST High~~                   | 10m     | Done at `0927fec`                                               |
+| 11 | ~~`TestQuoteJSON` backslash-escape pin — TODO_LIST High~~                                 | 10m     | Done at `0927fec` (renamed `TestJSONString` at `63ad9a7`)        |
+| 12 | ~~Cross-platform fakeCLI (Go-compiled helper, no `/bin/sh`) — TODO_LIST High~~            | 45m     | Done at `697b337` (ran on the real windows runner)              |
+| 13 | ~~Platform-assumption audit of remaining tests — TODO_LIST High~~                         | 20m     | Done at `63ad9a7` (GOOS guards with reasons)                    |
+| 14 | ~~CI: `-count=2` + `go mod verify` steps — TODO_LIST Medium~~                             | 7m      | Done at `d2d4634`                                               |
+| 15 | ~~Release `workflow_dispatch` dry-run trigger — TODO_LIST Medium~~                        | 5m      | Done — trigger added; dry-run exercised (run 31919208017)        |
+| 16 | ~~gosec G701 upstream repro — TODO_LIST external~~                                        | 30m     | Done — data point posted on securego/gosec#1712 (no duplicate filed) |
+| 17 | Fuzz corpus mining once nightly artifacts exist — TODO_LIST ongoing                       | ongoing | Still open — TODO_LIST T6 (artifacts now exist)                  |
+| 18 | CI status-check requirement on master (branch verified unprotected) — TODO_LIST external  | 5m      | **Won't implement — recorded ROADMAP non-decision "No branch protection on master"** |
 
 (18 real items — stop at real value; the remainder of the backlog is
 unchanged and lives in TODO_LIST.md.)
 
 ## g) Questions I cannot figure out myself (max 3)
 
-1. **Push policy right now:** master is ahead 1 (`7733d36`, the 00-40
-   report commit) and this audit's diff is uncommitted awaiting the daemon.
-   Should I push origin/master once the daemon lands this session's work —
-   or do you handle pushes manually?
-2. **v0.2.1 — cut it?** The audit confirmed the standing situation: master
-   CI is green on all three legs since `c7482e2`; the immutable v0.2.0 tag
-   is Windows-red (test code only — library correct). A v0.2.1 gives
-   consumers a tag whose tests pass everywhere. RELEASING.md preconditions
-   are now all satisfiable; it needs your tag-push approval.
-3. **v0.2.1 CHANGELOG scope:** fixes-only (`c3a083b`, `c7482e2` + errata
-   note for v0.2.0's Windows tests), or also fold in doc-only commits since
-   v0.2.0? Current policy excludes doc-only edits; I'd default to
-   fixes-only + errata — your call.
+_Resolved 2026-09-08: all three settled by the 04:20 release session._
+
+1. ~~**Push policy right now**~~ superseded — pushes landed via the
+   user's flow; master == origin held thereafter.
+2. ~~**v0.2.1 — cut it?**~~ done at `7ff9e72` — cut with all four CI
+   jobs green on origin before tagging (RELEASING precondition 4).
+3. ~~**v0.2.1 CHANGELOG scope**~~ resolved — fixes-only + errata note,
+   as recommended; verified by diffing `v0.2.0..HEAD` (only non-test Go
+   change was a comment correction).
 
 ---
 

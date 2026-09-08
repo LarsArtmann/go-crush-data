@@ -49,41 +49,64 @@ _Resolved 2026-09-08: all five committed, pushed, and CI-green long ago
 
 1. ~~**`DecodeTodos` + `Todo`/`TodoStatus`** (todos.go, todos_test.go,
    example, fuzz target). Works, tested, scale-proven. Gaps: uncommitted;
-   Windows/macOS legs unverified.~~ done at `6de2950`, `4a2d1ec` — shipped
-   in v0.3.0, all matrix legs green, adopted by crush-daily
-2. ~~**`DB.IterMessages`** (messages.go:49, shared `scanMessage` refactor).~~
-   done at `6de2950`, `4a2d1ec` — shipped in v0.3.0; the missing benchmark
-   remains the one open thread → TODO_LIST T24
+   Windows/macOS legs unverified. Effort to finish: S (commit + observe
+   CI).~~ done at `6de2950`, `4a2d1ec` — shipped in v0.3.0, all matrix
+   legs green, adopted by crush-daily
+2. ~~**`DB.IterMessages`** (messages.go:49, shared `scanMessage`
+   refactor). Parity/early-break/empty/canceled-ctx tests green under
+   race+shuffle. Gaps: uncommitted; **no benchmark** — the repo keeps a
+   committed bench baseline (Sessions/Messages/AgentGraph) and I added
+   a read path without one. Effort: S (BenchmarkIterMessages) + M if
+   regenerating baseline (`-count=6` per AGENTS.md).~~ shipped at
+   `6de2950`, `4a2d1ec`; the benchmark gap remains the one open thread
+   → TODO_LIST T24
 3. ~~**docs/recipes/registry-watching.md.** Written from the verified
-   harness. Gaps: uncommitted; verified on Linux only.~~ done at
-   `6de2950` — shipped; still honestly Linux-verified (see f/11)
+   harness. Gaps: uncommitted; verified on Linux only (fsnotify/inotify
+   paths; go-filewatcher self-documents cross-platform support but my
+   harness did not prove it).~~ done at `6de2950` — shipped; still
+   honestly Linux-verified (see f/11)
 4. ~~**Docs sweep** (README, FEATURES, CHANGELOG `[Unreleased]`, ROADMAP
    graduation + new non-decision, TODO_LIST T8, AGENTS.md, plan record
    docs/planning/2026-08-16_07-18-raw-ideas-graduation.md with per-task
-   verification).~~ done at `6de2950` (and refreshed continuously since —
-   docs-health passes 2026-09-02/09-08)
-5. ~~**parts.go `jsonNull` constant** (drive-by goconst fix).~~ done at
-   `6de2950`
+   verification). Gap: uncommitted; FEATURES/CHANGELOG claims become
+   CI-true only after push + green legs.~~ done at `6de2950` — and
+   kept fresh by the docs-health passes since (2026-09-02, 2026-09-08)
+5. ~~**parts.go `jsonNull` constant** (drive-by goconst fix). Tested
+   (`TestDecodeParts` green). Gap: uncommitted; deserves a line in the
+   eventual commit message.~~ done at `6de2950`
 
 ## c) NOT STARTED
 
 _Resolved 2026-09-08: #1–#4, #6 shipped; #5 executed by the 2026-09-07/08
 harvest sessions; remaining threads live in TODO_LIST._
 
-1. ~~**Commit + push + CI observation** of this session's work.~~ done at
-   `6de2950` (+ v0.3.0 `4a2d1ec`) — all matrix legs green
-2. ~~**T8 — adopt DecodeTodos/IterMessages in crush-daily**
-   (TODO_LIST, 30m).~~ done — executed by the 08:50 session
-   (`e1c3114`, `04e6c63` in crush-daily); T8 retired
-3. **BenchmarkIterMessages + baseline decision.** ← still open —
-   TODO_LIST T24 (now also covers baseline regeneration)
-4. ~~**v0.3.0 release.**~~ done at `4a2d1ec` — cut, tagged, proxy serves,
+1. ~~**Commit + push + CI observation** of this session's work. Not
+   started by design: user rule (never commit unless told). Priority:
+   Critical — everything in (b) is one `git push` away from real
+   verification.~~ done at `6de2950` (+ v0.3.0 `4a2d1ec`) — all matrix
+   legs green
+2. ~~**T8 — adopt DecodeTodos/IterMessages in crush-daily** (TODO_LIST,
+   30m). The "second consumer" the todos helper was gated on. Not
+   started; needs user go-ahead (question g/3).~~ done — executed by
+   the 08:50 session (crush-daily `e1c3114`, `04e6c63`); T8 retired
+3. **BenchmarkIterMessages + baseline decision.** Not started; see
+   (b)/2. ← still open — TODO_LIST T24 (now also covers baseline
+   regeneration)
+4. ~~**v0.3.0 release.** CHANGELOG `[Unreleased]` now carries two
+   `Added` entries (DecodeTodos, IterMessages) on top of Fixed/Changed
+   → minor bump by the repo's SemVer policy. Not started; owner
+   decision (question g/2). RELEASING preconditions (all legs green on
+   origin) apply.~~ done at `4a2d1ec` — cut, tagged, proxy serves,
    GitHub Release published
 5. ~~**Harvesting this report's (f) list into TODO_LIST/ROADMAP**
-   (docs-health HARVEST).~~ done — T-numbered items absorbed into the
-   living TODO_LIST; this annotate pass closed the rest
-6. **doc.go mention of the new APIs.** ← still open — TODO_LIST T14
-   (broader: document the parts envelope too)
+   (docs-health HARVEST). Deferred: user said report, then wait.~~
+   done — T-numbered items absorbed into the living TODO_LIST; this
+   annotate pass closed the rest
+6. **doc.go mention of the new APIs.** doc.go is conceptual, not an API
+   index, so nothing is false today; a sentence on streaming/todos
+   would still fit its "Schema drift"/"Read-only" narrative. Low
+   priority. ← still open — TODO_LIST T14 (broader: document the parts
+   envelope too)
 
 ## d) TOTALLY FUCKED UP
 
@@ -172,15 +195,23 @@ a quota.)
 
 _Resolved 2026-09-08: all three since decided by subsequent sessions._
 
-1. ~~**Commit granularity for this session's work.**~~ resolved — one
-   feature commit `6de2950` landed it ("feat: graduate three roadmap
-   ideas…"), matching option (a).
+1. ~~**Commit granularity for this session's work.** Options: (a) one
+   commit "feat: DecodeTodos + IterMessages + registry-watching
+   recipe", (b) split — feature code / recipe+docs / fuzz+workflow
+   fix, (c) you review the diff first. I cannot know your preference,
+   and the auto-commit daemon may race me — say the word and I commit
+   per your choice.~~ resolved — one feature commit `6de2950` landed
+   it ("feat: graduate three roadmap ideas…"), matching option (a)
 2. ~~**Cut v0.3.0 once CI legs are green, or hold for T8 (crush-daily
-   adoption) first?**~~ resolved — adoption first: T8 executed 08:50, then
-   v0.3.0 cut (`4a2d1ec`).
-3. ~~**Is T8 mine to execute (next session in ~/projects/crush-daily), or
-   yours?**~~ resolved — the next session executed it with the user's
-   go-ahead.
+   adoption) first?** Releasing before adoption makes the API public
+   before its second consumer validates the ergonomics; holding keeps
+   `[Unreleased]` growing. Owner call.~~ resolved — adoption first:
+   T8 executed 08:50, then v0.3.0 cut (`4a2d1ec`)
+3. ~~**Is T8 mine to execute (next session in ~/projects/crush-daily),
+   or yours?** The task lives in this repo's TODO_LIST with an
+   estimate, but it edits a different codebase — I need your go-ahead
+   before touching it (same class as the Parked mindwalk PR).~~
+   resolved — the next session executed it with the user's go-ahead
 
 ---
 

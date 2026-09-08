@@ -308,39 +308,51 @@ or follow-up status reports.)
 
 ### SDK (go-crush-data)
 
-1. Cut a GitHub Release page for v0.3.0 (if the tag-driven workflow
-   didn't fire). 5m — GitHub UI.
-2. Verify pkg.go.dev renders v0.3.0 — T4 is now scoped specifically to
-   `DecodeTodos`/`IterMessages`/registry-watching recipe. 5m — pkg.go.dev.
+1. ~~Cut a GitHub Release page for v0.3.0 (if the tag-driven workflow
+   didn't fire). 5m — GitHub UI.~~ done — the tag-driven workflow
+   fired; v0.3.0 release exists (Latest)
+2. ~~Verify pkg.go.dev renders v0.3.0 — T4 is now scoped specifically to
+   `DecodeTodos`/`IterMessages`/registry-watching recipe. 5m — pkg.go.dev.~~
+   done 2026-09-08 — the page renders v0.3.0 + both examples; T4 retired
 3. Add a real-data collector-level test (cross-repo fixture:
    `crush-daily` runs `Collect` against a synthetic registry that
    contains todos-bearing sessions; asserts `TodoStats` and
    `MessagePartStats` are not zero). M — `crush-daily/scripts/`.
+   ← cross-repo; the SDK side is covered by `TestAllAPIOnRealDatabase`
 4. Move `BenchmarkMessages`/`BenchmarkIterMessages` to a paired
    benchstat baseline so the iter path's allocations are visible in
-   trend. 30m — `docs/benchmarks/baseline-benchmarks.txt`.
-5. Add a fuzz matrix entry for `DecodeTodos` shape variants (the
+   trend. 30m — `docs/benchmarks/baseline-benchmarks.txt`. ← still
+   open — TODO_LIST T24 (`BenchmarkIterMessages` does not exist yet)
+5. ~~Add a fuzz matrix entry for `DecodeTodos` shape variants (the
    existing FuzzDecodeTodos exercises arbitrary bytes; add a
    structurally-aware corpus seeded from the 2026-08-16 census). 30m
-   — `fuzz_test.go`.
+   — `fuzz_test.go`.~~ done — the seed corpus carries the census
+   shape (census item + drifted-status seeds in `fuzz_test.go`)
 6. Add a `crushdata.ScanProjectDay` convenience that wires
    `Sessions(Day)` + per-session `DecodeTodos` + `IterMessages`
    accumulation. The pattern crush-daily adopted today (3 calls
    inside one method) is reusable; promoting it to the SDK saves the
    next consumer the same boilerplate. 30m — new file
-   `aggregate.go`.
+   `aggregate.go`. **Won't implement — no second consumer exists;
+   YAGNI (revisit when one appears)**
 7. Document the SDK's `iter.Seq2` return as the canonical lazy-read
    pattern in the package doc, alongside `DB.Messages`. 15m —
-   `doc.go`.
-8. Update the `Recipe: registry-watching` page to mention
+   `doc.go`. ← still open — folded into TODO_LIST T14
+8. ~~Update the `Recipe: registry-watching` page to mention
    `crush-daily` as a real consumer of `DecodeTodos` + `IterMessages`
-   (cross-link). 10m — `docs/recipes/registry-watching.md`.
-9. Verify the v0.3.0 Go module proxy `sum.golang.org` checksum against
+   (cross-link). 10m — `docs/recipes/registry-watching.md`.~~ done
+   2026-09-08 — real-consumer paragraph added
+9. ~~Verify the v0.3.0 Go module proxy `sum.golang.org` checksum against
    `go.sum` (the
    `checksum mismatch` failure mode from `go-release` skill). 5m —
-   module proxy.
+   module proxy.~~ done — crush-daily consumed v0.3.0 through the
+   proxy (`go get` + flake bump compiled green, `e1c3114`)
 
 ### Consumer (crush-daily)
+
+_Items 10–20 are crush-daily's backlog, not this repo's — annotated
+2026-09-08 as ← cross-repo for the docs-health pass; no verdicts beyond
+ownership are implied._
 
 10. Wire the per-project prompt content into the cross-project
     prompt too — the cross-project synthesis sees `[]insights`, not
@@ -382,130 +394,150 @@ or follow-up status reports.)
 
 21. Move the SDK bump + flake update + vendorHash re-derive into a
     single script (`scripts/bump-sdk.sh VERSION`). 30m — both repos.
+    **Won't implement for this repo — single consumer; the sequence
+    is documented as the AGENTS.md vendorHash-coupling gotcha**
 22. Add an end-to-end smoke that runs `go-crush-data`'s full gate
     after every crush-daily SDK bump, in CI on crush-daily. M —
-    `.github/workflows/`.
+    `.github/workflows/`. ← cross-repo
 23. Add a `CHANGELOG.md` cross-link convention: "crush-daily v0.x.y
     adopts SDK vN.M.K — see [PR](...) for the migration". 15m —
-    both repos.
+    both repos. **Won't implement — single consumer; convention
+    overhead exceeds value**
 24. Document the "first SDK consumer adoption" workflow in
     `go-release` skill: bump → flake update → vendorHash re-derive →
     consumer adoption → CHANGELOG.md cross-link → real-data test.
-    30m — `~/.config/crush/skills/go-release/`.
+    30m — `~/.config/crush/skills/go-release/`. **Won't implement —
+    out of repo scope; the sequence lives in this repo's AGENTS
+    gotcha where it's actually applied**
 
 ### Process / docs
 
 25. Add a per-session "release push confirmation" rule to the global
-    AGENTS.md. 10m.
+    AGENTS.md. 10m. **Won't implement — global-config policy domain,
+    not this repo's docs**
 26. Audit all `crush-daily/scripts/` for shell-isms; the `nix
-    develop` script assumes bash. 30m — shellcheck pass.
+    develop` script assumes bash. 30m — shellcheck pass. ← cross-repo
 27. Move `cmd/crush-daily/main_test.go`'s `TestCrushDiscoverer_*`
     into the `internal/collector/` test package where the fake
-    discoverer already lives. M — reorg.
+    discoverer already lives. M — reorg. ← cross-repo
 28. Pre-compute `BenchmarkIterMessages` (referenced in b/3 of the
     07:47 status, not started). 30m — `internal/collector/`.
+    ← cross-repo; the SDK-side benchmark is TODO_LIST T24
 29. Add an `// experimental` marker to the cross-project prompt's
     new stats section so a future LLM-output regression is locatable.
-    5m — `internal/insights/`.
+    5m — `internal/insights/`. ← cross-repo
 30. File an upstream issue against `larsartmann/go-cqrs-lite/catalog/v4`
-    for the shared-closure race (b/1). 30m — GitHub.
-31. Write the `DOMAIN_LANGUAGE.md` (c/5). L — `docs/`.
+    for the shared-closure race (b/1). 30m — GitHub. ← cross-repo
+31. Write the `DOMAIN_LANGUAGE.md` (c/5). L — `docs/`. **Won't
+    implement — cross-repo for crush-daily; this repo has a recorded
+    non-decision against DOMAIN_LANGUAGE.md**
 32. Add a "consumer adoptions" table to the SDK README listing
     crush-daily (and any future consumers) with the SDK version they
     adopt and the API surface they exercise. 30m — `README.md`.
+    **Won't implement — the only consumer is a private repo; a public
+    adoptions table would leak its name and rot**
 33. Capture the "real-data crawl" insight (registry → open DB →
     decode Todos → stream messages → fold) as a recipe page in
-    `docs/recipes/day-aggregate.md`. 30m.
+    `docs/recipes/day-aggregate.md`. 30m. **Won't implement — the
+    pattern is three calls shown in the runnable examples; no
+    consumer has asked for a recipe**
 34. Add a "first consumer" checklist to the SDK's ROADMAP raw-ideas
     section so future graduating ideas always include the
-    consumer-validation gate. 10m — `ROADMAP.md`.
+    consumer-validation gate. 10m — `ROADMAP.md`. **Won't implement —
+    the graduation discipline already lives in ROADMAP/TODO_LIST
+    structure; a checklist would duplicate it**
 35. Add `nix flake update` linting (verify the lockfile is current
-    before a release). 30m — CI.
+    before a release). 30m — CI. **Won't implement — the monthly
+    `flake-update.yml` job + vendorHash guard already cover lock
+    freshness**
 36. Add a CI leg that runs `nix flake check` on the consumer repo
     (crush-daily) when the producer repo (go-crush-data) is pushed,
-    via repository dispatch. M — `.github/workflows/`.
+    via repository dispatch. M — `.github/workflows/`. ← cross-repo
 
 ### Repo hygiene
 
 37. `nix fmt` in go-crush-data after every CHANGELOG.md edit (it has
-    markdown in scope). 1m.
+    markdown in scope). 1m. _(process habit — formatting is enforced
+    by `nix flake check`'s treefmt gate either way)_
 38. Verify that `c055855`'s "lost" import-grouping fix is not needed
     under current treefmt; if it is, file a treefmt-nix issue. 15m.
+    ← cross-repo (crush-daily's templ files)
 39. Retire the `pinFamilyHTTPStatus` / `RecoverHandler` request-ID
     TODO entries in `TODO_LIST.md` (crush-daily) if the v0.3.0 SDK
     bumps resolve them; otherwise, leave a one-line "still external"
-    note. 5m.
+    note. 5m. ← cross-repo
 40. Add a `make verify` (or rather, `nix run .#verify`) that runs
     build + vet + test + lint + flake check + link-check in one go,
-    in both repos. M.
+    in both repos. M. **Won't implement — the canonical gate block
+    in AGENTS.md + CI serve the purpose; three weeks of sessions ran
+    it without a script**
 
 ### Parked / observation
 
 41. The `crush-daily` report panel for "Message parts" is currently a
     one-line summary; a stacked bar chart (text vs tool_calls vs
     reasoning) would be a nice visualisation. M — `report.templ`.
+    ← cross-repo
 42. The `crushdata.TodoStatus` constants are string-typed; a future
     enum (Go 1.26 has typed enums) would prevent typos. Wait for
-    the next `errors.AsType`-style migration in the SDK.
+    the next `errors.AsType`-style migration in the SDK. **Won't
+    implement — original verdict stands (wait for a driver); none
+    has appeared**
 43. The SDK's example fixtures don't include a session with Todos;
     adding one to `example_test.go` would let pkg.go.dev's "Example"
     tab show the decoding in context. 10m — `example_test.go`.
+    **Won't implement — the runnable `ExampleDecodeTodos` already
+    demonstrates the decode on pkg.go.dev; fixture plumbing adds
+    churn without new signal**
 44. The TODOs in `crush-daily/TODO_LIST.md` are dated 2026-07-27; the
     docs-health skill's harvest cadence is overdue for a real-data
-    pass. 30m — `docs-health`.
+    pass. 30m — `docs-health`. ← cross-repo (run docs-health in
+    crush-daily)
 45. The `iter.Seq2` return on `IterMessages` runs `QueryContext`
     anew per range — that's documented in `messages.go:47`, but the
     next consumer to misuse it will be confused. Consider a static
     `IterMessagesOnce` that pre-binds the query and the rows.
-    Skip — premature.
+    Skip — premature. **Won't implement — original verdict (skip)
+    stands; no misusing consumer has appeared**
 46. The two `nolint:exhaustruct` annotations on the zero-value
     fallbacks are a code smell; if `domain.TodoStats`/`MessagePartStats`
     are zero-valued by default, the failure path could just declare
     them once at the top of `queryProject` and remove the
     reassignment. 5m — refactor for cleanliness, but not a TODO.
+    ← cross-repo (crush-daily code)
 47. Add `BenchmarkIterMessages` to the SDK's committed benchstat
     baseline; regenerate `docs/benchmarks/baseline-benchmarks.txt`
     via `go test -bench . -count=6 | tee …`. 30m — bench setup.
+    ← still open — TODO_LIST T24 (merged with #4)
 48. The `nix fmt` rewrites changed `var X = Y` → `X := Y` in the
     generated templ files; that's a treefmt preference for
     short-var declarations. If the next templ-regen produces a
     different `var X = Y` pattern, the diff will keep showing up.
-    Pin a treefmt config snapshot. 15m.
+    Pin a treefmt config snapshot. 15m. ← cross-repo
 49. The cross-project prompt (`buildCrossProjectPrompt`) iterates
     `[]projects` and `[]insights` in parallel; the new `TodoStats`/
     `MessagePartStats` are not yet in that loop. Wire them.
-    See #10 — same task.
+    See #10 — same task. ← cross-repo (duplicate of #10)
 50. Add a "consumer adoption" CI status badge to the SDK README —
     green if `crush-daily` (the only known consumer) builds against
-    the current HEAD. M.
+    the current HEAD. M. **Won't implement — the only consumer is a
+    private repo; a badge would leak it and cannot be public-CI-driven**
 
 ## g) QUESTIONS — 3 you cannot figure out yourself
 
-1. **Should the SDK's `DecodeTodos` census pin be refreshed against
+_Resolved 2026-09-08: #1 and #3 resolved by events; #2 stays a cross-repo
+call._
+
+1. ~~**Should the SDK's `DecodeTodos` census pin be refreshed against
    the current registry before v0.3.0 ships, or is the 2026-08-16
-   census still authoritative?** The 71,747-item / 287-DB census is
-   one snapshot; Crush releases between then and now may have added
-   new shapes. I'd re-run the census before tagging v0.3.0 to be
-   sure, but I don't know whether you want a fresh census or want to
-   trust the existing one. If the latter, the tag is fine as-is; if
-   the former, I'd want to re-run before publishing the GitHub
-   Release.
-
-2. **The `internal/server` race conditions are pre-existing. Do you
-   want me to fix them as part of this work (out of scope for T8)
-   in a follow-up session, or leave them for whoever owns the
-   cqrs-lite upgrade?** I noticed them, confirmed they pre-date this
-   session, and did not chase them. The choice is: (a) file an
-   upstream issue and wait, (b) vendor a fixed catalog/v4 locally,
-   (c) skip — they don't gate CI yet because the race detector
-   isn't on the server test path in CI (it is on mine). I cannot
-   decide which trade-off you prefer without knowing your
-   relationship to cqrs-lite.
-
-3. **The auto-commit daemon captured the feat and the lint-fix
+   census still authoritative?**~~ resolved — v0.3.0 shipped on the
+   existing census; the 2026-09-07 upstream verification re-confirmed
+   the shape against v0.92.0 source, and refresh-on-release is now
+   part of the AGENTS.md verification cadence
+2. **The `internal/server` race conditions are pre-existing.** ←
+   cross-repo owner call (crush-daily/cqrs-lite), unchanged
+3. ~~**The auto-commit daemon captured the feat and the lint-fix
    commits with messages I didn't fully review at write time
-   (e1c3114, 04e6c63). Both were pushed. Do you want me to amend
-   the messages, or are they fine as the daemon wrote them?** I read
-   both back at report time and judged them acceptable, but the
-   authority for the message lies with you, not the daemon. If you
-   want them rewritten, say so; otherwise the commits stand.
+   (e1c3114, 04e6c63).**~~ resolved — the commits stand (read back
+   and judged acceptable at report time; amending pushed history is
+   worse than the imperfection)
