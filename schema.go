@@ -78,12 +78,25 @@ func (s Schema) MissingColumns() []string {
 // requiredTables are the tables this library cannot function without.
 //
 //nolint:gochecknoglobals // a slice cannot be a constant and this one is definitionally fixed
-var requiredTables = []string{"sessions", "messages"}
+var requiredTables = []string{sessionsTable, messagesTable}
 
 // costColumn names the sessions cost column shared by the schema probe and
 // the capability-substituted cost expressions of the sessions, stats, and
 // agent-subtree queries.
 const costColumn = "cost"
+
+// todosColumn names the sessions todos column shared by the schema probe
+// and the capability-substituted todos expressions of the sessions and
+// agent-subtree queries.
+const todosColumn = "todos"
+
+// messagesTable names the messages table shared by the required-table
+// check and the message-column probes.
+const messagesTable = "messages"
+
+// sessionsTable names the sessions table of the required-table check and
+// the session-column probes.
+const sessionsTable = "sessions"
 
 // probeSchema inspects an open database and returns its capabilities.
 //
@@ -98,30 +111,30 @@ func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
 		err    error
 	)
 
-	if schema.SessionsCost, err = columnExists(ctx, db, "sessions", costColumn); err != nil {
+	if schema.SessionsCost, err = columnExists(ctx, db, sessionsTable, costColumn); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
 	if schema.SessionsParentSessionID, err = columnExists(
-		ctx, db, "sessions", "parent_session_id",
+		ctx, db, sessionsTable, "parent_session_id",
 	); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
-	if schema.SessionsTodos, err = columnExists(ctx, db, "sessions", "todos"); err != nil {
+	if schema.SessionsTodos, err = columnExists(ctx, db, sessionsTable, todosColumn); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
-	if schema.MessagesModel, err = columnExists(ctx, db, "messages", "model"); err != nil {
+	if schema.MessagesModel, err = columnExists(ctx, db, messagesTable, "model"); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
-	if schema.MessagesProvider, err = columnExists(ctx, db, "messages", "provider"); err != nil {
+	if schema.MessagesProvider, err = columnExists(ctx, db, messagesTable, "provider"); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
 	if schema.MessagesFinishedAt, err = columnExists(
-		ctx, db, "messages", "finished_at",
+		ctx, db, messagesTable, "finished_at",
 	); err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}

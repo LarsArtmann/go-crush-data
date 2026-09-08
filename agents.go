@@ -103,8 +103,8 @@ func (db *DB) descendantSessions(ctx context.Context, rootID string) ([]Session,
 		recursiveCostExpr = "0"
 	}
 
-	todosExpr := "todos"
-	recursiveTodosExpr := "s.todos"
+	todosExpr := todosColumn
+	recursiveTodosExpr := "s." + todosColumn
 
 	if !db.schema.SessionsTodos {
 		todosExpr = "NULL"

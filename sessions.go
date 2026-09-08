@@ -112,7 +112,7 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 
 	todosExpr := "NULL AS todos"
 	if db.schema.SessionsTodos {
-		todosExpr = "todos"
+		todosExpr = todosColumn
 	}
 
 	query := fmt.Sprintf(
