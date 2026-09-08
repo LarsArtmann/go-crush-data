@@ -68,6 +68,7 @@ func (c partCensus) unknownKinds() []string {
 	}
 
 	sort.Strings(unknown)
+
 	return unknown
 }
 
@@ -276,6 +277,7 @@ func TestAllAPIOnRealDatabase(t *testing.T) {
 	}
 
 	var totals sweepTotals
+
 	totals.partKinds = make(map[string]int)
 
 	for _, session := range sessions {
@@ -410,6 +412,7 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 		db, err := Open(project.DataDir)
 		if err != nil {
 			t.Logf("skipping %s: %v", project.DataDir, err)
+
 			continue
 		}
 
@@ -423,6 +426,7 @@ func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
 		databases++
 		aggregate.entries += census.entries
 		aggregate.unparseable += census.unparseable
+
 		for kind, count := range census.kinds {
 			aggregate.kinds[kind] += count
 		}
