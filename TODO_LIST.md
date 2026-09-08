@@ -16,7 +16,7 @@ renumbered, and deleting an item retires its ID for good.
       one new upstream part type currently lands in `UnknownPart`
       silently, and `TestAllAPIOnRealDatabase` decodes but does not count
       kinds. 1–2h — `parts_test.go`, `realdata_test.go`; source:
-      docs/status/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)8/(f)17
+      docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (f)8/(f)17
 
 ## Medium
 
@@ -84,7 +84,7 @@ renumbered, and deleting an item retires its ID for good.
       regardless (the todos probe, `Message.UpdatedAt` scan, and ReadFiles
       ORDER BY all touch read paths), and the iter path has never been in
       the trend. 1h — `go test -bench . -count=6 | tee …` + benchstat;
-      source: same report (f)29 + 2026-08-16_08-50 report (f)4/(f)47
+      source: same report (f)29 + docs/status/archived/2026-08-16_08-50_todo-t8-adoption-in-crush-daily.md (f)4/(f)47
 - [ ] **T25** Pin registry `last_accessed` UTC round-trip with a test
       (upstream writes `time.Now().UTC()`). 15m — `discover_test.go`;
       source: same report (f)30
@@ -97,7 +97,7 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T29** Add shellcheck to the devShell and run it over `scripts/`
       (three bash guard scripts, today only battle-tested by running
       them). 20m — `flake.nix`, `scripts/`; source:
-      2026-08-16_04-20 report (e)4/(f)11
+      docs/status/archived/2026-08-16_04-20_v0.2.1-release-plan-execution-and-self-review.md (e)4/(f)11
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
