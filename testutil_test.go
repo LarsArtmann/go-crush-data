@@ -25,6 +25,11 @@ const (
 )
 
 const currentSchemaDDL = `
+	-- mirrors the schema of the pinned upstream release; guarded against the
+	-- generated snapshot docs/storage-schema-v0.92.0.sql by
+	-- TestFixtureSchemaMatchesUpstreamSnapshot (column sets must match;
+	-- indexes/triggers/CHECK constraints are intentionally omitted — fixtures
+	-- control their own timestamps, so upstream's update triggers must not fire)
 	CREATE TABLE sessions (
 		id TEXT PRIMARY KEY,
 		parent_session_id TEXT,
@@ -54,6 +59,15 @@ const currentSchemaDDL = `
 		session_id TEXT NOT NULL,
 		path TEXT NOT NULL,
 		read_at INTEGER NOT NULL
+	);
+	CREATE TABLE files (
+		id TEXT PRIMARY KEY,
+		session_id TEXT NOT NULL,
+		path TEXT NOT NULL,
+		content TEXT NOT NULL,
+		version INTEGER NOT NULL DEFAULT 0,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
 	);
 `
 

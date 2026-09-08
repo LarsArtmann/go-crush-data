@@ -15,5 +15,22 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Guard self-test (doctored fixture must fire)
+        run: scripts/check-upstream-drift.sh --self-test
+
       - name: Check upstream migration drift
         run: scripts/check-upstream-drift.sh
+
+  release-notice:
+    name: Open issue on new crush stable release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Detect new stable release and open tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check-upstream-release.sh

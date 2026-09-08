@@ -51,12 +51,6 @@ renumbered, and deleting an item retires its ID for good.
       `go test -fuzz=DecodeParts` + `go test -fuzz=DecodeTodos` each time
       upstream verification runs (targets + CI workflow exist; never run
       locally). 5m — fuzz targets; source: same report (f)18
-- [ ] **T21** Investigate the `crush.db?_loc=auto` stray file in
-      `/home/lars/projects/.crush` (present 2026-09-07, 0 bytes; a second
-      `crush.db?_loc=auto&_time_format=sqlite` appeared with it — likely a
-      tool mishandling a SQLite URI; harmless to this library — it opens
-      exact paths). Trash once understood. 20m — local data dir; source:
-      same report (f)25 + 2026-09-08_15-31 report (c)P8
 - [ ] **T28** Decide whether summary messages (`is_summary_message = 1`)
       should count in day filters/stats, and pin the answer. 30m —
       `sessions.go`, `stats.go`; source: same report (f)38
