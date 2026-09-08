@@ -52,6 +52,12 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Changed
 
+- The `golangci-lint` tool pin bumps v2.12.2 → v2.13.2 and `exhaustruct`
+  renames to `exhaustruct_v5` (v5 schema: `ignore-patterns` covers the two
+  structs this library constructs by field assignment, never literals).
+  The `go tool` binary (byte-identical to CI) and the nixpkgs binary now
+  run the same version, eliminating the two-binary deprecation divergence.
+  The suite is clean under both.
 - The read-only connection now sets `busy_timeout(5000)` and
   `query_only(1)` pragmas. Reads hold out up to 5s against a live
   writer's lock instead of failing fast with `SQLITE_BUSY`, and any
