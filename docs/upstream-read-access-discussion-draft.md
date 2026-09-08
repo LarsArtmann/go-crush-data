@@ -35,7 +35,6 @@ undocumented on-disk format (the Go six reviewed source-level on
 | [jhlee0409/claude-code-history-viewer](https://github.com/jhlee0409/claude-code-history-viewer) | Rust/Tauri | GUI history browser across `<project>/.crush/crush.db` |
 | [yigitkonur/cli-continues](https://github.com/yigitkonur/cli-continues) | TS | session handoff parser; maintains its own reverse-engineered docs of the format |
 | [Dicklesworthstone/coding_agent_session_search](https://github.com/Dicklesworthstone/coding_agent_session_search) (CASS) | Rust | cross-agent session search over `crush.db` |
-| [vshulcz/deja-vu](https://github.com/vshulcz/deja-vu) | Go | session search (vshulcz/deja-vu#2949) |
 | [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage) | Go | usage tracking from `.crush/crush.db` per project |
 | [Pilan-AI/mnemo](https://github.com/Pilan-AI/mnemo) | Go | indexes Crush sessions into its SQLite |
 | [superbasedapp/observer](https://github.com/superbasedapp/observer) | Go | agent observer via a `crush` adapter (deepest parser in the ecosystem) |

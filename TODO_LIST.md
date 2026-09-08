@@ -26,10 +26,19 @@ renumbered, and deleting an item retires its ID for good.
       ongoing — `.github/workflows/fuzz.yml`
 - [ ] **T7** Pin GitHub action versions via Renovate once the app is
       installed (depends on T1). 10m — `.github/workflows/*.yml`
+- [ ] **T8** Harden the read-only DSN with `busy_timeout` and
+      `query_only` (2 of 6 ecosystem readers set busy_timeout; ours can
+      fail fast with SQLITE_BUSY under a live writer). See
+      docs/ecosystem-implementation-review.md. 30m — `db.go`
+- [ ] **T9** Report the `time.UnixMilli` date bug to openusage and
+      mnemo (sessions land in 1970; both cite Crush's lying migration
+      comment as their schema reference). Needs user go-ahead. 10m each
+      — upstream of this repo
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 
 - Upstream PR to cosmtrek/mindwalk for the `sdk/go-crush-data` branch
   (Stream X T24; needs user go-ahead to push).
-- Link the charmbracelet/crush schema-documentation issue here once filed
-  (Stream X T20).
+- Post the charmbracelet/crush read-access Discussion from
+  docs/upstream-read-access-discussion-draft.md (Stream X T20; needs
+  user go-ahead; link it here once posted).

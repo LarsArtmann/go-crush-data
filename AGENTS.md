@@ -41,7 +41,7 @@ script added; upstream stats command read — its GetUsageByModel only counts
 message rows per model/provider and never sums session-level fields per
 model, so our model-breakdown CTE comment stands unchanged; files table
 confirmed still written by v0.92.0 via internal/history). A weekly CI job
-(`upstream-drift.yml`) runs the script.
+(`.github/workflows/upstream-drift.yml`) runs the script.
 
 Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestSessionsOnRealDatabase|TestAllAPIOnRealDatabase'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Re-run both after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
@@ -64,7 +64,12 @@ Non-Go surfaces: `scripts/check-vendor-hash.sh` (drift guard),
 `.github/workflows/` (ci, release, fuzz, bench, flake-update — all
 tagged to pinned action SHAs), `docs/benchmarks/baseline-benchmarks.txt`
 (benchstat baseline for the bench.yml trend; regenerate via
-`go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples).
+`go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples),
+`docs/ecosystem-implementation-review.md` (source-verified comparison of
+every known Go tool reading crush data — 2 of 6 inherited the
+milliseconds-comment lie as `time.UnixMilli` date bugs), and
+`docs/upstream-read-access-discussion-draft.md` (draft Discussion for
+charmbracelet/crush; post needs user go-ahead).
 
 ## Critical decisions
 
