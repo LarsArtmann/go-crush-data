@@ -2,10 +2,139 @@ package crushdata
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 )
+
+// realDataDir resolves the real database directory for the env-gated tests:
+// CRUSH_DATA_REAL_DATA_DIR when set, else ../.crush when it holds a database.
+// The bool reports whether real data is available at all.
+func realDataDir(t *testing.T) (string, bool) {
+	t.Helper()
+
+	if dataDir := os.Getenv("CRUSH_DATA_REAL_DATA_DIR"); dataDir != "" {
+		return dataDir, true
+	}
+
+	candidate, err := filepath.Abs(filepath.Join("..", ".crush"))
+	if err != nil {
+		return "", false
+	}
+
+	if _, statErr := os.Stat(filepath.Join(candidate, DBName)); statErr != nil {
+		return "", false
+	}
+
+	return candidate, true
+}
+
+// partCensus is the result of scanning raw parts entries on disk: how often
+// each discriminator appears, how many entries were seen, and how many rows
+// could not be parsed as arrays at all.
+type partCensus struct {
+	kinds       map[string]int
+	entries     int
+	unparseable int
+}
+
+// knownPartKinds is the complete discriminator set Crush v0.92.0 writes
+// (the decode table in parts.go plus the two attachment pass-throughs).
+// Anything else in a real database means upstream added a part type.
+var knownPartKinds = map[string]bool{
+	partText:         true,
+	partReasoning:    true,
+	partToolCall:     true,
+	partToolResult:   true,
+	partFinish:       true,
+	partShellCommand: true,
+	partImageURL:     true,
+	partBinary:       true,
+}
+
+// unknownKinds returns the discriminators this library does not know,
+// sorted. Typeless entries (empty type, null data — Crush has always written
+// them and the decoder skips them by design) are not drift and stay excluded.
+func (c partCensus) unknownKinds() []string {
+	unknown := make([]string, 0, len(c.kinds))
+	for kind := range c.kinds {
+		if kind != "" && !knownPartKinds[kind] {
+			unknown = append(unknown, kind)
+		}
+	}
+
+	sort.Strings(unknown)
+	return unknown
+}
+
+// censusPartDiscriminators aggregates the raw `{type,data}` discriminators of
+// every parts entry in the database, entirely inside SQLite: the histogram
+// never ships message payloads across the driver boundary, so a census stays
+// cheap even on multi-gigabyte databases. Rows that are not valid JSON are
+// counted, not failed — corruption is a different problem than drift, and
+// DB.Messages already degrades such rows to nil Parts.
+func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, error) {
+	census := partCensus{kinds: make(map[string]int)}
+
+	rows, err := handle.QueryContext(ctx, `
+		SELECT COALESCE(json_extract(entry.value, '$.type'), ''), COUNT(*)
+		FROM messages, json_each(messages.parts) AS entry
+		WHERE messages.parts IS NOT NULL AND json_valid(messages.parts)
+		GROUP BY 1`)
+	if err != nil {
+		return partCensus{}, fmt.Errorf("census part kinds: %w", err)
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var (
+			kind  string
+			count int
+		)
+
+		if err := rows.Scan(&kind, &count); err != nil {
+			return partCensus{}, fmt.Errorf("scan census row: %w", err)
+		}
+
+		census.kinds[kind] = count
+		census.entries += count
+	}
+
+	if err := rows.Err(); err != nil {
+		return partCensus{}, fmt.Errorf("census part kinds: %w", err)
+	}
+
+	if err := handle.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM messages
+		WHERE parts IS NOT NULL AND parts != '[]' AND NOT json_valid(parts)`).
+		Scan(&census.unparseable); err != nil {
+		return partCensus{}, fmt.Errorf("count unparseable parts rows: %w", err)
+	}
+
+	return census, nil
+}
+
+// sortedHistogram renders a histogram deterministically for logs.
+func sortedHistogram(counts map[string]int) string {
+	kinds := make([]string, 0, len(counts))
+	for kind := range counts {
+		kinds = append(kinds, kind)
+	}
+
+	sort.Strings(kinds)
+
+	rendered := make([]string, 0, len(kinds))
+	for _, kind := range kinds {
+		rendered = append(rendered, fmt.Sprintf("%s=%d", kind, counts[kind]))
+	}
+
+	return "{" + strings.Join(rendered, " ") + "}"
+}
 
 // sweepTotals accumulates what one real-data sweep saw, for the final log.
 type sweepTotals struct {
@@ -14,6 +143,7 @@ type sweepTotals struct {
 	graphNodes    int
 	readFilePaths int
 	todoLists     int
+	partKinds     map[string]int
 }
 
 // sweepRealSession exercises every per-session read API against one real
@@ -36,6 +166,10 @@ func sweepRealSession(t *testing.T, db *DB, session Session, totals *sweepTotals
 
 	for _, message := range rows {
 		sliceParts += len(message.Parts)
+
+		for _, part := range message.Parts {
+			totals.partKinds[decodedPartKind(part)]++
+		}
 	}
 
 	streamed, iterParts := 0, 0
@@ -100,18 +234,9 @@ func TestAllAPIOnRealDatabase(t *testing.T) {
 
 	t.Parallel()
 
-	dataDir := os.Getenv("CRUSH_DATA_REAL_DATA_DIR")
-	if dataDir == "" {
-		candidate, err := filepath.Abs(filepath.Join("..", ".crush"))
-		if err != nil {
-			t.Skip("no real data dir")
-		}
-
-		if _, statErr := os.Stat(filepath.Join(candidate, DBName)); statErr != nil {
-			t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
-		}
-
-		dataDir = candidate
+	dataDir, ok := realDataDir(t)
+	if !ok {
+		t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
 	}
 
 	db, err := Open(dataDir)
@@ -129,6 +254,7 @@ func TestAllAPIOnRealDatabase(t *testing.T) {
 	}
 
 	var totals sweepTotals
+	totals.partKinds = make(map[string]int)
 
 	for _, session := range sessions {
 		sweepRealSession(t, db, session, &totals)
@@ -143,13 +269,197 @@ func TestAllAPIOnRealDatabase(t *testing.T) {
 	}
 
 	t.Logf(
-		"real database at %s: %d sessions, %d messages, %d parts, %d graph nodes, %d read-file paths, %d todo lists",
+		"real database at %s: %d sessions, %d messages, %d parts, part kinds %s, %d graph nodes, %d read-file paths, %d todo lists",
 		dataDir,
 		len(sessions),
 		totals.messages,
 		totals.parts,
+		sortedHistogram(totals.partKinds),
 		totals.graphNodes,
 		totals.readFilePaths,
 		totals.todoLists,
 	)
+}
+
+// decodedPartKind names a decoded part for the sweep histogram. UnknownPart
+// keeps its discriminator in the name so pass-through attachments and
+// corrupt payloads stay distinguishable from genuinely new part types.
+func decodedPartKind(part Part) string {
+	switch typed := part.(type) {
+	case TextPart:
+		return partText
+	case ReasoningPart:
+		return partReasoning
+	case ToolCallPart:
+		return partToolCall
+	case ToolResultPart:
+		return partToolResult
+	case FinishPart:
+		return partFinish
+	case ShellCommandPart:
+		return partShellCommand
+	case UnknownPart:
+		return "unknown:" + typed.Type
+	default:
+		return "unknown"
+	}
+}
+
+// TestPartDiscriminatorsCensusShape is the parts-envelope drift tripwire, the
+// TestDecodeTodosCensusShape equivalent for the `{type,data}` envelope: it
+// scans every parts entry of a real database raw, before decode — a new
+// upstream discriminator would decode as UnknownPart without a peep, which
+// is exactly the silent-drift hole this closes — and fails when a
+// discriminator outside the known set appears. Skipped without real data and
+// under -short.
+func TestPartDiscriminatorsCensusShape(t *testing.T) {
+	if testing.Short() {
+		t.Skip("real-data sweep (slow) in -short mode")
+	}
+
+	t.Parallel()
+
+	dataDir, ok := realDataDir(t)
+	if !ok {
+		t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
+	}
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatalf("Open real database: %v", err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	census, err := censusPartDiscriminators(context.Background(), db.handle)
+	if err != nil {
+		t.Fatalf("census parts: %v", err)
+	}
+
+	if unknown := census.unknownKinds(); len(unknown) > 0 {
+		t.Fatalf(
+			"unknown part discriminators %v in %s (histogram %s) — Crush added part types this library does not decode; extend decodePart and knownPartKinds",
+			unknown,
+			dataDir,
+			sortedHistogram(census.kinds),
+		)
+	}
+
+	t.Logf(
+		"parts census at %s: %d entries, kinds %s, %d unparseable rows",
+		dataDir,
+		census.entries,
+		sortedHistogram(census.kinds),
+		census.unparseable,
+	)
+}
+
+// TestPartDiscriminatorsCensusRegistry runs the census across every database
+// in a real registry: set CRUSH_DATA_REAL_REGISTRY to the global data
+// directory holding projects.json. Heavy — the local registry's largest
+// database is multi-gigabyte — so it is intended for upstream-verification
+// sessions (the AGENTS.md cadence), not the standard real-data pass. Fails on
+// any unknown discriminator.
+func TestPartDiscriminatorsCensusRegistry(t *testing.T) {
+	if testing.Short() {
+		t.Skip("registry census (slow) in -short mode")
+	}
+
+	t.Parallel()
+
+	globalDir := os.Getenv("CRUSH_DATA_REAL_REGISTRY")
+	if globalDir == "" {
+		t.Skip("registry census (heavy); set CRUSH_DATA_REAL_REGISTRY to the global data dir to run it")
+	}
+
+	ctx := context.Background()
+
+	projects, err := DiscoverProjects(ctx, DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	aggregate := partCensus{kinds: make(map[string]int)}
+	databases := 0
+
+	for _, project := range projects {
+		db, err := Open(project.DataDir)
+		if err != nil {
+			t.Logf("skipping %s: %v", project.DataDir, err)
+			continue
+		}
+
+		census, err := censusPartDiscriminators(ctx, db.handle)
+		_ = db.Close()
+
+		if err != nil {
+			t.Fatalf("census %s: %v", project.DataDir, err)
+		}
+
+		databases++
+		aggregate.entries += census.entries
+		aggregate.unparseable += census.unparseable
+		for kind, count := range census.kinds {
+			aggregate.kinds[kind] += count
+		}
+	}
+
+	if unknown := aggregate.unknownKinds(); len(unknown) > 0 {
+		t.Fatalf(
+			"unknown part discriminators %v across %d databases — Crush added part types this library does not decode; extend decodePart and knownPartKinds",
+			unknown,
+			databases,
+		)
+	}
+
+	t.Logf(
+		"registry census at %s: %d databases, %d entries, kinds %s, %d unparseable rows",
+		globalDir,
+		databases,
+		aggregate.entries,
+		sortedHistogram(aggregate.kinds),
+		aggregate.unparseable,
+	)
+}
+
+// TestPartDiscriminatorsCensusDetectsUnknown pins the tripwire's failure mode
+// on a fixture, so CI proves fail-loud behavior on every platform without
+// real data: a synthetic discriminator must surface in unknownKinds while
+// known and typeless entries must not.
+func TestPartDiscriminatorsCensusDetectsUnknown(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(handle *sql.DB) {
+		insertSession(t, handle, "session", "", "Session", 1, fixtureBase, fixtureBase)
+		insertMessage(t, handle, "message", "session", "assistant",
+			`[{"type":"text","data":{"text":"hi"}},{"type":"hologram","data":{"fov":90}},{"data":{"no":"type"}}]`,
+			fixtureModel, "", fixtureBase)
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	census, err := censusPartDiscriminators(context.Background(), db.handle)
+	if err != nil {
+		t.Fatalf("census parts: %v", err)
+	}
+
+	if got := census.kinds["text"]; got != 1 {
+		t.Fatalf("text count = %d, want 1 (histogram %s)", got, sortedHistogram(census.kinds))
+	}
+
+	if got := census.kinds[""]; got != 1 {
+		t.Fatalf("typeless count = %d, want 1 (histogram %s)", got, sortedHistogram(census.kinds))
+	}
+
+	unknown := census.unknownKinds()
+	if len(unknown) != 1 || unknown[0] != "hologram" {
+		t.Fatalf("unknownKinds() = %v, want [hologram]", unknown)
+	}
 }

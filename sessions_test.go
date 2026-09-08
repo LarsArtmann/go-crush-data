@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -347,18 +346,9 @@ func TestSessionTimestampsAreUTC(t *testing.T) {
 func TestSessionsOnRealDatabase(t *testing.T) {
 	t.Parallel()
 
-	dataDir := os.Getenv("CRUSH_DATA_REAL_DATA_DIR")
-	if dataDir == "" {
-		candidate, err := filepath.Abs(filepath.Join("..", ".crush"))
-		if err != nil {
-			t.Skip("no real data dir")
-		}
-
-		if _, statErr := os.Stat(filepath.Join(candidate, DBName)); statErr != nil {
-			t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
-		}
-
-		dataDir = candidate
+	dataDir, ok := realDataDir(t)
+	if !ok {
+		t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
 	}
 
 	db, err := Open(dataDir)
