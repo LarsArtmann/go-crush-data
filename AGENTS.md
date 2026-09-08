@@ -139,6 +139,16 @@ charmbracelet/crush; post needs user go-ahead).
 - **Workflow steps need `defaults.run.shell: bash`**: the windows-latest
   default is PowerShell, which splits `-flag=file` arguments differently
   and broke the coverage step once.
+- **Two lint binaries diverge: `nix run .#lint` is NOT CI's lint.** CI runs
+  `go tool golangci-lint run --timeout=5m ./...` (go.mod `tool` pin);
+  the nix lint app is a different build. Seen 2026-09-08: nix lint reported
+  0 issues while all three CI legs went red on 3 goconst findings
+  (`todos`/`messages` literals from the todos-probe work). Gate on the
+  go-tool command — it is byte-identical to CI. This also resolves the old
+  "goconst occurrence counting" mystery (2026-08-16 07:47 report f/10):
+  it was binary/version skew, not counting mechanics; note goconst's
+  per-string counts shift as you extract constants (fixing `messages`
+  pushed `sessions` over the threshold in the same run).
 - **Lint per file while writing tests** (`golangci-lint run <file>_test.go`),
   not after a large batch; and never trust `cmd | tail` without `pipefail`.
 - **golangci-lint's cache can serve ANOTHER tree's findings**: linting a
