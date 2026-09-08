@@ -44,47 +44,46 @@ Done and locally verified, but **uncommitted — CI (ubuntu/windows/macos
 legs) has never seen any of it**. Blocking: commit/push needs user
 instruction (question g/1).
 
-1. **`DecodeTodos` + `Todo`/`TodoStatus`** (todos.go, todos_test.go,
+_Resolved 2026-09-08: all five committed, pushed, and CI-green long ago
+(`6de2950`, then v0.3.0 at `4a2d1ec`)._
+
+1. ~~**`DecodeTodos` + `Todo`/`TodoStatus`** (todos.go, todos_test.go,
    example, fuzz target). Works, tested, scale-proven. Gaps: uncommitted;
-   Windows/macOS legs unverified. Effort to finish: S (commit + observe CI).
-2. **`DB.IterMessages`** (messages.go:49, shared `scanMessage` refactor).
-   Parity/early-break/empty/canceled-ctx tests green under race+shuffle.
-   Gaps: uncommitted; **no benchmark** — the repo keeps a committed bench
-   baseline (Sessions/Messages/AgentGraph) and I added a read path without
-   one. Effort: S (BenchmarkIterMessages) + M if regenerating baseline
-   (`-count=6` per AGENTS.md).
-3. **docs/recipes/registry-watching.md.** Written from the verified
-   harness. Gaps: uncommitted; verified on Linux only (fsnotify/inotify
-   paths; go-filewatcher self-documents cross-platform support but my
-   harness did not prove it).
-4. **Docs sweep** (README, FEATURES, CHANGELOG `[Unreleased]`, ROADMAP
+   Windows/macOS legs unverified.~~ done at `6de2950`, `4a2d1ec` — shipped
+   in v0.3.0, all matrix legs green, adopted by crush-daily
+2. ~~**`DB.IterMessages`** (messages.go:49, shared `scanMessage` refactor).~~
+   done at `6de2950`, `4a2d1ec` — shipped in v0.3.0; the missing benchmark
+   remains the one open thread → TODO_LIST T24
+3. ~~**docs/recipes/registry-watching.md.** Written from the verified
+   harness. Gaps: uncommitted; verified on Linux only.~~ done at
+   `6de2950` — shipped; still honestly Linux-verified (see f/11)
+4. ~~**Docs sweep** (README, FEATURES, CHANGELOG `[Unreleased]`, ROADMAP
    graduation + new non-decision, TODO_LIST T8, AGENTS.md, plan record
    docs/planning/2026-08-16_07-18-raw-ideas-graduation.md with per-task
-   verification). Gap: uncommitted; FEATURES/CHANGELOG claims become
-   CI-true only after push + green legs.
-5. **parts.go `jsonNull` constant** (drive-by goconst fix). Tested
-   (`TestDecodeParts` green). Gap: uncommitted; deserves a line in the
-   eventual commit message.
+   verification).~~ done at `6de2950` (and refreshed continuously since —
+   docs-health passes 2026-09-02/09-08)
+5. ~~**parts.go `jsonNull` constant** (drive-by goconst fix).~~ done at
+   `6de2950`
 
 ## c) NOT STARTED
 
-1. **Commit + push + CI observation** of this session's work. Not started
-   by design: user rule (never commit unless told). Priority: Critical —
-   everything in (b) is one `git push` away from real verification.
-2. **T8 — adopt DecodeTodos/IterMessages in crush-daily**
-   (TODO_LIST, 30m). The "second consumer" the todos helper was gated on.
-   Not started; needs user go-ahead (question g/3).
-3. **BenchmarkIterMessages + baseline decision.** Not started; see (b)/2.
-4. **v0.3.0 release.** CHANGELOG `[Unreleased]` now carries two `Added`
-   entries (DecodeTodos, IterMessages) on top of Fixed/Changed → minor
-   bump by the repo's SemVer policy. Not started; owner decision
-   (question g/2). RELEASING preconditions (all legs green on origin)
-   apply.
-5. **Harvesting this report's (f) list into TODO_LIST/ROADMAP**
-   (docs-health HARVEST). Deferred: user said report, then wait.
-6. **doc.go mention of the new APIs.** doc.go is conceptual, not an API
-   index, so nothing is false today; a sentence on streaming/todos would
-   still fit its "Schema drift"/"Read-only" narrative. Low priority.
+_Resolved 2026-09-08: #1–#4, #6 shipped; #5 executed by the 2026-09-07/08
+harvest sessions; remaining threads live in TODO_LIST._
+
+1. ~~**Commit + push + CI observation** of this session's work.~~ done at
+   `6de2950` (+ v0.3.0 `4a2d1ec`) — all matrix legs green
+2. ~~**T8 — adopt DecodeTodos/IterMessages in crush-daily**
+   (TODO_LIST, 30m).~~ done — executed by the 08:50 session
+   (`e1c3114`, `04e6c63` in crush-daily); T8 retired
+3. **BenchmarkIterMessages + baseline decision.** ← still open —
+   TODO_LIST T24 (now also covers baseline regeneration)
+4. ~~**v0.3.0 release.**~~ done at `4a2d1ec` — cut, tagged, proxy serves,
+   GitHub Release published
+5. ~~**Harvesting this report's (f) list into TODO_LIST/ROADMAP**
+   (docs-health HARVEST).~~ done — T-numbered items absorbed into the
+   living TODO_LIST; this annotate pass closed the rest
+6. **doc.go mention of the new APIs.** ← still open — TODO_LIST T14
+   (broader: document the parts envelope too)
 
 ## d) TOTALLY FUCKED UP
 
@@ -142,50 +141,49 @@ honest failures are process failures:
 
 ## f) Next tasks (ranked)
 
-| #  | Task                                                                                                                                                              | Impact   | Effort | Category    |
-| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ----------- |
-| 1  | Commit this session's work (see question g/1 for granularity)                                                                                                     | Critical | S      | Cleanup     |
-| 2  | Push + observe all three CI legs green                                                                                                                            | Critical | S      | CI          |
-| 3  | T8: adopt DecodeTodos/IterMessages in crush-daily                                                                                                                 | High     | M      | Feature     |
-| 4  | Add BenchmarkIterMessages; regenerate baseline if trend shifts                                                                                                    | High     | M      | Quality     |
-| 5  | Cut v0.3.0 after legs green (2× Added ⇒ minor)                                                                                                                    | High     | S      | Release     |
-| 6  | Verify pkg.go.dev renders v0.3.0 + spot-check new symbols (extends T4)                                                                                            | Medium   | S      | Docs        |
-| 7  | Observe first nightly fuzz incl. FuzzDecodeTodos (extends T2)                                                                                                     | Medium   | S      | CI          |
-| 8  | HARVEST this report's (f) into TODO_LIST/ROADMAP                                                                                                                  | Medium   | S      | Docs        |
-| 9  | Investigate LSP-vs-CLI lint divergence; pin note in AGENTS.md                                                                                                     | Medium   | S      | Tooling     |
-| 10 | Reproduce goconst's occurrence counting (comments? tests?) and document it in AGENTS.md tooling gotchas                                                           | Medium   | S      | Tooling     |
-| 11 | Cross-platform note for the recipe (or a macOS runner check for the harness pattern)                                                                              | Low      | S      | Docs        |
-| 12 | doc.go: one sentence each for streaming + todos under existing sections                                                                                           | Low      | S      | Docs        |
-| 13 | T1 (Renovate app install) — still external, config validates                                                                                                      | Medium   | S      | CI          |
-| 14 | T3 (first flake-lock PR observation)                                                                                                                              | Low      | S      | CI          |
-| 15 | T6 (mine fuzz corpus seeds once nightly runs exist)                                                                                                               | Low      | M      | Quality     |
-| 16 | T7 (pin action SHAs via Renovate after T1)                                                                                                                        | Low      | S      | CI          |
-| 17 | Upstream mindwalk PR (Parked; needs go-ahead)                                                                                                                     | Medium   | M      | Ecosystem   |
-| 18 | File/refresh the charmbracelet/crush schema-docs issue; link it in Parked                                                                                         | Medium   | S      | Ecosystem   |
-| 19 | Consider a `DecodeTodos` strictness knob ONLY if a real consumer hits drift (none has)                                                                            | Low      | S      | Feature     |
-| 20 | Re-run census after next Crush release; update pinned shape if drifted                                                                                            | Low      | S      | Maintenance |
-| 21 | Add `IterMessages` + `DecodeTodos` to example_test.go "all APIs" coverage check (both have examples; keep the invariant: every public API has a runnable example) | Low      | S      | Docs        |
+| #  | Task                                                                                                                                                              | Impact   | Effort | Category    | Resolution (2026-09-08 annotate pass)                     |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ----------- | --------------------------------------------------------- |
+| 1  | ~~Commit this session's work (see question g/1 for granularity)~~                                                                                                 | Critical | S      | Cleanup     | Done at `6de2950`                                         |
+| 2  | ~~Push + observe all three CI legs green~~                                                                                                                        | Critical | S      | CI          | Done — legs green; standing record in FEATURES             |
+| 3  | ~~T8: adopt DecodeTodos/IterMessages in crush-daily~~                                                                                                             | High     | M      | Feature     | Done (crush-daily `e1c3114`, `04e6c63`)                   |
+| 4  | Add BenchmarkIterMessages; regenerate baseline if trend shifts                                                                                                    | High     | M      | Quality     | Still open — TODO_LIST T24                                |
+| 5  | ~~Cut v0.3.0 after legs green (2× Added ⇒ minor)~~                                                                                                                | High     | S      | Release     | Done at `4a2d1ec`                                         |
+| 6  | ~~Verify pkg.go.dev renders v0.3.0 + spot-check new symbols (extends T4)~~                                                                                        | Medium   | S      | Docs        | Done 2026-09-08 — page renders v0.3.0 + both examples      |
+| 7  | ~~Observe first nightly fuzz incl. FuzzDecodeTodos (extends T2)~~                                                                                                 | Medium   | S      | CI          | Done — runs green continuously (observed 2026-09-08)      |
+| 8  | ~~HARVEST this report's (f) into TODO_LIST/ROADMAP~~                                                                                                              | Medium   | S      | Docs        | Done — absorbed into the T-numbered TODO_LIST             |
+| 9  | Investigate LSP-vs-CLI lint divergence; pin note in AGENTS.md                                                                                                     | Medium   | S      | Tooling     | **Won't investigate — no recurrence in 3 weeks; toolchain + lint config refreshed since (`83d2ad6`); the CLI gate result is already treated as authoritative** |
+| 10 | Reproduce goconst's occurrence counting (comments? tests?) and document it in AGENTS.md tooling gotchas                                                           | Medium   | S      | Tooling     | **Won't investigate — the actionable lesson ("read the linter's remedy first") is recorded in this report's e/1; the detector mechanics add nothing** |
+| 11 | Cross-platform note for the recipe (or a macOS runner check for the harness pattern)                                                                              | Low      | S      | Docs        | **Won't implement — recipe states its Linux-only verification honestly; no macOS demand since** |
+| 12 | doc.go: one sentence each for streaming + todos under existing sections                                                                                           | Low      | S      | Docs        | Still open — folded into TODO_LIST T14                    |
+| 13 | T1 (Renovate app install) — still external, config validates                                                                                                      | Medium   | S      | CI          | Still open — TODO_LIST T1                                 |
+| 14 | T3 (first flake-lock PR observation)                                                                                                                              | Low      | S      | CI          | Changed shape — first run failed 2026-09-01 (permissions); fixed 2026-09-08, TODO_LIST T3 |
+| 15 | T6 (mine fuzz corpus seeds once nightly runs exist)                                                                                                               | Low      | M      | Quality     | Still open — TODO_LIST T6 (artifacts now exist)           |
+| 16 | T7 (pin action SHAs via Renovate after T1)                                                                                                                        | Low      | S      | CI          | Still open — TODO_LIST T7                                 |
+| 17 | Upstream mindwalk PR (Parked; needs go-ahead)                                                                                                                     | Medium   | M      | Ecosystem   | Still parked — TODO_LIST "Parked"                        |
+| 18 | File/refresh the charmbracelet/crush schema-docs issue; link it in Parked                                                                                          | Medium   | S      | Ecosystem   | Routed — superseded by the read-access Discussion draft (docs/upstream-read-access-discussion-draft.md, TODO_LIST "Parked") |
+| 19 | Consider a `DecodeTodos` strictness knob ONLY if a real consumer hits drift (none has)                                                                            | Low      | S      | Feature     | **Won't implement — the gate (real consumer drift) has not fired** |
+| 20 | Re-run census after next Crush release; update pinned shape if drifted                                                                                            | Low      | S      | Maintenance | Done as process — encoded in the AGENTS.md verification cadence |
+| 21 | ~~Add `IterMessages` + `DecodeTodos` to example_test.go "all APIs" coverage check~~                                                                              | Low      | S      | Docs        | Done — both examples render on pkg.go.dev (verified 2026-09-08) |
 
 (21 real items; padded filler withheld — the skill allows up to 50, not
 a quota.)
 
 ## g) Questions I cannot answer myself
 
-1. **Commit granularity for this session's work.** Options: (a) one commit
-   "feat: DecodeTodos + IterMessages + registry-watching recipe", (b)
-   split — feature code / recipe+docs / fuzz+workflow fix, (c) you review
-   the diff first. I cannot know your preference, and the auto-commit
-   daemon may race me — say the word and I commit per your choice.
-2. **Cut v0.3.0 once CI legs are green, or hold for T8 (crush-daily
-   adoption) first?** Releasing before adoption makes the API public
-   before its second consumer validates the ergonomics; holding keeps
-   `[Unreleased]` growing. Owner call.
-3. **Is T8 mine to execute (next session in ~/projects/crush-daily), or
-   yours?** The task lives in this repo's TODO_LIST with an estimate, but
-   it edits a different codebase — I need your go-ahead before touching it
-   (same class as the Parked mindwalk PR).
+_Resolved 2026-09-08: all three since decided by subsequent sessions._
+
+1. ~~**Commit granularity for this session's work.**~~ resolved — one
+   feature commit `6de2950` landed it ("feat: graduate three roadmap
+   ideas…"), matching option (a).
+2. ~~**Cut v0.3.0 once CI legs are green, or hold for T8 (crush-daily
+   adoption) first?**~~ resolved — adoption first: T8 executed 08:50, then
+   v0.3.0 cut (`4a2d1ec`).
+3. ~~**Is T8 mine to execute (next session in ~/projects/crush-daily), or
+   yours?**~~ resolved — the next session executed it with the user's
+   go-ahead.
 
 ---
 
-_Report ends. Waiting for instructions. Section (f) is pending HARVEST into
-TODO_LIST/ROADMAP until instructed._
+_Report ends. Originally left awaiting harvest instructions; (f) has since
+been harvested and every item resolved or routed (2026-09-08 annotate
+pass)._
