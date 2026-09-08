@@ -61,8 +61,11 @@ run_step "upstream drift (pinned clone)" scripts/check-upstream-drift.sh
 run_step "real-data sweeps" go test -run 'TestAllAPIOnRealDatabase|TestPartDiscriminatorsCensusShape' .
 
 if [[ -n ${CRUSH_DATA_REAL_REGISTRY:-} ]]; then
+	# 45m, not 30m: under local-consumer contention (a running indexer or
+	# concurrent sessions) per-DB 60s skips accumulate and sank a 30m run
+	# on 2026-09-08; the budget must survive a contended registry.
 	run_step "registry census (heavy)" \
-		go test -run TestPartDiscriminatorsCensusRegistry -timeout 30m .
+		go test -run TestPartDiscriminatorsCensusRegistry -timeout 45m .
 else
 	record "registry census (heavy)" SKIPPED
 	echo "==> registry census (heavy): SKIPPED (set CRUSH_DATA_REAL_REGISTRY to run it)"

@@ -44,13 +44,15 @@ On every new charmbracelet/crush **stable** release (not nightly):
 4. re-run the real-data sweeps (`TestAllAPIOnRealDatabase` on the largest
    local registry DB, plus the parts-discriminator census:
    `CRUSH_DATA_REAL_REGISTRY=<global dir> go test -run
-   TestPartDiscriminatorsCensusRegistry -timeout 30m .`) and update the
+   TestPartDiscriminatorsCensusRegistry -timeout 45m .` — 45m because
+   contention from a running indexer makes per-DB 60s skips accumulate;
+   a 30m run sank that way on 2026-09-08) and update the
    last-verified tag below,
 5. refresh the schema snapshot and its doc:
    `go run ./scripts/genschema -migrations <clone>/internal/db/migrations
-   > docs/storage-schema-<version>.sql`(rename to the new version), extend
-   the fixture DDL until`TestFixtureSchemaMatchesUpstreamSnapshot`passes,
-   and update`docs/storage-schema-<version>.md`.
+   > docs/storage-schema-<version>.sql` (rename to the new version), extend
+   the fixture DDL until `TestFixtureSchemaMatchesUpstreamSnapshot` passes,
+   and update `docs/storage-schema-<version>.md`.
 
 A weekly CI job (`.github/workflows/upstream-drift.yml`) runs the drift
 script, and its `release-notice` job opens a tracking issue automatically

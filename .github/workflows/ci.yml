@@ -56,7 +56,11 @@ jobs:
         run: go build ./...
 
       - name: Test (race + shuffle + count=2 + coverage)
-        run: go test -race -shuffle=on -count=2 -coverprofile=coverage.out -covermode=atomic ./...
+        # -coverpkg=. scopes the coverage profile to the library package:
+        # scripts/ holds scratch tooling with no tests, and Go >=1.22 emits
+        # those packages into -coverprofile at 0%, dragging the merged total
+        # under the gate even when library coverage is fine.
+        run: go test -race -shuffle=on -count=2 -coverprofile=coverage.out -covermode=atomic -coverpkg=. ./...
 
       - name: Coverage gate (≥85%)
         shell: bash
