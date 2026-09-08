@@ -20,7 +20,7 @@ nix flake check       # build + format
 nix run .#lint        # golangci-lint (~90 linters; run per-file while writing tests)
 nix run .#test        # race test via nix
 CRUSH_UPSTREAM_DIR=/tmp/crush-upstream scripts/check-upstream-drift.sh  # pinned-crush migrations vs capability guard
-scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard
+scripts/check-vendor-hash.sh  # local copy of the CI go.sum↔vendorHash drift guard (run after every go get / go mod tidy)
 scripts/check-doc-links.sh    # markdown links + file:line citations in root docs resolve (runs in CI)
 ```
 

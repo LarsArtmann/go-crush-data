@@ -6,7 +6,10 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  # create-pull-request pushes a branch; the 2026-09-01 scheduled run failed
+  # with "Permission to LarsArtmann/go-crush-data.git denied to
+  # github-actions[bot]" under the previous contents: read.
+  contents: write
 
 jobs:
   update-lock:

@@ -24,7 +24,7 @@ infrastructure that fails loudly before shipping.
   consumer hits thousands of sessions per data dir; `SessionFilter.Limit`
   covers current consumers. Source: docs/status/2026-09-07_21-59…verification.md (f)19.
 - **Exposing `files`-table snapshots (`ReadFileVersions`)** — upstream still
-  writes file snapshots (v0.92.0 `internal/history/file.go`), the initial
+  writes file snapshots (v0.92.0 internal/history/file.go), the initial
   migration carries the table, and this library deliberately does not read
   it. Graduate only when a consumer asks for versioned file content.
   Source: same report (f)34.

@@ -21,13 +21,13 @@ renumbered, and deleting an item retires its ID for good.
 ## Medium
 
 - [ ] **T11** Fixture test pinning `CRUSH_GLOBAL_DATA`-is-a-directory
-      semantics (upstream joins `crush.json` then takes `dir`). 20m —
+      semantics (upstream joins crush.json then takes dir). 20m —
       `discover_test.go`; source: same report (f)12
 - [ ] **T12** Fixture test: `crush projects --json` with an empty registry →
       empty result, no error (runs the real CLI fallback path). 20m —
       `discover_test.go`; source: same report (f)13/(b)4
 - [ ] **T13** Storage-schema snapshot doc per verified release
-      (`docs/storage-schema-v0.92.0.md`): tables, columns, migrations as
+      docs/storage-schema-v0.92.0.md: tables, columns, migrations as
       verified against the pinned source. 30m — `docs/`; source: same
       report (f)14
 - [ ] **T14** Document the parts envelope `{type,data}` + all 8 upstream
@@ -42,7 +42,7 @@ renumbered, and deleting an item retires its ID for good.
       `stats_test.go`; source: same report (f)20
 - [ ] **T17** GitHub Action: open an issue when a new crush stable release
       lands (drives the AGENTS.md verification cadence; the weekly
-      `upstream-drift.yml` job already covers scheduled detection).
+      weekly upstream-drift.yml job already covers scheduled detection).
       1h — `.github/workflows/`; source: same report (f)33
 
 ## Low

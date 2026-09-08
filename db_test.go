@@ -30,23 +30,29 @@ func TestOpenSQLitePragmas(t *testing.T) {
 	db := openFixture(t, schemaCurrent)
 	t.Cleanup(func() { _ = db.Close() })
 
+	ctx := context.Background()
+
 	var busyTimeout int
-	if err := db.handle.QueryRow("PRAGMA busy_timeout").Scan(&busyTimeout); err != nil {
+
+	if err := db.handle.QueryRowContext(ctx, "PRAGMA busy_timeout").Scan(&busyTimeout); err != nil {
 		t.Fatalf("read busy_timeout: %v", err)
 	}
+
 	if busyTimeout != 5000 {
 		t.Fatalf("busy_timeout = %d, want 5000", busyTimeout)
 	}
 
 	var queryOnly int
-	if err := db.handle.QueryRow("PRAGMA query_only").Scan(&queryOnly); err != nil {
+
+	if err := db.handle.QueryRowContext(ctx, "PRAGMA query_only").Scan(&queryOnly); err != nil {
 		t.Fatalf("read query_only: %v", err)
 	}
+
 	if queryOnly != 1 {
 		t.Fatalf("query_only = %d, want 1", queryOnly)
 	}
 
-	if _, err := db.handle.Exec("CREATE TABLE must_fail (id TEXT)"); err == nil {
+	if _, err := db.handle.ExecContext(ctx, "CREATE TABLE must_fail (id TEXT)"); err == nil {
 		t.Fatal("write through the read-only handle unexpectedly succeeded")
 	}
 }
