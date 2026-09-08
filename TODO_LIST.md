@@ -10,19 +10,6 @@ renumbered, and deleting an item retires its ID for good.
 
 ## Medium
 
-- [ ] **T11** Fixture test pinning `CRUSH_GLOBAL_DATA`-is-a-directory
-      semantics (upstream joins crush.json then takes dir). 20m —
-      `discover_test.go`; source: same report (f)12
-- [ ] **T12** Fixture test: `crush projects --json` with an empty registry →
-      empty result, no error (runs the real CLI fallback path). 20m —
-      `discover_test.go`; source: same report (f)13/(b)4
-- [ ] **T13** Storage-schema snapshot doc per verified release
-      docs/storage-schema-v0.92.0.md: tables, columns, migrations as
-      verified against the pinned source. 30m — `docs/`; source: same
-      report (f)14
-- [ ] **T14** Document the parts envelope `{type,data}` + all 8 upstream
-      discriminators in `doc.go` (currently only in AGENTS.md storage
-      facts). 20m — `doc.go`; source: same report (f)15
 - [ ] **T15** `Schema.MissingColumns()` omits the read_files _table_;
       consider `MissingCapabilities()` covering tables (small API break —
       needs a user call). 30m — `schema.go`; source: same report (f)16
@@ -64,32 +51,15 @@ renumbered, and deleting an item retires its ID for good.
       `go test -fuzz=DecodeParts` + `go test -fuzz=DecodeTodos` each time
       upstream verification runs (targets + CI workflow exist; never run
       locally). 5m — fuzz targets; source: same report (f)18
-- [ ] **T19** Cite upstream `projects.Register()` sort (LastAccessed desc)
-      in the dedupe doc comment — justifies "most recent wins". 10m —
-      `discover.go`; source: same report (f)22
 - [ ] **T21** Investigate the `crush.db?_loc=auto` stray file in
       `/home/lars/projects/.crush` (present 2026-09-07, 0 bytes; a second
       `crush.db?_loc=auto&_time_format=sqlite` appeared with it — likely a
       tool mishandling a SQLite URI; harmless to this library — it opens
       exact paths). Trash once understood. 20m — local data dir; source:
       same report (f)25 + 2026-09-08_15-31 report (c)P8
-- [ ] **T25** Pin registry `last_accessed` UTC round-trip with a test
-      (upstream writes `time.Now().UTC()`). 15m — `discover_test.go`;
-      source: same report (f)30
-- [ ] **T27** Test: registry parse tolerates unknown top-level keys (future
-      upstream fields must not break Discovery). 20m — `discover_test.go`;
-      source: same report (f)37
 - [ ] **T28** Decide whether summary messages (`is_summary_message = 1`)
       should count in day filters/stats, and pin the answer. 30m —
       `sessions.go`, `stats.go`; source: same report (f)38
-- [ ] **T29** Add shellcheck to the devShell and run it over `scripts/`
-      (three bash guard scripts, today only battle-tested by running
-      them). 20m — `flake.nix`, `scripts/`; source:
-      docs/status/archived/2026-08-16_04-20_v0.2.1-release-plan-execution-and-self-review.md (e)4/(f)11
-- [ ] **T33** Add the docs-health cadence rule to AGENTS.md (after every
-      release and any 50+-item session — proposed 2026-08-16, never
-      landed; this audit found a Critical split brain 3 weeks after the
-      last "full sync"). 15m — `AGENTS.md`; source: same report (f)9
 - [ ] **T36** flake.nix lint app drops extra arguments (`exec golangci-lint
       run ./...` is hardcoded): pass `"$@"` through so `nix run .#lint --
       <args>` stops silently ignoring them — the false-belief trap hit one

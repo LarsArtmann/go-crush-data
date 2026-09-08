@@ -51,6 +51,16 @@ confirmed still written by v0.92.0 via internal/history). A weekly CI job
 
 Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestSessionsOnRealDatabase|TestAllAPIOnRealDatabase'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Re-run both after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
+## Docs-health cadence (T33)
+
+Run a docs-health pass (TODO_LIST ↔ FEATURES ↔ CHANGELOG ↔ reality sync;
+annotate stale status reports) after **every release** and after **any
+session that touches 50+ list items**. The 2026-08-16 proposal for this
+rule never landed, and the 2026-09-08 audit found a Critical split brain
+that had lived 3 weeks after the last "full sync" — the absence of a
+cadence rule was the root cause. A pass takes minutes; skipping it is how
+documentation rots silently.
+
 ## Architecture (single root package `crushdata`)
 
 | File        | Role                                                                                                                                                                                                                                                                                                                                                                                                |
