@@ -98,6 +98,22 @@ renumbered, and deleting an item retires its ID for good.
       (three bash guard scripts, today only battle-tested by running
       them). 20m — `flake.nix`, `scripts/`; source:
       docs/status/archived/2026-08-16_04-20_v0.2.1-release-plan-execution-and-self-review.md (e)4/(f)11
+- [ ] **T30** Restore the ~15 compressed annotation bodies in archived
+      reports to full original-text strikethrough form (02:13 b/c,
+      08:50 d/e5–e10, 04:20 b-tails; originals in git history) — or
+      record the accept-decision and close. 30m — `docs/*/archived/`;
+      source: 2026-09-08_05-26 report (d)1/(f)3
+- [ ] **T31** Archived→archived reference sweep: grep `docs/status/2026-`,
+      `docs/planning/2026-` inside archived/ and repoint at `archived/`
+      paths. 10m — `docs/*/archived/`; source: same report (f)4
+- [ ] **T32** Add `-cover` to the docs-health gate line; refresh the
+      FEATURES coverage number and the bench.yml "observed green" date
+      (both stale since 2026-08-15/16). 15m — `AGENTS.md`, `FEATURES.md`;
+      source: same report (e)5/(f)5/(f)6
+- [ ] **T33** Add the docs-health cadence rule to AGENTS.md (after every
+      release and any 50+-item session — proposed 2026-08-16, never
+      landed; this audit found a Critical split brain 3 weeks after the
+      last "full sync"). 15m — `AGENTS.md`; source: same report (f)9
 
 ## External (waiting on GitHub UI, schedules, or upstream)
 
@@ -109,6 +125,10 @@ renumbered, and deleting an item retires its ID for good.
       github-actions bot") reaches origin: observe the first successful
       flake-lock PR and that the vendorHash guard behaves. 5m —
       `.github/workflows/flake-update.yml`
+- [ ] **T34** Observe the first SCHEDULED `upstream-drift.yml` run
+      (Mondays 03:47 UTC; first = 2026-09-14) — the workflow_dispatch
+      run on 2026-09-08 was green (5s). 5m —
+      `.github/workflows/upstream-drift.yml`
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 
