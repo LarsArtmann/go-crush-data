@@ -110,6 +110,7 @@ func censusPartDiscriminators(ctx context.Context, handle *sql.DB) (partCensus, 
 	// rowids start at 1, so a lower bound of 0 selects every row in full mode.
 	lowerBound := int64(0)
 	full := os.Getenv("CRUSH_DATA_CENSUS_FULL") == "1"
+
 	if !full {
 		lowerBound = maxRowID - partCensusWindow
 	}

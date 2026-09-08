@@ -278,6 +278,18 @@ linters:
         text: unused
         linters:
           - unused
+      # censusprobe is machine-local scratch tooling (T10 census canary):
+      # printing to stdout is its entire job and thresholds like the 2000-row
+      # window are one-off constants, so print/style rules don't apply.
+      - path: ^scripts/censusprobe/
+        linters:
+          - forbidigo
+          - mnd
+          - nlreturn
+          - wsl_v5
+          - noctx
+          - sqlclosecheck
+          - modernize
     paths:
       - _templ\.go$
       - \.gen\.go$
