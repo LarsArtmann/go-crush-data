@@ -52,10 +52,6 @@ renumbered, and deleting an item retires its ID for good.
       five runs success). ongoing — `.github/workflows/fuzz.yml`
 - [ ] **T7** Pin GitHub action versions via Renovate once the app is
       installed (depends on T1). 10m — `.github/workflows/*.yml`
-- [ ] **T9** Report the `time.UnixMilli` date bug to openusage and
-      mnemo (sessions land in 1970; both cite Crush's lying migration
-      comment as their schema reference). Needs user go-ahead. 10m each
-      — upstream of this repo
 - [ ] **T18** Verification-session fuzz cadence: 30s
       `go test -fuzz=DecodeParts` + `go test -fuzz=DecodeTodos` each time
       upstream verification runs (targets + CI workflow exist; never run
@@ -63,11 +59,6 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T19** Cite upstream `projects.Register()` sort (LastAccessed desc)
       in the dedupe doc comment — justifies "most recent wins". 10m —
       `discover.go`; source: same report (f)22
-- [ ] **T20** Outbound upstream issue (run verify-before-filing first):
-      sessions/messages migration comments claim milliseconds while
-      `update_sessions_updated_at` writes `strftime('%s','now')` (seconds)
-      and the CLI renders `time.Unix(CreatedAt, 0)`. 30m — upstream; source:
-      same report (f)24
 - [ ] **T21** Investigate the `crush.db?_loc=auto` stray file in
       `/home/lars/projects/.crush` (present 2026-09-07; likely a tool
       mishandling a SQLite URI; harmless to this library — it opens exact
@@ -123,11 +114,18 @@ renumbered, and deleting an item retires its ID for good.
       (Mondays 03:47 UTC; first = 2026-09-14) — the workflow_dispatch
       run on 2026-09-08 was green (5s). 5m —
       `.github/workflows/upstream-drift.yml`
+- [ ] **T35** Monitor upstream responses to the 2026-09-08 filing
+      campaign — [crush discussion #3740](https://github.com/charmbracelet/crush/discussions/3740),
+      fix PRs [openusage#357](https://github.com/janekbaraniewski/openusage/pull/357) +
+      [mnemo#22](https://github.com/Pilan-AI/mnemo/pull/22), comment on
+      [crush#3576](https://github.com/charmbracelet/crush/pull/3576) — and
+      run Phase G (adoption suggestions) once both fix PRs merge. Daily
+      pass — `docs/status/2026-09-08_filing-campaign-plan.md`
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 
 - Upstream PR to cosmtrek/mindwalk for the `sdk/go-crush-data` branch
   (Stream X T24; needs user go-ahead to push).
-- Post the charmbracelet/crush read-access Discussion from
-  docs/upstream-read-access-discussion-draft.md (Stream X T20; needs
-  user go-ahead; link it here once posted).
+- charmbracelet/crush read-access Discussion: POSTED 2026-09-08 as
+  [discussion #3740](https://github.com/charmbracelet/crush/discussions/3740)
+  (Ideas; body verified). Follow-ups tracked as TODO_LIST T35.
