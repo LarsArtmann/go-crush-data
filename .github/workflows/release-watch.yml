@@ -1,0 +1,54 @@
+name: Release watch
+
+on:
+  schedule:
+    - cron: "23 4 * * *" # daily, clear of the Monday 03:47 drift slot
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    name: Open an issue when a new crush stable lands
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect new upstream stable and open the cadence issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          tag="$(gh api repos/charmbracelet/crush/releases/latest --jq .tag_name)"
+          if [ -z "$tag" ]; then
+            echo "no stable release found upstream" >&2
+            exit 1
+          fi
+
+          echo "upstream latest stable: $tag"
+
+          existing="$(gh issue list --state open --search "in:title \"crush $tag released\"" --json number --jq 'length')"
+          if [ "$existing" -ne 0 ]; then
+            echo "cadence issue for $tag already open — nothing to do"
+            exit 0
+          fi
+
+          gh issue create \
+            --title "crush $tag released — run the upstream verification cadence" \
+            --body "$(cat <<EOF
+          Upstream [charmbracelet/crush](https://github.com/charmbracelet/crush) shipped stable release \`$tag\`.
+
+          Run the AGENTS.md "Upstream verification cadence":
+
+          - [ ] bump \`crush_ref\`/\`crush_sha\` at the top of \`scripts/check-upstream-drift.sh\` to \`$tag\`
+          - [ ] run the script and resolve any drift (probe or document-exempt, extend the guard list)
+          - [ ] re-run \`TestUpstreamMigrationColumnsAreProbedOrExempt\`
+          - [ ] re-run the real-data sweeps (\`TestAllAPIOnRealDatabase\`, \`TestStatsParityWithCrushDailySQLOnRealDatabase\`, \`TestPartDiscriminatorsCensusRegistry\`)
+          - [ ] refresh \`docs/storage-schema-*.md\` to a \`$tag\` snapshot
+          - [ ] update the "Last verified" line in AGENTS.md
+          - [ ] run a docs-health pass (T33 cadence rule)
+          EOF
+          )"
+
+          echo "cadence issue opened for $tag"

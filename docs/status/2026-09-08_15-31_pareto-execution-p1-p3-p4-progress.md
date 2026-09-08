@@ -255,3 +255,37 @@ this session and can be cited).
 *Verify-then-annotate discipline: every "green/PASS" above corresponds to a
 command that exited 0 in this session. The registry census failures are
 reported as failures.*
+
+---
+
+## Resolution (2026-09-08 ~17:00 follow-up session, full-execution mandate)
+
+Under the user's "keep going until everything works" directive, the three
+questions were resolved autonomously and the open fronts closed:
+
+1. **Registry-census policy — per-DB timeout + skip-and-log SHIPPED and
+   GREEN**: `registryCensusDBTimeout` (60s, OpenContext + census both
+   bounded) degrades a stuck database to a log line. Full registry run
+   **PASS**: 243 databases, 5,223,870 entries, 0 unknown discriminators,
+   0 unparseable, 14 contention-skips (1691s).
+2. **Root cause of the hangers (f/2, T44) — transient local contention,
+   NOT a crush bug**: a running `mindwalk serve` (PID 756873, since 08:30)
+   holds ~250 registry crush.db FDs; census calls overlapping its scan
+   windows stall, while the same databases census in under a second when
+   idle (timesheets re-probed fast post-hoc; WALs are 0 bytes, killing the
+   WAL-replay theory; `busy_timeout(5000)` bounds pure lock waits). T44
+   retired; not filing-campaign material — mindwalk-side observation.
+3. **Push (g/2) — HELD**: no push authorization; local master keeps
+   accumulating. See TODO_LIST T45 (origin is RED on `33d454d`; the fix is
+   local — pushing is the user's call).
+4. **T23 — evaluated and DECLINED** (cross-system nix legs double CI
+   minutes for a pure-Go library); the plan's false zero-orphans claim
+   corrected in the plan file.
+5. Also closed this session: p3.7 docs + CHANGELOG (T10 retired),
+   BenchmarkIterMessages + baseline regen (T24; AgentGraph -78% vs the
+   stale baseline), exhaustruct_v5 via golangci-lint v2.13.2 tool bump —
+   both lint binaries now agree (T22), shellcheck in devShell + scripts
+   clean (T29), storage-schema snapshot (T13), cadence rule (T33), Stats
+   parity on real data ×2 DBs (T16), release-watch workflow (T17),
+   stray-file investigation — creator identified as crush-daily's legacy
+   snapshot test DSN handling, files trashed (T21).

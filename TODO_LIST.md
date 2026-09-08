@@ -12,7 +12,11 @@ renumbered, and deleting an item retires its ID for good.
 
 - [ ] **T15** `Schema.MissingColumns()` omits the read_files _table_;
       consider `MissingCapabilities()` covering tables (small API break —
-      needs a user call). 30m — `schema.go`; source: same report (f)16
+      needs a user call). 30m — `schema.go`; source: same report (f)16.
+      Evidence 2026-09-08: a pure ADDITION (`MissingCapabilities()` new
+      method, `MissingColumns()` kept delegating) breaks nothing — the
+      "break" only exists if MissingColumns is replaced; recommendation
+      pending user call.
 
 ## Low
 

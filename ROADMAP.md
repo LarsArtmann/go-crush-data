@@ -47,6 +47,12 @@ infrastructure that fails loudly before shipping.
   both would be probe-gated), or is the library deliberately minimal for
   crush-daily's needs? `Message.UpdatedAt` already landed (initial-schema
   column, no probe needed). Source: docs/status/archived/2026-09-07_21-59_upstream-v0.92.0-storage-verification.md (g)2/(f)10.
+  Evidence 2026-09-08 (prevalence, two real DBs): summary messages are
+  ~0.1% of messages (750/703,387 and 14/13,790); ~3.6–4.1% of sessions
+  carry `summary_message_id`; spread over 71 distinct days. Counting
+  semantics already decided inclusive and pinned
+  (`TestSummaryMessagesAreCounted`); this question is only about
+  EXPOSING the fields.
 
 ## Recorded non-decisions (anti-drift)
 
