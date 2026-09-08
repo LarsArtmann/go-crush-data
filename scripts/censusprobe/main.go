@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LarsArtmann/go-crush-data"
+	crushdata "github.com/LarsArtmann/go-crush-data"
 	_ "modernc.org/sqlite"
 )
 

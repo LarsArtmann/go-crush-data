@@ -2,23 +2,29 @@ goos: linux
 goarch: amd64
 pkg: github.com/LarsArtmann/go-crush-data
 cpu: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S          
-BenchmarkSessionsList-32    	     424	   2693182 ns/op	 1491194 B/op	   20051 allocs/op
-BenchmarkSessionsList-32    	     450	   2645484 ns/op	 1491151 B/op	   20051 allocs/op
-BenchmarkSessionsList-32    	     452	   2646900 ns/op	 1491156 B/op	   20051 allocs/op
-BenchmarkSessionsList-32    	     446	   2661562 ns/op	 1491149 B/op	   20051 allocs/op
-BenchmarkSessionsList-32    	     442	   2658962 ns/op	 1491147 B/op	   20051 allocs/op
-BenchmarkSessionsList-32    	     442	   2667237 ns/op	 1491161 B/op	   20051 allocs/op
-BenchmarkMessages-32        	     256	   4650366 ns/op	 3109784 B/op	   68051 allocs/op
-BenchmarkMessages-32        	     254	   4664309 ns/op	 3109704 B/op	   68051 allocs/op
-BenchmarkMessages-32        	     259	   4595203 ns/op	 3109722 B/op	   68051 allocs/op
-BenchmarkMessages-32        	     256	   4681660 ns/op	 3109723 B/op	   68051 allocs/op
-BenchmarkMessages-32        	     258	   4644502 ns/op	 3109737 B/op	   68051 allocs/op
-BenchmarkMessages-32        	     256	   4618355 ns/op	 3109696 B/op	   68051 allocs/op
-BenchmarkAgentGraph-32      	     759	   1582793 ns/op	  298995 B/op	    5409 allocs/op
-BenchmarkAgentGraph-32      	     756	   1576592 ns/op	  298977 B/op	    5409 allocs/op
-BenchmarkAgentGraph-32      	     742	   1602879 ns/op	  298991 B/op	    5409 allocs/op
-BenchmarkAgentGraph-32      	     754	   1573850 ns/op	  298979 B/op	    5409 allocs/op
-BenchmarkAgentGraph-32      	     763	   1582287 ns/op	  298976 B/op	    5409 allocs/op
-BenchmarkAgentGraph-32      	     757	   1585799 ns/op	  298997 B/op	    5409 allocs/op
+BenchmarkSessionsList-32    	     393	   2993954 ns/op	 1491206 B/op	   20052 allocs/op
+BenchmarkSessionsList-32    	     406	   2874801 ns/op	 1491183 B/op	   20052 allocs/op
+BenchmarkSessionsList-32    	     424	   2883677 ns/op	 1491180 B/op	   20052 allocs/op
+BenchmarkSessionsList-32    	     396	   3015325 ns/op	 1491195 B/op	   20052 allocs/op
+BenchmarkSessionsList-32    	     396	   3003340 ns/op	 1491183 B/op	   20052 allocs/op
+BenchmarkSessionsList-32    	     387	   3049821 ns/op	 1491174 B/op	   20052 allocs/op
+BenchmarkMessages-32        	     279	   4347332 ns/op	 2713881 B/op	   46065 allocs/op
+BenchmarkMessages-32        	     266	   4399496 ns/op	 2713952 B/op	   46065 allocs/op
+BenchmarkMessages-32        	     273	   4414433 ns/op	 2714026 B/op	   46065 allocs/op
+BenchmarkMessages-32        	     279	   4394314 ns/op	 2714004 B/op	   46065 allocs/op
+BenchmarkMessages-32        	     267	   4476228 ns/op	 2713730 B/op	   46064 allocs/op
+BenchmarkMessages-32        	     254	   4945759 ns/op	 2714172 B/op	   46065 allocs/op
+BenchmarkIterMessages-32    	     246	   4688105 ns/op	 1287453 B/op	   46039 allocs/op
+BenchmarkIterMessages-32    	     271	   4356556 ns/op	 1287588 B/op	   46039 allocs/op
+BenchmarkIterMessages-32    	     290	   4132349 ns/op	 1287671 B/op	   46040 allocs/op
+BenchmarkIterMessages-32    	     279	   4608816 ns/op	 1287473 B/op	   46039 allocs/op
+BenchmarkIterMessages-32    	     259	   4722363 ns/op	 1287440 B/op	   46039 allocs/op
+BenchmarkIterMessages-32    	     254	   4673417 ns/op	 1287447 B/op	   46039 allocs/op
+BenchmarkAgentGraph-32      	    2960	    389516 ns/op	  172176 B/op	    1318 allocs/op
+BenchmarkAgentGraph-32      	    3238	    370526 ns/op	  172174 B/op	    1318 allocs/op
+BenchmarkAgentGraph-32      	    3273	    367248 ns/op	  172186 B/op	    1318 allocs/op
+BenchmarkAgentGraph-32      	    3132	    381573 ns/op	  172191 B/op	    1318 allocs/op
+BenchmarkAgentGraph-32      	    3276	    371893 ns/op	  172190 B/op	    1318 allocs/op
+BenchmarkAgentGraph-32      	    3090	    393634 ns/op	  172176 B/op	    1318 allocs/op
 PASS
-ok  	github.com/LarsArtmann/go-crush-data	21.893s
+ok  	github.com/LarsArtmann/go-crush-data	29.729s
