@@ -1,7 +1,9 @@
 # Draft: upstream discussion (charmbracelet/crush, category: Ideas)
 
-Status: DRAFT — verified against crush v0.92.0 (559ec80) on 2026-09-07.
-Do not post before final review.
+Status: POSTED 2026-09-08 as
+[discussion #3740](https://github.com/charmbracelet/crush/discussions/3740)
+(Ideas) — body verified byte-identical after posting. Draft kept as the
+authored record; do not re-post.
 
 - Title: Supported read access to historical session data for third-party tools
 - Category: Ideas (upstream convention: feature requests go to Discussions,
@@ -59,8 +61,11 @@ What these tools all currently reverse-engineer (no upstream docs):
 - agent child session IDs (`messageID$$toolCallID`)
 - unix-second timestamps (the migration comments say milliseconds — they
   are not; comment fix pending in #3576). The comment has real victims:
-  2 of the 6 Go readers ship date bugs from converting with
-  `time.UnixMilli` — their sessions land in January 1970
+  2 of the 6 Go readers shipped date bugs from converting with
+  `time.UnixMilli` — their sessions landed in January 1970. Both are now
+  fixed: [openusage#357](https://github.com/janekbaraniewski/openusage/pull/357),
+  [mnemo#22](https://github.com/Pilan-AI/mnemo/pull/22) — the fixes took
+  one line each; the diagnosis took reverse-engineering
 
 This works, but breaks silently on migrations. For example, #3580
 (compressing message parts) would break every JSON-parsing reader. As #2707's
@@ -101,9 +106,21 @@ definitely be docs."
    on-disk format is unsupported and will keep changing? Either is cheap
    and removes the guesswork.
 
-Happy to share what we learned from real-world data (e.g. a census of the
-todos JSON shape across 71,747 items in 287 databases — zero malformed,
-three statuses, no extra keys) if that's useful for the docs work.
+### An offer, in case it's useful
+
+If Crush ever wants an official read surface — an SDK, a docs page, or
+an in-process package — I'd be glad to contribute the basis:
+[go-crush-data](https://github.com/LarsArtmann/go-crush-data) is MIT,
+resolves the `projects.json` registry, opens every `crush.db` read-only,
+probes schema capabilities so migrations degrade gracefully instead of
+breaking, and decodes the parts envelope and todos shape, tested against
+v0.92.0 plus a census of 287 real databases (71,747 todo items). It
+would of course need to become a module Crush controls; the logic and
+census-verified fixtures are simply there if useful. No strings
+attached either way — the questions above matter more than the offer.
+
+Happy to share what we learned from real-world data (e.g. that todos
+census) if that's useful for the docs work.
 
 ### Related
 
