@@ -42,11 +42,20 @@ renumbered, and deleting an item retires its ID for good.
       `stats_test.go`; source: same report (f)20
 - [ ] **T17** GitHub Action: open an issue when a new crush stable release
       lands (drives the AGENTS.md verification cadence; the weekly
-      weekly upstream-drift.yml job already covers scheduled detection).
+      `.github/workflows/upstream-drift.yml` job already covers scheduled detection).
       1h — `.github/workflows/`; source: same report (f)33
 
 ## Low
 
+- [ ] **T6** Mine nightly fuzz artifacts for corpus seeds — nightly runs
+      exist and are green since 2026-08-17 (observed 2026-09-08: latest
+      five runs success). ongoing — `.github/workflows/fuzz.yml`
+- [ ] **T7** Pin GitHub action versions via Renovate once the app is
+      installed (depends on T1). 10m — `.github/workflows/*.yml`
+- [ ] **T9** Report the `time.UnixMilli` date bug to openusage and
+      mnemo (sessions land in 1970; both cite Crush's lying migration
+      comment as their schema reference). Needs user go-ahead. 10m each
+      — upstream of this repo
 - [ ] **T18** Verification-session fuzz cadence: 30s
       `go test -fuzz=DecodeParts` + `go test -fuzz=DecodeTodos` each time
       upstream verification runs (targets + CI workflow exist; never run
@@ -70,15 +79,15 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T23** Consider `nix flake check --all-systems` in CI (gate currently
       omits aarch64/darwin). 1h — `.github/workflows/ci.yml`; source: same
       report (f)28
-- [ ] **T24** Refresh `docs/benchmarks/baseline-benchmarks.txt` — now due:
-      the todos probe, Message.UpdatedAt scan, and ReadFiles ORDER BY all
-      touch read paths. 1h — `go test -bench . -count=6 | tee …` +
-      benchstat; source: same report (f)29
+- [ ] **T24** Benchmarks: add `BenchmarkIterMessages` and regenerate
+      `docs/benchmarks/baseline-benchmarks.txt` — regeneration is due
+      regardless (the todos probe, `Message.UpdatedAt` scan, and ReadFiles
+      ORDER BY all touch read paths), and the iter path has never been in
+      the trend. 1h — `go test -bench . -count=6 | tee …` + benchstat;
+      source: same report (f)29 + 2026-08-16_08-50 report (f)4/(f)47
 - [ ] **T25** Pin registry `last_accessed` UTC round-trip with a test
       (upstream writes `time.Now().UTC()`). 15m — `discover_test.go`;
       source: same report (f)30
-- [ ] **T26** Audit README for schema claims needing the v0.92.0
-      annotations. 20m — `README.md`; source: same report (f)31
 - [ ] **T27** Test: registry parse tolerates unknown top-level keys (future
       upstream fields must not break Discovery). 20m — `discover_test.go`;
       source: same report (f)37
@@ -90,28 +99,12 @@ renumbered, and deleting an item retires its ID for good.
 
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
-- [ ] **T2** Observe the first nightly fuzz run (03:17 UTC); on green, flip
-      the FEATURES row to FULLY_FUNCTIONAL. 5m — `.github/workflows/fuzz.yml`
-- [ ] **T3** Observe the first monthly flake-lock PR; check the vendorHash
-      guard fires correctly on a stale hash. 5m —
+- [ ] **T3** After the `.github/workflows/flake-update.yml` permissions fix (`contents: write`,
+      2026-09-08 — the 2026-09-01 scheduled run failed with
+      `Permission to LarsArtmann/go-crush-data.git denied to
+      github-actions[bot]`) reaches origin: observe the first successful
+      flake-lock PR and that the vendorHash guard behaves. 5m —
       `.github/workflows/flake-update.yml`
-- [ ] **T4** Verify pkg.go.dev renders v0.3.0 (`DecodeTodos`,
-      `DB.IterMessages`); confirm the recipe page lists. 5m — pkg.go.dev
-
-## Low
-
-- [ ] **T6** Mine nightly fuzz artifacts for corpus seeds once runs exist.
-      ongoing — `.github/workflows/fuzz.yml`
-- [ ] **T7** Pin GitHub action versions via Renovate once the app is
-      installed (depends on T1). 10m — `.github/workflows/*.yml`
-- [ ] **T8** Harden the read-only DSN with `busy_timeout` and
-      `query_only` (2 of 6 ecosystem readers set busy_timeout; ours can
-      fail fast with SQLITE_BUSY under a live writer). See
-      docs/ecosystem-implementation-review.md. 30m — `db.go`
-- [ ] **T9** Report the `time.UnixMilli` date bug to openusage and
-      mnemo (sessions land in 1970; both cite Crush's lying migration
-      comment as their schema reference). Needs user go-ahead. 10m each
-      — upstream of this repo
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 

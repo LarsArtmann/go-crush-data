@@ -125,6 +125,7 @@ for _, todo := range todos {
 | Models       | `messages.model`             | model fields read empty            |
 | Providers    | `messages.provider`          | provider fields read empty         |
 | Finish times | `messages.finished_at`       | `FinishedAt` reads zero            |
+| Todos        | `sessions.todos`             | `Session.Todos` reads nil          |
 
 `db.Schema().MissingColumns()` tells you exactly what an old database lacks.
 Databases without the required `sessions`/`messages` tables fail `Open` with

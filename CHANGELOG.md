@@ -40,6 +40,13 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Changed
 
+- The read-only connection now sets `busy_timeout(5000)` and
+  `query_only(1)` pragmas. Reads hold out up to 5s against a live
+  writer's lock instead of failing fast with `SQLITE_BUSY`, and any
+  accidental write statement through the handle fails even if a future
+  change weakens `mode=ro`. Motivated by an ecosystem review: 2 of 6
+  known Go readers of `crush.db` set `busy_timeout` for exactly this
+  reason (`docs/ecosystem-implementation-review.md`).
 - `DB.ReadFiles` returns paths most recently read first
   (`ORDER BY read_at DESC`), matching upstream's read_files listing; the
   previous order was unspecified.
