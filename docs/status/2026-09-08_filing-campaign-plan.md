@@ -26,8 +26,10 @@ Status markers: [ ] todo · [x] done.
       `millisToTime`) + add a date-pinning test. 10m
 - [ ] **B3** Run their full suite locally on the branch. 10m
 - [ ] **B4** Push + open PR. Body: real-DB evidence, root cause =
-      charmbracelet/crush migration comment (PR #3576 pending), one
-      non-pushy "Related" line to go-crush-data. 10m
+      charmbracelet/crush migration comment (PR #3576 pending), plus a
+      short "Beyond this fix" paragraph: go-crush-data exists for
+      exactly this format (schema-drift probing, tolerant parts), link
+      the Discussion once posted. Suggest, never swap. 10m
 
 ## Phase C — mnemo fix PR (receipt #2)
 
@@ -36,10 +38,14 @@ Status markers: [ ] todo · [x] done.
 - [ ] **C3** Run their build + tests locally. 10m
 - [ ] **C4** Push + open PR. Same description pattern as B4. 10m
 
-## Phase D — Upstream Discussion (the ask)
+## Phase D — Upstream Discussion (the ask + the endgame)
 
 - [ ] **D1** Re-read `docs/upstream-read-access-discussion-draft.md`;
-      insert the two fix-PR links + "fixed this morning" receipts. 10m
+      insert the two fix-PR links + "fixed this morning" receipts, and
+      add the adoption offer: if Crush ever wants an official read
+      surface, go-crush-data (MIT, tested against v0.92.0, census-
+      backed) is offered as a candidate basis — the "merge into crush
+      for everybody's stability" pathway. 10m
 - [ ] **D2** Fetch charmbracelet/crush Ideas category ID via GraphQL. 5m
 - [ ] **D3** Post Discussion (createDiscussion mutation), verify
       rendering + cross-links. 10m
@@ -57,11 +63,32 @@ Status markers: [ ] todo · [x] done.
 
 - [ ] **F1** Comment on vshulcz/deja-vu#2949: verified format facts
       (unix seconds, 8-discriminator envelope, registry path) + pointer
-      to go-crush-data. 8m
+      to go-crush-data as a ready-made Go reader. 8m
 - [ ] **F2** Update TODO_LIST: T9 superseded by fix-PRs (B4/C4); link
       posted Discussion in Parked section. 8m
 - [ ] **F3** Batched response-monitoring pass over both PRs + the
       Discussion (repeat daily). 10m/pass
+
+## Phase G — Ecosystem adoption suggestions (after fix PRs merge)
+
+Strategy: fix first (credibility), suggest second. Every suggestion is
+a separate, respectful touchpoint — never a code swap inside a fix PR.
+Go repos only; the Rust/TS repos (tokscale, CASS, history-viewer,
+cli-continues) get nothing to consume — at most a courtesy link to the
+ecosystem review where on-topic.
+
+- [ ] **G1** openusage Issue/Discussion: consider go-crush-data for the
+      crush provider. Selling points: schema-drift probing (their #1
+      silent-breakage risk), correct registry resolution incl.
+      CRUSH_GLOBAL_DATA, and a pure-Go driver story (modernc — dropping
+      their cgo/mattn build dependency entirely). 12m
+- [ ] **G2** mnemo Issue: same suggestion; they already use modernc, so
+      adoption costs zero driver change; replaces their hardcoded
+      columns + ~/.crush/crush.db path with probed, registry-driven
+      reads. 12m
+- [ ] **G3** crunch + crush-tmux: lightweight suggestion Issues
+      (crunch gains registry discovery instead of filesystem walks;
+      crush-tmux marginal — send only if a natural thread exists). 12m
 
 ## Dependency chain
 
@@ -69,6 +96,7 @@ A1→B1→B2→B3→B4 ┐
 A2→C1→C2→C3→C4 ┴→ D1→D2→D3 → E1
                                    E2, F1 independent of D
                                    F2 after D3; F3 after B4/C4/D3
+                                   G1/G2 after B4/C4 merge; G3 anytime after D3
 
 ## Out of scope (tracked elsewhere)
 
@@ -76,5 +104,5 @@ A2→C1→C2→C3→C4 ┴→ D1→D2→D3 → E1
   mining) and T10+ from the concurrent session — untouched by this plan.
 - No new charmbracelet/crush Issues (feature asks belong in
   Discussions; bug PR #3576 already open).
-- No dependency-adoption PRs to openusage/mnemo (rejected: scope creep,
-  driver conflict in openusage).
+- No code swaps inside fix PRs (adoption happens via Phase G
+  suggestions after credibility is established).
