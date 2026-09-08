@@ -50,9 +50,9 @@ On every new charmbracelet/crush **stable** release (not nightly):
    last-verified tag below,
 5. refresh the schema snapshot and its doc:
    `go run ./scripts/genschema -migrations <clone>/internal/db/migrations
-   > docs/storage-schema-<version>.sql` (rename to the new version), extend
-   the fixture DDL until `TestFixtureSchemaMatchesUpstreamSnapshot` passes,
-   and update `docs/storage-schema-<version>.md`.
+   > docs/storage-schema-<version>.sql`(rename to the new version), extend
+   the fixture DDL until`TestFixtureSchemaMatchesUpstreamSnapshot`passes,
+   and update`docs/storage-schema-<version>.md`.
 
 A weekly CI job (`.github/workflows/upstream-drift.yml`) runs the drift
 script, and its `release-notice` job opens a tracking issue automatically

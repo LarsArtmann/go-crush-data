@@ -70,8 +70,8 @@ fixed mid-gate (see a/2).
    probes pushed cyclop over 12): the next capability is one table row plus
    a field — the exact pairing the guard test enforces.
 9. Tests: `TestSessionSummaryMessageID` (direct read + AgentGraph CTE path
-   + legacy zero substitution), `TestMessagesIsSummaryMessage`
-   (Messages + IterMessages + legacy), example output updated.
+   - legacy zero substitution), `TestMessagesIsSummaryMessage`
+     (Messages + IterMessages + legacy), example output updated.
 10. **Real-data verification** beyond the pair: a throwaway /tmp probe
     using the library read the repo's own `.crush` DB — 4/33 sessions carry
     a summary pointer; the first such session holds exactly 3 flagged

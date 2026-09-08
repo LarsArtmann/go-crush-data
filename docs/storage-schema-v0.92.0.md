@@ -17,19 +17,19 @@ AGENTS.md cadence).
 
 ## sessions
 
-| column             | type    | added in                     | this library                         |
-| ------------------ | ------- | ---------------------------- | ------------------------------------ |
-| id                 | TEXT PK | initial (2025-04-24)         | reads                                |
-| parent_session_id  | TEXT    | probed capability            | reads (agent graphs; absent → flat)  |
-| title              | TEXT    | initial                      | reads                                |
-| message_count      | INTEGER | initial (trigger-maintained) | reads                                |
-| prompt_tokens      | INTEGER | initial                      | reads (stats)                        |
-| completion_tokens  | INTEGER | initial                      | reads (stats)                        |
-| cost               | REAL    | probed capability            | reads (absent → 0)                   |
-| updated_at         | INTEGER | initial                      | reads                                |
-| created_at         | INTEGER | initial                      | reads                                |
+| column             | type    | added in                     | this library                                                        |
+| ------------------ | ------- | ---------------------------- | ------------------------------------------------------------------- |
+| id                 | TEXT PK | initial (2025-04-24)         | reads                                                               |
+| parent_session_id  | TEXT    | probed capability            | reads (agent graphs; absent → flat)                                 |
+| title              | TEXT    | initial                      | reads                                                               |
+| message_count      | INTEGER | initial (trigger-maintained) | reads                                                               |
+| prompt_tokens      | INTEGER | initial                      | reads (stats)                                                       |
+| completion_tokens  | INTEGER | initial                      | reads (stats)                                                       |
+| cost               | REAL    | probed capability            | reads (absent → 0)                                                  |
+| updated_at         | INTEGER | initial                      | reads                                                               |
+| created_at         | INTEGER | initial                      | reads                                                               |
 | summary_message_id | TEXT    | 2025-05-15 migration         | probed capability — reads (`Session.SummaryMessageID`; absent → "") |
-| todos              | TEXT    | 2025-08-12 migration         | reads as raw JSON (`Session.Todos`)  |
+| todos              | TEXT    | 2025-08-12 migration         | reads as raw JSON (`Session.Todos`)                                 |
 
 `parent_session_id` and `todos` ride the initial `CREATE TABLE` in the
 pinned source but were added by later migrations historically; the probe
@@ -37,17 +37,17 @@ covers databases frozen before those migrations landed.
 
 ## messages
 
-| column             | type    | added in                      | this library                         |
-| ------------------ | ------- | ----------------------------- | ------------------------------------ |
-| id                 | TEXT PK | initial (UUIDv4 — random!)    | reads                                |
-| session_id         | TEXT    | initial (FK, indexed)         | reads                                |
-| role               | TEXT    | initial                       | reads                                |
-| parts              | TEXT    | initial                       | reads (the `{type,data}` envelope)   |
-| model              | TEXT    | probed capability             | reads (absent → "")                  |
-| created_at         | INTEGER | initial (indexed since 06-24) | reads                                |
-| updated_at         | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)          |
-| finished_at        | INTEGER | probed capability             | reads (absent → zero time)           |
-| provider           | TEXT    | 2025-06-27 migration          | reads (absent → "")                  |
+| column             | type    | added in                      | this library                                                           |
+| ------------------ | ------- | ----------------------------- | ---------------------------------------------------------------------- |
+| id                 | TEXT PK | initial (UUIDv4 — random!)    | reads                                                                  |
+| session_id         | TEXT    | initial (FK, indexed)         | reads                                                                  |
+| role               | TEXT    | initial                       | reads                                                                  |
+| parts              | TEXT    | initial                       | reads (the `{type,data}` envelope)                                     |
+| model              | TEXT    | probed capability             | reads (absent → "")                                                    |
+| created_at         | INTEGER | initial (indexed since 06-24) | reads                                                                  |
+| updated_at         | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)                                            |
+| finished_at        | INTEGER | probed capability             | reads (absent → zero time)                                             |
+| provider           | TEXT    | 2025-06-27 migration          | reads (absent → "")                                                    |
 | is_summary_message | INTEGER | 2025-08-10 migration          | probed capability — reads (`Message.IsSummaryMessage`; absent → false) |
 
 Message IDs are `uuid.New()` (UUIDv4): random, so insertion order is

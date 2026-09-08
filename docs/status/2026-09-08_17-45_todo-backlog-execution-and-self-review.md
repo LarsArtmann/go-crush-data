@@ -36,15 +36,15 @@ attributes honestly and self-reviews only THIS session's work.
    goose migrations to in-memory SQLite, honors StatementBegin/End, dumps
    deterministic sqlite_master) → checked-in
    `docs/storage-schema-v0.92.0.sql`; `TestFixtureSchemaMatchesUpstreamSnapshot`
-   + negative-path test; fixture DDL gained the missing `files` table;
-   `check-upstream-drift.sh` now diffs the snapshot (verified green against
-   the pinned clone).
+   - negative-path test; fixture DDL gained the missing `files` table;
+     `check-upstream-drift.sh` now diffs the snapshot (verified green against
+     the pinned clone).
 
 **Scripts / CI / workflows** (shellcheck-clean, actionlint-clean):
 
 10. **T37** drift self-test: `--self-test` runs the guard against a
     checked-in doctored fixture (must exit 1 with the rogue column visible)
-    + empty-extraction probe (must exit 2 — the vacuous-pass hole). Green.
+    - empty-extraction probe (must exit 2 — the vacuous-pass hole). Green.
 11. **T42** `scripts/check-root-package-main.sh` + ubuntu CI step.
 12. **T17** `release-notice` job in upstream-drift.yml +
     `scripts/check-upstream-release.sh`: opens one tracking issue per new
