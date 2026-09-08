@@ -132,6 +132,28 @@ const messagesTable = "messages"
 // the session-column probes.
 const sessionsTable = "sessions"
 
+// columnProbe wires one well-known column to the [Schema] field carrying its
+// presence, so probeSchema stays a flat table walk instead of one branch per
+// capability. Adding a probe is one row here plus the field; the drift guard
+// (TestUpstreamMigrationColumnsAreProbedOrExempt) enforces the pairing.
+type columnProbe struct {
+	table  string
+	column string
+	assign func(schema *Schema, present bool)
+}
+
+//nolint:gochecknoglobals // a slice cannot be a constant and this one is definitionally fixed
+var columnProbes = []columnProbe{
+	{sessionsTable, costColumn, func(s *Schema, present bool) { s.SessionsCost = present }},
+	{sessionsTable, "parent_session_id", func(s *Schema, present bool) { s.SessionsParentSessionID = present }},
+	{sessionsTable, todosColumn, func(s *Schema, present bool) { s.SessionsTodos = present }},
+	{sessionsTable, "summary_message_id", func(s *Schema, present bool) { s.SessionsSummaryMessageID = present }},
+	{messagesTable, "model", func(s *Schema, present bool) { s.MessagesModel = present }},
+	{messagesTable, "provider", func(s *Schema, present bool) { s.MessagesProvider = present }},
+	{messagesTable, "finished_at", func(s *Schema, present bool) { s.MessagesFinishedAt = present }},
+	{messagesTable, "is_summary_message", func(s *Schema, present bool) { s.MessagesIsSummaryMessage = present }},
+}
+
 // probeSchema inspects an open database and returns its capabilities.
 //
 // Probe failures surface as errors: a canceled context or an unreadable
@@ -140,54 +162,23 @@ const sessionsTable = "sessions"
 // broken"). A database whose required tables are verifiably missing fails
 // with an error wrapping [ErrUnsupportedSchema].
 func probeSchema(ctx context.Context, db *sql.DB, path string) (Schema, error) {
-	var (
-		schema Schema
-		err    error
-	)
+	var schema Schema
 
-	if schema.SessionsCost, err = columnExists(ctx, db, sessionsTable, costColumn); err != nil {
+	for _, probe := range columnProbes {
+		present, err := columnExists(ctx, db, probe.table, probe.column)
+		if err != nil {
+			return Schema{}, wrapProbeError(path, err)
+		}
+
+		probe.assign(&schema, present)
+	}
+
+	readFiles, err := tableExists(ctx, db, "read_files")
+	if err != nil {
 		return Schema{}, wrapProbeError(path, err)
 	}
 
-	if schema.SessionsParentSessionID, err = columnExists(
-		ctx, db, sessionsTable, "parent_session_id",
-	); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.SessionsTodos, err = columnExists(ctx, db, sessionsTable, todosColumn); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.SessionsSummaryMessageID, err = columnExists(
-		ctx, db, sessionsTable, "summary_message_id",
-	); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.MessagesModel, err = columnExists(ctx, db, messagesTable, "model"); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.MessagesProvider, err = columnExists(ctx, db, messagesTable, "provider"); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.MessagesFinishedAt, err = columnExists(
-		ctx, db, messagesTable, "finished_at",
-	); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.MessagesIsSummaryMessage, err = columnExists(
-		ctx, db, messagesTable, "is_summary_message",
-	); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
-
-	if schema.ReadFilesTable, err = tableExists(ctx, db, "read_files"); err != nil {
-		return Schema{}, wrapProbeError(path, err)
-	}
+	schema.ReadFilesTable = readFiles
 
 	for _, table := range requiredTables {
 		present, err := tableExists(ctx, db, table)

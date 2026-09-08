@@ -12,6 +12,10 @@ import (
 // bounded read instead of a stack overflow.
 const maxAgentDepth = 64
 
+// nullLiteral substitutes for capability-gated expressions the subtree CTE
+// cannot read from a schema that predates them.
+const nullLiteral = "NULL"
+
 // AgentGraph returns the subagent tree rooted at the session with the given
 // ID: the root node plus every descendant linked through
 // sessions.parent_session_id, in preorder (root first, each subtree ordered
@@ -107,16 +111,16 @@ func (db *DB) descendantSessions(ctx context.Context, rootID string) ([]Session,
 	recursiveTodosExpr := "s." + todosColumn
 
 	if !db.schema.SessionsTodos {
-		todosExpr = "NULL"
-		recursiveTodosExpr = "NULL"
+		todosExpr = nullLiteral
+		recursiveTodosExpr = nullLiteral
 	}
 
 	summaryExpr := "summary_message_id"
 	recursiveSummaryExpr := "s.summary_message_id"
 
 	if !db.schema.SessionsSummaryMessageID {
-		summaryExpr = "NULL"
-		recursiveSummaryExpr = "NULL"
+		summaryExpr = nullLiteral
+		recursiveSummaryExpr = nullLiteral
 	}
 
 	// query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args

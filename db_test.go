@@ -106,7 +106,7 @@ func TestSchemaMissingCapabilities(t *testing.T) {
 	t.Parallel()
 
 	full := Schema{
-		SessionsCost:              true,
+		SessionsCost:             true,
 		SessionsParentSessionID:  true,
 		SessionsTodos:            true,
 		SessionsSummaryMessageID: true,

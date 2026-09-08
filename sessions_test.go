@@ -478,3 +478,77 @@ func TestSessionsDayFilterComposesWithLimit(t *testing.T) {
 		}
 	}
 }
+
+// TestSessionSummaryMessageID pins the summary_message_id read across all
+// three session query paths: the direct read, the agent-subtree CTE, and the
+// legacy-schema zero substitution.
+func TestSessionSummaryMessageID(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "root", "", "Root", 1, fixtureBase, fixtureBase)
+		insertSession(t, db, "child", "root", "Child", 0, fixtureBase+1, fixtureBase+1)
+
+		if _, err := db.ExecContext(
+			context.Background(),
+			"UPDATE sessions SET summary_message_id = 'sum-1' WHERE id = 'child'",
+		); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	if !db.Schema().SessionsSummaryMessageID {
+		t.Fatal("Schema.SessionsSummaryMessageID = false, want true on the current schema")
+	}
+
+	root, err := db.Session(context.Background(), "root")
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	if root.SummaryMessageID != "" {
+		t.Fatalf("root.SummaryMessageID = %q, want empty (NULL column)", root.SummaryMessageID)
+	}
+
+	child, err := db.Session(context.Background(), "child")
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	if child.SummaryMessageID != "sum-1" {
+		t.Fatalf("child.SummaryMessageID = %q, want sum-1", child.SummaryMessageID)
+	}
+
+	graph, err := db.AgentGraph(context.Background(), "root")
+	if err != nil {
+		t.Fatalf("AgentGraph: %v", err)
+	}
+
+	if len(graph.Nodes) != 2 || graph.Nodes[1].Session.ID != "child" {
+		t.Fatalf("graph nodes = %+v, want root then child", graph.Nodes)
+	}
+
+	if got := graph.Nodes[1].Session.SummaryMessageID; got != "sum-1" {
+		t.Fatalf("AgentGraph child SummaryMessageID = %q, want sum-1 (CTE path)", got)
+	}
+
+	legacy := openFixture(t, schemaLegacy)
+
+	legacySession, err := legacy.Session(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Session (legacy): %v", err)
+	}
+
+	if legacySession.SummaryMessageID != "" {
+		t.Fatalf("legacy SummaryMessageID = %q, want empty (column absent)", legacySession.SummaryMessageID)
+	}
+}

@@ -165,7 +165,10 @@ func (db *DB) buildMessagesQuery() string {
 
 	return fmt.Sprintf(
 		"SELECT id, role, parts, %s, %s, created_at, updated_at, %s, %s FROM messages WHERE session_id = ? ORDER BY rowid",
-		modelExpr, providerExpr, finishedExpr, isSummaryExpr,
+		modelExpr,
+		providerExpr,
+		finishedExpr,
+		isSummaryExpr,
 	)
 }
 

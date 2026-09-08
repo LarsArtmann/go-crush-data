@@ -539,3 +539,89 @@ func TestIterMessagesCanceledContext(t *testing.T) {
 		t.Fatalf("error yield carried message %q, want the zero value", message.ID)
 	}
 }
+
+// TestMessagesIsSummaryMessage pins the is_summary_message scan path on both
+// read shapes (Messages and IterMessages share scanMessage) and the
+// legacy-schema zero substitution.
+func TestMessagesIsSummaryMessage(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "s", "", "Session", 2, fixtureBase, fixtureBase+10)
+		insertMessage(t, db, "m-plain", "s", "user", "[]", "", "", fixtureBase+1)
+		insertMessage(t, db, "m-summary", "s", "assistant", "[]", fixtureModel, "", fixtureBase+2)
+
+		if _, err := db.ExecContext(
+			context.Background(),
+			"UPDATE messages SET is_summary_message = 1 WHERE id = 'm-summary'",
+		); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	if !db.Schema().MessagesIsSummaryMessage {
+		t.Fatal("Schema.MessagesIsSummaryMessage = false, want true on the current schema")
+	}
+
+	byID := map[string]Message{}
+
+	messages, err := db.Messages(context.Background(), "s")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, message := range messages {
+		byID[message.ID] = message
+	}
+
+	if byID["m-plain"].IsSummaryMessage {
+		t.Fatal("m-plain IsSummaryMessage = true, want false")
+	}
+
+	if !byID["m-summary"].IsSummaryMessage {
+		t.Fatal("m-summary IsSummaryMessage = false, want true")
+	}
+
+	summaryYields := 0
+
+	for message, err := range db.IterMessages(context.Background(), "s") {
+		if err != nil {
+			t.Fatalf("IterMessages: %v", err)
+		}
+
+		want := message.ID == "m-summary"
+		if message.IsSummaryMessage != want {
+			t.Fatalf("%s IsSummaryMessage = %v, want %v", message.ID, message.IsSummaryMessage, want)
+		}
+
+		if want {
+			summaryYields++
+		}
+	}
+
+	if summaryYields != 1 {
+		t.Fatalf("summary yields = %d, want 1", summaryYields)
+	}
+
+	legacy := openFixture(t, schemaLegacy)
+
+	legacyMessages, err := legacy.Messages(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages (legacy): %v", err)
+	}
+
+	for _, message := range legacyMessages {
+		if message.IsSummaryMessage {
+			t.Fatalf("%s IsSummaryMessage = true on a schema without the column", message.ID)
+		}
+	}
+}

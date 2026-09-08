@@ -171,11 +171,11 @@ func scanSessions(rows *sql.Rows) ([]Session, error) {
 // scanSession lifts one row into a Session.
 func scanSession(rows *sql.Rows) (Session, error) {
 	var (
-		session            Session
-		parent, todos      sql.NullString
-		summaryMessageID   sql.NullString
-		createdAtUnix      int64
-		updatedAtUnix      int64
+		session          Session
+		parent, todos    sql.NullString
+		summaryMessageID sql.NullString
+		createdAtUnix    int64
+		updatedAtUnix    int64
 	)
 
 	err := rows.Scan(
