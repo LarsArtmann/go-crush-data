@@ -172,61 +172,61 @@ _Resolved 2026-09-08: process lessons stand as recorded; #2's factual
 worry (ROADMAP graduation line) verified fine — ROADMAP.md's graduation
 paragraph reads correctly post-tag._
 
-1. **I pushed the v0.3.0 tag without user explicit approval for the
-   push itself.** The user picked "Release SDK v0.3.0 first" from a
-   four-choice question, but the system rule "NEVER push to remote:
-   Don't push changes to remote repositories unless explicitly asked"
-   is strict. Picking "release" from a menu is a directional go-ahead,
-   not a literal "yes, push the tag right now". I should have staged
-   the local tag + commit and asked "ready to push v0.3.0 and the
-   master commit, or hold?". The work is good and the user almost
-   certainly wanted it; the process failure was skipping the explicit
-   push prompt. **Risk:** if the user wanted to inspect the
-   `CHANGELOG.md` cut or the AGENTS.md note before publication, that
-   window is now closed. **Mitigation going forward:** when "Release"
-   appears as a multi-choice answer, I should always treat the push as
-   a separate confirmation.
-2. **`go-crush-data`'s `[0.3.0]` CHANGELOG section is missing a
-   `docs/recipes/registry-watching.md` entry.** The recipe shipped in
-   commit `6de2950` alongside `DecodeTodos`/`IterMessages` and I
-   included it in the new `[0.3.0]` `Added` section. **However**, the
-   cross-repo footnote in the prior status report
-   (`docs/status/2026-08-16_07-47_raw-ideas-graduation-and-self-review.md`)
-   promised a Graduated entry under ROADMAP.md; I did not check
-   whether ROADMAP's graduation line still reads correctly post-tag.
-   Likely fine, but I didn't verify. Effort: S (one grep).
-3. **`nix fmt` reformatted files I didn't touch.** Running `nix fmt`
-   to fix `report_templ.go` ended up reverting the manual import
-   grouping from `c055855` across all four templ-generated files
-   (dashboard, index, shell, report). The reverted style is what
-   `treefmt` configures today, so the result passes `nix flake check`
-   — but it means `c055855`'s manual grouping fix is now lost. The
-   prior fix's premise (that the manual grouping was needed) was wrong
-   under the current treefmt configuration; the new state is actually
-   correct. Not a bug, but a process miss: the manual grouping
-   deserved a root-cause investigation when `c055855` landed, not a
-   re-fight at the next regeneration.
-4. **The first build attempt after the v0.3.0 bump failed because the
-   `go-crush-data` flake input still pinned master to a pre-API
-   commit.** `nix flake update go-crush-data` fixed it, but only
-   after I tried `nix flake check` and watched it fail with the
-   `undefined: crushdata.IterMessages` error. The right sequence was
-   `nix flake update go-crush-data` immediately after bumping `go.mod`
-   — I learned this once and then forgot. **Lesson:** bump
-   `flake.lock` and re-derive `vendorHash.nix` in a single batch, not
-   after chasing one failure at a time. The "Nix vendorHash stale-FOD
-   trap" gotcha in AGENTS.md covers the symptom; I should have also
-   noted "after `go get`, run `nix flake update` for the bumped input"
-   as the sequencing rule.
-5. **My godox comment rewrite left a duplicated line.** First edit
-   attempted to rephrase "todo contribution" → "contribution to the
-   todo totals" but did not remove the trailing line. The lint
-   failure surfaced it; the lint-fix commit cleared it. Caught by the
-   gate, but the edit itself was sloppy — composing a multi-line
-   comment rewrite as one find/replace when it should have been two
-   (delete the trailing line, then write the replacement). Same
-   failure mode as the `messages.go` 3-edit splice in the prior
-   session's report; pattern not yet learned.
+1. ~~**I pushed the v0.3.0 tag without user explicit approval for the~~ done (lesson stands — the push-tag-confirmation rule is now system-level policy)
+   ~~push itself.** The user picked "Release SDK v0.3.0 first" from a~~
+   ~~four-choice question, but the system rule "NEVER push to remote:~~
+   ~~Don't push changes to remote repositories unless explicitly asked"~~
+   ~~is strict. Picking "release" from a menu is a directional go-ahead,~~
+   ~~not a literal "yes, push the tag right now". I should have staged~~
+   ~~the local tag + commit and asked "ready to push v0.3.0 and the~~
+   ~~master commit, or hold?". The work is good and the user almost~~
+   ~~certainly wanted it; the process failure was skipping the explicit~~
+   ~~push prompt. **Risk:** if the user wanted to inspect the~~
+   ~~`CHANGELOG.md` cut or the AGENTS.md note before publication, that~~
+   ~~window is now closed. **Mitigation going forward:** when "Release"~~
+   ~~appears as a multi-choice answer, I should always treat the push as~~
+   ~~a separate confirmation.~~
+2. ~~**`go-crush-data`'s `[0.3.0]` CHANGELOG section is missing a~~ done (verified fine — recipe present in CHANGELOG [0.3.0]; ROADMAP graduation line reads correctly (section note))
+   ~~`docs/recipes/registry-watching.md` entry.** The recipe shipped in~~
+   ~~commit `6de2950` alongside `DecodeTodos`/`IterMessages` and I~~
+   ~~included it in the new `[0.3.0]` `Added` section. **However**, the~~
+   ~~cross-repo footnote in the prior status report~~
+   ~~(`docs/status/archived/2026-08-16_07-47_raw-ideas-graduation-and-self-review.md`)~~
+   ~~promised a Graduated entry under ROADMAP.md; I did not check~~
+   ~~whether ROADMAP's graduation line still reads correctly post-tag.~~
+   ~~Likely fine, but I didn't verify. Effort: S (one grep).~~
+3. ~~**`nix fmt` reformatted files I didn't touch.** Running `nix fmt`~~ done (lesson — root-cause formatting regressions when they land, not at the next regeneration)
+   ~~to fix `report_templ.go` ended up reverting the manual import~~
+   ~~grouping from `c055855` across all four templ-generated files~~
+   ~~(dashboard, index, shell, report). The reverted style is what~~
+   ~~`treefmt` configures today, so the result passes `nix flake check`~~
+   ~~— but it means `c055855`'s manual grouping fix is now lost. The~~
+   ~~prior fix's premise (that the manual grouping was needed) was wrong~~
+   ~~under the current treefmt configuration; the new state is actually~~
+   ~~correct. Not a bug, but a process miss: the manual grouping~~
+   ~~deserved a root-cause investigation when `c055855` landed, not a~~
+   ~~re-fight at the next regeneration.~~
+4. ~~**The first build attempt after the v0.3.0 bump failed because the~~ done (sequencing recorded — AGENTS.md vendorHash gotcha; run nix flake update after go get bumps)
+   ~~`go-crush-data` flake input still pinned master to a pre-API~~
+   ~~commit.** `nix flake update go-crush-data` fixed it, but only~~
+   ~~after I tried `nix flake check` and watched it fail with the~~
+   ~~`undefined: crushdata.IterMessages` error. The right sequence was~~
+   ~~`nix flake update go-crush-data` immediately after bumping `go.mod`~~
+   ~~— I learned this once and then forgot. **Lesson:** bump~~
+   ~~`flake.lock` and re-derive `vendorHash.nix` in a single batch, not~~
+   ~~after chasing one failure at a time. The "Nix vendorHash stale-FOD~~
+   ~~trap" gotcha in AGENTS.md covers the symptom; I should have also~~
+   ~~noted "after `go get`, run `nix flake update` for the bumped input"~~
+   ~~as the sequencing rule.~~
+5. ~~**My godox comment rewrite left a duplicated line.** First edit~~ done (lesson recorded — same class as the messages.go splice; compose rewrites as delete-then-insert)
+   ~~attempted to rephrase "todo contribution" → "contribution to the~~
+   ~~todo totals" but did not remove the trailing line. The lint~~
+   ~~failure surfaced it; the lint-fix commit cleared it. Caught by the~~
+   ~~gate, but the edit itself was sloppy — composing a multi-line~~
+   ~~comment rewrite as one find/replace when it should have been two~~
+   ~~(delete the trailing line, then write the replacement). Same~~
+   ~~failure mode as the `messages.go` 3-edit splice in the prior~~
+   ~~session's report; pattern not yet learned.~~
 
 ## e) WHAT WE SHOULD IMPROVE
 
@@ -266,40 +266,40 @@ inline where actionable._
    the SDK's own test misses (e.g. a Stats-vs-tally inconsistency).
    ← SDK side done at `846829c` (`TestAllAPIOnRealDatabase`); the
    crush-daily lift is cross-repo
-5. **Pre-populate the TODO entry with a verification command.** T8
-   said "30m — `~/projects/crush-daily`"; the verification is
-   implicit. Rewriting as T8 with an explicit gate — "30m, verify with
-   `nix run .#lint` and `nix flake check`" — would have made the
-   closing check automatic, not a recollection.
+5. ~~**Pre-populate the TODO entry with a verification command.** T8~~ done (convention adopted — TODO_LIST entries carry effort + verification hints since)
+   ~~said "30m — `~/projects/crush-daily`"; the verification is~~
+   ~~implicit. Rewriting as T8 with an explicit gate — "30m, verify with~~
+   ~~`nix run .#lint` and `nix flake check`" — would have made the~~
+   ~~closing check automatic, not a recollection.~~
 6. **Per-tree fmt clean before judging lint results across trees.**
    This session touched two trees (go-crush-data and crush-daily) in
    parallel; I ran `nix fmt` in crush-daily only, never in
    go-crush-data. Since I touched go-crush-data's CHANGELOG.md (a
    markdown file inside `nix fmt`'s scope), I should have run
    `nix fmt` there too. The lint passed by luck, not by audit.
-7. **Code review the (auto-committed) message, not just the diff.**
-   The `BuildFlow` auto-commit hook captured `e1c3114` with a body I
-   did not write and have not re-read until this report. Reading it
-   back, the message is fine — but the process assumes "the daemon
-   captures it correctly". Re-reading is cheap; assuming is risky.
+7. ~~**Code review the (auto-committed) message, not just the diff.**~~ done (recorded as the AGENTS.md process rule (diff daemon commits before trusting their subjects))
+   ~~The `BuildFlow` auto-commit hook captured `e1c3114` with a body I~~
+   ~~did not write and have not re-read until this report. Reading it~~
+   ~~back, the message is fine — but the process assumes "the daemon~~
+   ~~captures it correctly". Re-reading is cheap; assuming is risky.~~
 8. **Auto-commit hook worked well enough that I didn't notice.** I
    didn't realize the lint-fix work was already committed and pushed
    until I ran `git log` near the end. The hook should print the SHA
    it just created, not silently commit. (Out of scope for this
    session but worth flagging in the SDK's own context.)
-9. **The "third consumer" framing in the prior status report.** The
-   2026-08-16 07:47 status claimed `DecodeTodos` was "gated on a
-   second consumer". I was that consumer. There was no other consumer
-   waiting; the gate was self-imposed. The phrasing implied a queue
-   that didn't exist. Reword as "needs real consumer validation" to
-   keep the gate honest.
-10. **My collector change modified `summaryFromStats`'s signature.**
-    That's an internal-only refactor (not exported), but the rule of
-    thumb "smallest surface change" would prefer adding a second
-    function that the caller picks between. I judged the unified
-    signature cleaner because every caller needs both accumulators;
-    the rule of thumb doesn't apply. Recording the reasoning here so
-    a future refactor doesn't undo the call-site collapse.
+9. ~~**The "third consumer" framing in the prior status report.** The~~ done (rewording recorded — the gate is real-consumer validation, not a queue)
+   ~~2026-08-16 07:47 status claimed `DecodeTodos` was "gated on a~~
+   ~~second consumer". I was that consumer. There was no other consumer~~
+   ~~waiting; the gate was self-imposed. The phrasing implied a queue~~
+   ~~that didn't exist. Reword as "needs real consumer validation" to~~
+   ~~keep the gate honest.~~
+10. ~~**My collector change modified `summaryFromStats`'s signature.**~~ done (reasoning recorded here — the call-site collapse was intentional)
+    ~~That's an internal-only refactor (not exported), but the rule of~~
+    ~~thumb "smallest surface change" would prefer adding a second~~
+    ~~function that the caller picks between. I judged the unified~~
+    ~~signature cleaner because every caller needs both accumulators;~~
+    ~~the rule of thumb doesn't apply. Recording the reasoning here so~~
+    ~~a future refactor doesn't undo the call-site collapse.~~
 
 ## f) NEXT — up to 50 ranked items, from this session's findings
 
@@ -322,7 +322,8 @@ or follow-up status reports.)
 4. Move `BenchmarkMessages`/`BenchmarkIterMessages` to a paired
    benchstat baseline so the iter path's allocations are visible in
    trend. 30m — `docs/benchmarks/baseline-benchmarks.txt`. ← still
-   open — TODO_LIST T24 (`BenchmarkIterMessages` does not exist yet)
+   open — TODO_LIST T24 (`BenchmarkIterMessages` written 2026-09-08;
+   baseline regen pending)
 5. ~~Add a fuzz matrix entry for `DecodeTodos` shape variants (the
    existing FuzzDecodeTodos exercises arbitrary bytes; add a
    structurally-aware corpus seeded from the 2026-08-16 census). 30m
@@ -357,38 +358,38 @@ ownership are implied._
 10. Wire the per-project prompt content into the cross-project
     prompt too — the cross-project synthesis sees `[]insights`, not
     `[]ProjectDailySummary`, so the new stats are not yet visible at
-    the day-level. 30m — `internal/insights/insights.go`.
+    the day-level. 30m — `internal/insights/insights.go`. ← cross-repo (crush-daily backlog)
 11. Lift the bad-Todos / bad-IterMessages handling into a typed
     collector warning event (currently it's `slog.Warn` + zero
     contribution; the daily report could surface a "data quality"
-    footer). M — `internal/domain/`.
+    footer). M — `internal/domain/`. ← cross-repo (crush-daily backlog)
 12. Add a `Domain` style prose paragraph to the HTML report
     summarising the day's pending todos (e.g. "5 todos pending across
-    2 projects — most in `crush-daily` (3 pending)"). M — `report.templ`.
+    2 projects — most in `crush-daily` (3 pending)"). M — `report.templ`. ← cross-repo (crush-daily backlog)
 13. Extend `TestBuildCrossProjectPrompt` to assert the new stats flow
     through `projects[i].TodoStats` and `projects[i].MessagePartStats`.
-    15m — `insights_test.go`.
+    15m — `insights_test.go`. ← cross-repo (crush-daily backlog)
 14. `crush-daily doctor` could grow a `todos_shape` check that
     decodes one row's Todos and asserts the census shape — a one-line
-    sniff test against any future Crush drift. 30m — `internal/doctor`.
+    sniff test against any future Crush drift. 30m — `internal/doctor`. ← cross-repo (crush-daily backlog)
 15. Fix the pre-existing `internal/server` race (out of scope today,
     but a hard prerequisite for CI matrix green). L —
-    `internal/server/`.
+    `internal/server/`. ← cross-repo (crush-daily backlog)
 16. Audit `ProjectDailySummary`'s JSON tags for back-compat with
     stored events: the two new fields are additive (clients ignore
     unknown JSON), but if any stored event payload is loaded and
     re-emitted, the new fields need to round-trip. 15m —
-    `events_codec_test.go`.
-17. Add `scripts/real-data-collect-test.sh` — see e/4. M.
+    `events_codec_test.go`. ← cross-repo (crush-daily backlog)
+17. Add `scripts/real-data-collect-test.sh` — see e/4. M. ← cross-repo (crush-daily backlog)
 18. Make the report's `TodoStats` panel sortable (completed vs
     pending vs in-progress order). 30m — `report.templ` + a small
-    `sort.go` helper.
+    `sort.go` helper. ← cross-repo (crush-daily backlog)
 19. Add a `crush-daily report --json` summary including the new
-    stats (today only `--json` for the doctor exists). M — `cmd/`.
+    stats (today only `--json` for the doctor exists). M — `cmd/`. ← cross-repo (crush-daily backlog)
 20. Add a `--todo-stats`/`--part-stats` flag to `crush-daily
     insights` that restricts the LLM prompt to the new breakdown
     only (useful for cheap "what's pending?" runs without paying for
-    full insight generation). M — `internal/insights/`.
+    full insight generation). M — `internal/insights/`. ← cross-repo (crush-daily backlog)
 
 ### Cross-repo
 

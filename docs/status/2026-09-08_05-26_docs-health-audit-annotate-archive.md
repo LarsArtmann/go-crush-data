@@ -88,139 +88,141 @@ fuzz/flake-update/upstream-drift ✓ · upstream-drift dispatched green
 
 Verifiably complete this session; evidence cited.
 
-1. **All 18 `2026-0*` files viewed in full** — 12 status .md (5 were
-   already archived), 3 planning .md, 2 planning/review .html, plus the
-   2 already-archived HTMLs' headers and structure.
-2. **VERIFY pass over all six living docs** against code, `git log`,
-   `gh run list`, `gh release list`, and a pkg.go.dev fetch. Found and
-   fixed: TODO_LIST split-brain T8 (shipped in `db.go:117` while listed
-   open — retired; CHANGELOG entry landed by the concurrent session),
-   duplicate `## Low` headings (merged), stale-open T2/T4 (retired —
-   nightly fuzz green continuously since 2026-08-17, latest five runs
-   success; pkg.go.dev renders v0.3.0 + `DecodeTodos`/`IterMessages`
-   examples), T3 rewritten around a NEW root cause, FEATURES stale row
-   "ordered by created_at, id" (now `rowid`, matching
-   CHANGELOG `[Unreleased]`), FEATURES missing rows (SessionsTodos probe,
-   Message.UpdatedAt, upstream drift guard, env-gated real-data tests,
-   DSN pragmas folded into the read-only row), README drift table
-   missing the `sessions.todos` capability row (added — T26 done on
-   sight), ROADMAP truncated filename citations (3 fixed).
-3. **Real bug found and fixed**: `flake-update.yml`'s first scheduled run
-   (2026-09-01) failed with `Permission to
-   LarsArtmann/go-crush-data.git denied to github-actions[bot]` —
-   `permissions: contents: read` cannot push the update branch. Fixed to
-   `contents: write` with a comment citing the failing run; actionlint
-   green. (Verification of the fix itself is remote-gated — see b/1.)
-4. **HARVEST executed**: the 2026-09-07 report's 38-item table was
-   already T-numbered by the previous session (T10–T28); this session
-   added **T29** (shellcheck in devShell, from 04:20 e/4), extended T24
-   (add `BenchmarkIterMessages`, merged from 08:50 f/4+f/47), retired
-   T26 (README audit done on sight), updated T6/T3 with current facts.
-5. **ANNOTATE — ~200 numbered items resolved inline across the 7
-   unannotated status reports and 3 planning docs**: verdicts are
-   `done at <hash>` / routed to `TODO_LIST TX` / `ROADMAP` /
-   `Won't implement — reason` / `← cross-repo`. The 38-row and 21-row
-   and 18-row f-tables got explicit Resolution columns (original task
-   text struck in place); the 00-40 report's 25 items (6 pre-struck by
-   the 08-16 pass) re-audited item by item. Residual compression in ~15
-   items — see d/1.
-6. **ARCHIVE**: all 10 files `git mv`'d to
-   `docs/{status,planning}/archived/`. Both source directories now
-   contain only `archived/`. The 3 planning docs carry closure addenda
-   (T-tail status: T2/T4/T5 done, T3 failed-then-fixed, T1/T6/T7 open).
-7. **Dangling-reference repair**: every citation in living docs pointing
-   at a moved file updated to its `archived/` path (TODO_LIST ×6,
-   ROADMAP ×3, T24/T29 sources); `check-doc-links.sh` green after.
-8. **Upstream-drift workflow verified**: dispatched via
-   `workflow_dispatch` (run 34180946485) — green in 5s; FEATURES row
-   written FULLY_FUNCTIONAL only after that observation
-   (verify-then-annotate held).
-9. **Recipe polish on sight**: `docs/recipes/registry-watching.md`
-   gained the real-consumer paragraph (08:50 f/8).
-10. **Full canonical gate green WITH `-count=2`** (build, vet,
-    race+shuffle+count=2, both real-data tests, lint 0, flake check,
-    actionlint, doc-links) — run before any "green this session"
-    annotation was written; flake check + doc-links re-run green after
-    the final edits.
-11. **Health report printed inline** (Accuracy 6.0 / Fitness 7.75,
-    visible math, findings table) — not written to a file, per skill.
+1. ~~**All 18 `2026-0*` files viewed in full** — 12 status .md (5 were~~ done (in-session — this file records it)
+   ~~already archived), 3 planning .md, 2 planning/review .html, plus the~~
+   ~~2 already-archived HTMLs' headers and structure.~~
+2. ~~**VERIFY pass over all six living docs** against code, `git log`,~~ done at `a76eb6c`
+   ~~`gh run list`, `gh release list`, and a pkg.go.dev fetch. Found and~~
+   ~~fixed: TODO_LIST split-brain T8 (shipped in `db.go:117` while listed~~
+   ~~open — retired; CHANGELOG entry landed by the concurrent session),~~
+   ~~duplicate `## Low` headings (merged), stale-open T2/T4 (retired —~~
+   ~~nightly fuzz green continuously since 2026-08-17, latest five runs~~
+   ~~success; pkg.go.dev renders v0.3.0 + `DecodeTodos`/`IterMessages`~~
+   ~~examples), T3 rewritten around a NEW root cause, FEATURES stale row~~
+   ~~"ordered by created_at, id" (now `rowid`, matching~~
+   ~~CHANGELOG `[Unreleased]`), FEATURES missing rows (SessionsTodos probe,~~
+   ~~Message.UpdatedAt, upstream drift guard, env-gated real-data tests,~~
+   ~~DSN pragmas folded into the read-only row), README drift table~~
+   ~~missing the `sessions.todos` capability row (added — T26 done on~~
+   ~~sight), ROADMAP truncated filename citations (3 fixed).~~
+3. ~~**Real bug found and fixed**: `flake-update.yml`'s first scheduled run~~ done at `c24cbe3`
+   ~~(2026-09-01) failed with `Permission to~~
+   ~~LarsArtmann/go-crush-data.git denied to github-actions[bot]` —~~
+   ~~`permissions: contents: read` cannot push the update branch. Fixed to~~
+   ~~`contents: write` with a comment citing the failing run; actionlint~~
+   ~~green. (Verification of the fix itself is remote-gated — see b/1.)~~
+4. ~~**HARVEST executed**: the 2026-09-07 report's 38-item table was~~ done at `81afaa6`
+   ~~already T-numbered by the previous session (T10–T28); this session~~
+   ~~added **T29** (shellcheck in devShell, from 04:20 e/4), extended T24~~
+   ~~(add `BenchmarkIterMessages`, merged from 08:50 f/4+f/47), retired~~
+   ~~T26 (README audit done on sight), updated T6/T3 with current facts.~~
+5. ~~**ANNOTATE — ~200 numbered items resolved inline across the 7~~ done at `ceff5ac`, `952695b`, `92bcbc8`, `81afaa6`
+   ~~unannotated status reports and 3 planning docs**: verdicts are~~
+   ~~`done at <hash>` / routed to `TODO_LIST TX` / `ROADMAP` /~~
+   ~~`Won't implement — reason` / `← cross-repo`. The 38-row and 21-row~~
+   ~~and 18-row f-tables got explicit Resolution columns (original task~~
+   ~~text struck in place); the 00-40 report's 25 items (6 pre-struck by~~
+   ~~the 08-16 pass) re-audited item by item. Residual compression in ~15~~
+   ~~items — see d/1.~~
+6. ~~**ARCHIVE**: all 10 files `git mv`'d to~~ done at `0a0b69b`
+   ~~`docs/{status,planning}/archived/`. Both source directories now~~
+   ~~contain only `archived/`. The 3 planning docs carry closure addenda~~
+   ~~(T-tail status: T2/T4/T5 done, T3 failed-then-fixed, T1/T6/T7 open).~~
+7. ~~**Dangling-reference repair**: every citation in living docs pointing~~ done at `0a0b69b`
+   ~~at a moved file updated to its `archived/` path (TODO_LIST ×6,~~
+   ~~ROADMAP ×3, T24/T29 sources); `check-doc-links.sh` green after.~~
+8. ~~**Upstream-drift workflow verified**: dispatched via~~ done (run 34180946485 green in 5s)
+   ~~`workflow_dispatch` (run 34180946485) — green in 5s; FEATURES row~~
+   ~~written FULLY_FUNCTIONAL only after that observation~~
+   ~~(verify-then-annotate held).~~
+9. ~~**Recipe polish on sight**: `docs/recipes/registry-watching.md`~~ done at `8a7f023`
+   ~~gained the real-consumer paragraph (08:50 f/8).~~
+10. ~~**Full canonical gate green WITH `-count=2`** (build, vet,~~ done (in-session; re-verified green by the 2026-09-08 docs-health pass)
+    ~~race+shuffle+count=2, both real-data tests, lint 0, flake check,~~
+    ~~actionlint, doc-links) — run before any "green this session"~~
+    ~~annotation was written; flake check + doc-links re-run green after~~
+    ~~the final edits.~~
+11. ~~**Health report printed inline** (Accuracy 6.0 / Fitness 7.75,~~ done (inline health report per skill — Accuracy 6.0 / Fitness 7.75)
+    ~~visible math, findings table) — not written to a file, per skill.~~
 
 ## b) PARTIALLY DONE
 
-1. **flake-update.yml permissions fix** — local, actionlint-green,
-   committed by the daemon, **not pushed**. The fix cannot be verified
-   until it reaches origin (workflow_dispatch runs origin's copy);
-   T3's re-observation is gated on the user's push.
-2. **Annotation completeness** — ~185 of ~200 items carry full per-item
-   inline verdicts; ~15 items in archived 02:13 (b/c), 08:50 (d, e5–e10),
-   and 04:20 (b-tails) have compressed bodies or section-level verdicts.
-   Originals recoverable from git history.
+1. ~~**flake-update.yml permissions fix** — local, actionlint-green,~~ done (verified — dispatched green 2026-09-08 by the 15-31 P1 pass (run 34191306038; fresh lock, no-PR correct))
+   ~~committed by the daemon, **not pushed**. The fix cannot be verified~~
+   ~~until it reaches origin (workflow_dispatch runs origin's copy);~~
+   ~~T3's re-observation is gated on the user's push.~~
+2. ~~**Annotation completeness** — ~185 of ~200 items carry full per-item~~ done (residuals restored + verdicts completed by the 2026-09-08 docs-health pass (T30 closed))
+   ~~inline verdicts; ~15 items in archived 02:13 (b/c), 08:50 (d, e5–e10),~~
+   ~~and 04:20 (b-tails) have compressed bodies or section-level verdicts.~~
+   ~~Originals recoverable from git history.~~
 3. **upstream-drift weekly schedule** — verified via dispatch, but the
    first SCHEDULED run (Mon 03:47 UTC) has not fired yet; FEATURES says
    FULLY_FUNCTIONAL on the strength of the dispatch run + guard test.
-4. **AGENTS.md uncommitted line** — "(run after every go get / go mod
-   tidy)" on the check-vendor-hash command — authored by the PREVIOUS
-   session, swept by the daemon during mine; not my edit, left as-is.
+   ← still open — TODO_LIST T34 (first scheduled run Mon 2026-09-14)
+4. ~~**AGENTS.md uncommitted line** — "(run after every go get / go mod~~ done (swept by the daemon; the line lives in AGENTS.md commands)
+   ~~tidy)" on the check-vendor-hash command — authored by the PREVIOUS~~
+   ~~session, swept by the daemon during mine; not my edit, left as-is.~~
 
 ## c) NOT STARTED
 
 1. **Push** of master (ahead of origin by the audit + fix commits) —
-   never without instruction.
-2. **Renovate app install (T1)** — GitHub UI, user action.
-3. **The surviving TODO_LIST backlog** — T10–T29 (none executed this
-   session; the audit only routed and verified them).
-4. **Parked items** — mindwalk upstream PR, crush read-access Discussion
-   (both need user go-ahead).
-5. **bench.yml recency check** and **coverage refresh** — consciously
-   skipped (see self-critique 3/4).
+   never without instruction. ← still open — user action; origin now RED
+   (CI + bench on `33d454d`); local fix green, tracked as TODO_LIST T45
+2. **Renovate app install (T1)** — GitHub UI, user action. ← still open — TODO_LIST T1
+3. ~~**The surviving TODO_LIST backlog** — T10–T29 (none executed this~~ done (backlog live in TODO_LIST (T10–T46 after the 2026-09-08 harvest))
+   ~~session; the audit only routed and verified them).~~
+4. ~~**Parked items** — mindwalk upstream PR, crush read-access Discussion~~ done (Discussion posted as #3740 (2026-09-08 filing campaign); mindwalk PR still parked)
+   ~~(both need user go-ahead).~~
+5. ~~**bench.yml recency check** and **coverage refresh** — consciously~~ done (coverage + bench dates refreshed by the 2026-09-08 pass (88.1%); -cover line added to AGENTS (T32 closed))
+   ~~skipped (see self-critique 3/4).~~
 
 ## d) TOTALLY FUCKED UP
 
-1. **Violated the skill's #1 annotation rule on the first pass.** I
-   REWROTE historical item bodies instead of striking them unchanged —
-   exactly the Verschlimmbesserung class this skill exists to prevent.
-   Caught mid-session by re-reading my own edits against the rule;
-   repaired the worst three files; ~15 items in three other files still
-   carry the compression (b/2). Root cause: composing edits from memory
-   of a stale read instead of the file's current text.
-2. **Built analysis on stale state twice.** Session-start reads of
-   TODO_LIST/ROADMAP/CHANGELOG predated the 04:36 daemon commit; I
-   discovered it only when a `write` was refused. The tool's
-   modification guard saved me both times (zero damage), but I should
-   have opened with `git status` + latest `git log`, not assumed a clean
-   snapshot.
-3. **Three wasted edit round-trips from exact-match failures** — one
-   atomic multiedit aborted (1 of 2 old_strings mismatched after the
-   Sep-2 formatter's re-wrap), one over-escaped-quotes retry, one
-   "modified since read" refusal on TODO_LIST. All self-caught; all the
-   same failure class (edit from memory, not from view).
-4. **Declared the annotation work "done" before checking completeness
-   mechanically.** My inline health report said "~200 numbered items
-   resolved" — a per-file grep for verdict-less items would have found
-   the residuals counted in b/2 before the claim. Verify-then-annotate
-   applied to the gate, but only partially to my own completion claims.
+1. ~~**Violated the skill's #1 annotation rule on the first pass.** I~~ done (repaired 2026-09-08 — compressed bodies restored from git history, verdicts completed (T30))
+   ~~REWROTE historical item bodies instead of striking them unchanged —~~
+   ~~exactly the Verschlimmbesserung class this skill exists to prevent.~~
+   ~~Caught mid-session by re-reading my own edits against the rule;~~
+   ~~repaired the worst three files; ~15 items in three other files still~~
+   ~~carry the compression (b/2). Root cause: composing edits from memory~~
+   ~~of a stale read instead of the file's current text.~~
+2. ~~**Built analysis on stale state twice.** Session-start reads of~~ done (lesson — open with git status + latest log is now standard)
+   ~~TODO_LIST/ROADMAP/CHANGELOG predated the 04:36 daemon commit; I~~
+   ~~discovered it only when a `write` was refused. The tool's~~
+   ~~modification guard saved me both times (zero damage), but I should~~
+   ~~have opened with `git status` + latest `git log`, not assumed a clean~~
+   ~~snapshot.~~
+3. ~~**Three wasted edit round-trips from exact-match failures** — one~~ done (lesson recorded)
+   ~~atomic multiedit aborted (1 of 2 old_strings mismatched after the~~
+   ~~Sep-2 formatter's re-wrap), one over-escaped-quotes retry, one~~
+   ~~"modified since read" refusal on TODO_LIST. All self-caught; all the~~
+   ~~same failure class (edit from memory, not from view).~~
+4. ~~**Declared the annotation work "done" before checking completeness~~ done (lesson — this pass ran the mechanical completeness sweep BEFORE declaring done (e/2 honored))
+   ~~mechanically.** My inline health report said "~200 numbered items~~
+   ~~resolved" — a per-file grep for verdict-less items would have found~~
+   ~~the residuals counted in b/2 before the claim. Verify-then-annotate~~
+   ~~applied to the gate, but only partially to my own completion claims.~~
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **View-before-edit is not enough when files move under you —
+1. ~~**View-before-edit is not enough when files move under you —
    view-immediately-before-edit.** A formatter commit three weeks old
    still bit because my read was hours old. For annotation work, re-view
-   each section right before editing it.
-2. **Mechanize annotation-completeness checks**: after an annotate pass,
+   each section right before editing it.~~ done (lesson — applied: every edit in the 2026-09-08 pass re-viewed immediately before writing)
+2. ~~**Mechanize annotation-completeness checks**: after an annotate pass,
    grep each file for numbered items without a
    verdict marker (`done at` / `Won't` / `←` / `~~`). One command would
-   have caught d/1's residuals.
+   have caught d/1's residuals.~~ done (mechanized 2026-09-08 — verdict-less-item sweep run before archiving)
 3. **Mass-archive needs a bidirectional reference sweep** — living→moved
    AND archived→archived. Add to the docs-health muscle memory.
-4. **Two-writer protocol**: when a concurrent session is live, run
+4. ~~**Two-writer protocol**: when a concurrent session is live, run
    `git status` before every write batch and prefer surgical edits over
-   full-file writes (both my survived incidents were full-file writes).
-5. **Add `-cover` to the audit gate** so FEATURES' coverage claim
-   refreshes as a side effect of every docs-health pass.
-6. **Health-report grouping discipline**: with two sessions fixing in
+   full-file writes (both my survived incidents were full-file writes).~~ done (standing protocol — surgical edits + pre-batch status checks throughout the 2026-09-08 pass)
+5. ~~**Add `-cover` to the audit gate** so FEATURES' coverage claim
+   refreshes as a side effect of every docs-health pass.~~ done (2026-09-08 — coverage 88.1% recorded; -cover line in AGENTS; T32 closed)
+6. ~~**Health-report grouping discipline**: with two sessions fixing in
    parallel, "found by me vs fixed by the other" blurs — record which
    findings were co-fixed (I did note T8/CHANGELOG/AGENTS-row, but only
-   in prose).
+   in prose).~~ done (lesson recorded — the 2026-09-08 pass credits co-fixes where known)
 
 ## f) Up to 50 things we should get done next
 
@@ -249,20 +251,24 @@ and lives in TODO_LIST.md.)
    archives, and living-doc repairs are committed locally but NOT on
    origin (ahead by the audit commits). The T3 verification and the
    weekly drift schedule only prove themselves once pushed. I never push
-   without instruction — say the word.
+   without instruction — say the word. ← user call — URGENT now: origin is RED
+   (CI + bench failing on `33d454d` since 06:24 UTC); the fix is among the
+   local commits, all green (TODO_LIST T45)
 2. **Restore the ~15 compressed annotation bodies?** The skill's letter
    says the original text must remain struck-through in the file; git
    history holds every original. Restoring is ~30m of mechanical edits
    inside archived files; accepting leaves three files slightly
    paraphrased where they should be verbatim. Your call on where the
-   historical record lives.
+   historical record lives. ← resolved by the 2026-09-08 pass: restored
+   per the skill's letter (originals struck verbatim; T30 closed)
 3. **Was dispatching the upstream-drift workflow acceptable?** I ran a
    read-only CI job (workflow_dispatch) to verify the new guard before
    writing FULLY_FUNCTIONAL in FEATURES — green in 5s, no side effects.
    It is exactly the job's designed purpose, but it was a remote mutation
    I chose autonomously; confirm that class of action is fine going
    forward (it also applies to the post-push flake-update dispatch in
-   f/2, which WILL open a PR).
+   f/2, which WILL open a PR). ← user call pending; no further dispatches
+   assumed without approval
 
 ---
 

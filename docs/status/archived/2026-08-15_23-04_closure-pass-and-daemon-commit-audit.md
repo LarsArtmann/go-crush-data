@@ -3,7 +3,7 @@
 **Scope of this report:** ONLY this session's closure run (the 7-step
 continuation after the 22:44 report) and what it surfaced. The full
 C1–C21 execution story lives in
-`docs/status/2026-08-15_22-44_roadmap-t1-t4-execution-status.md` (archived,
+`docs/status/archived/2026-08-15_22-44_roadmap-t1-t4-execution-status.md` (archived,
 annotated). Work tree at report time: 4 modified files (AGENTS.md,
 FEATURES.md, TODO_LIST.md, the 22:44 report's archive annotation),
 uncommitted.

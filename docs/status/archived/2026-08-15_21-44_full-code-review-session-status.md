@@ -44,8 +44,8 @@ schema reports all capabilities, 3 sessions read.
 10. **CHANGELOG:** `### Fixed` entries for both bugs + doc fix, under 0.1.1.
 11. **TODO_LIST.md created** with 4 open ticketed findings + done items.
 12. **HTML artifacts written:**
-    - Plan: `docs/planning/2026-08-15_21_30-full-code-review-execution.html`
-    - Report: `docs/reviews/2026-08-15_21-38_full-code-review.html`
+    - Plan: `docs/planning/archived/2026-08-15_21_30-full-code-review-execution.html`
+    - Report: `docs/reviews/archived/2026-08-15_21-38_full-code-review.html`
 13. **Real-database smoke test run** (post-hoc, during this status check) —
     passes; missed during the review proper, owned here.
 

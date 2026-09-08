@@ -155,7 +155,7 @@ routed to the live TODO_LIST._
    ~~not both, when a historical file is annotated AND moved.~~
 6. **Cadence for docs-health**: this much drift accumulated in ONE day of
    intense sessions. A docs-health audit gated on every release (and after
-   any 50+ item session) keeps it bounded.
+   any 50+ item session) keeps it bounded. ← still open — TODO_LIST T33
 
 ## f) Up to 50 things we should get done next
 

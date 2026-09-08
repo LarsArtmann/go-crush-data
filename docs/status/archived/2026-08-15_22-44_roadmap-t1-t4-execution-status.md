@@ -7,7 +7,7 @@
 > `9b4d346`. Questions in section g still await user decisions.
 
 **Session start point:** `bcc0a50` (clean tree), plan
-`docs/planning/2026-08-15_22-00-consolidated-roadmap-execution.md`.
+`docs/planning/archived/2026-08-15_22-00-consolidated-roadmap-execution.md`.
 **Scope executed:** C1–C21 across all four Pareto tiers, with verification
 gates between tiers. 35 files changed (22 modified, 13 new), all uncommitted
 at report time.

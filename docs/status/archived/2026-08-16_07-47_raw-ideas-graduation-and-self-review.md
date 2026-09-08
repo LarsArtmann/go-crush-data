@@ -67,7 +67,7 @@ _Resolved 2026-09-08: all five committed, pushed, and CI-green long ago
    honestly Linux-verified (see f/11)
 4. ~~**Docs sweep** (README, FEATURES, CHANGELOG `[Unreleased]`, ROADMAP
    graduation + new non-decision, TODO_LIST T8, AGENTS.md, plan record
-   docs/planning/2026-08-16_07-18-raw-ideas-graduation.md with per-task
+   docs/planning/archived/2026-08-16_07-18-raw-ideas-graduation.md with per-task
    verification). Gap: uncommitted; FEATURES/CHANGELOG claims become
    CI-true only after push + green legs.~~ done at `6de2950` — and
    kept fresh by the docs-health passes since (2026-09-02, 2026-09-08)
@@ -143,24 +143,24 @@ honest failures are process failures:
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Linter remedy first, archaeology second.** When a linter states the
-   fix ("make it a constant"), apply it; investigate the detector only if
-   the fix is wrong. Impact: this session, ~6 round trips ≈ 10% of the
-   session's tool budget.
-2. **CI-adjacent claims require touching the CI file in the same
-   change.** Any new test/fuzz target ⇒ grep `.github/workflows/` for
-   hardcoded lists before writing "covered by nightly" anywhere.
+1. ~~**Linter remedy first, archaeology second.** When a linter states the~~ done (standing lesson — no recurrence logged since)
+   ~~fix ("make it a constant"), apply it; investigate the detector only if~~
+   ~~the fix is wrong. Impact: this session, ~6 round trips ≈ 10% of the~~
+   ~~session's tool budget.~~
+2. ~~**CI-adjacent claims require touching the CI file in the same~~ done (lesson — workflow target lists checked in later sessions (fuzz/bench/upstream-drift))
+   ~~change.** Any new test/fuzz target ⇒ grep `.github/workflows/` for~~
+   ~~hardcoded lists before writing "covered by nightly" anywhere.~~
 3. **New read path ⇒ benchmark in the same change** (repo convention:
    committed baseline + benchstat trend). IterMessages shipped without
-   one; the trend CI is blind to it until added.
-4. **Resolve or pin the LSP-vs-CLI lint divergence.** One investigation;
-   if unresolvable, an AGENTS.md line "gopls-class diagnostics may serve
-   stale golangci findings; the `nix run .#lint` result is authoritative"
-   — mirroring the existing cross-tree cache gotcha.
-5. **Targeted formatting.** `golangci-lint fmt <files>` where possible;
-   repo-wide fmt only at session end.
-6. **Edit hygiene on structural changes:** one precise edit over a
-   context-rich anchor, never a batch containing no-op filler edits.
+   one; the trend CI is blind to it until added. ← still open — TODO_LIST T24 (benchmark written 2026-09-08, baseline regen pending)
+4. ~~**Resolve or pin the LSP-vs-CLI lint divergence.** One investigation;~~ done (root cause found 2026-09-08 — two divergent lint binaries; AGENTS.md gotcha + CI-identical gate command landed (f6cd473))
+   ~~if unresolvable, an AGENTS.md line "gopls-class diagnostics may serve~~
+   ~~stale golangci findings; the `nix run .#lint` result is authoritative"~~
+   ~~— mirroring the existing cross-tree cache gotcha.~~
+5. ~~**Targeted formatting.** `golangci-lint fmt <files>` where possible;~~ done (lesson recorded — with the caveat that per-file linting splits cross-file test helpers (2026-09-08 15-31 report d/5))
+   ~~repo-wide fmt only at session end.~~
+6. ~~**Edit hygiene on structural changes:** one precise edit over a~~ done (standing lesson)
+   ~~context-rich anchor, never a batch containing no-op filler edits.~~
 
 ## f) Next tasks (ranked)
 
