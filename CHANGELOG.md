@@ -13,6 +13,16 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.4.0] - 2026-09-08
+
+### Added
+
 - `Session.SummaryMessageID` and `Message.IsSummaryMessage` — the summary
   metadata Crush writes when compacting a session's context: the session
   points at its summary message, and that message row is flagged. Both are
@@ -313,7 +323,8 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.1.1...v0.2.0
