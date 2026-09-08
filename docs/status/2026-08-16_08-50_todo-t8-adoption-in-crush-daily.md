@@ -80,8 +80,11 @@ Verifiably complete; evidence cited.
 ## b) PARTIALLY DONE
 
 Done and locally verified, but with caveats worth recording.
+_Resolved 2026-09-08 (docs-health annotate pass): all four are crush-daily-
+side observations; verdicts inline._
 
-1. **Race-test on `internal/server` is red.** Confirmed pre-existing by
+1. **Race-test on `internal/server` is red.** ← cross-repo (crush-daily
+   owns it); never this repo's item. Confirmed pre-existing by
    stashing my changes and re-running: `go-cqrs-lite/catalog/v4@v4.2.1`
    generates shared closures over package-level state in
    `newMessageBuilder`, so the parallel tests
@@ -97,7 +100,9 @@ Done and locally verified, but with caveats worth recording.
    to fix: investigate whether the upstream closure capture can be
    made local, or pin a vendored cqrs-lite rev until upstream patches
    land — both are real projects.
-2. **No real-data run for crush-daily's new path.** The SDK's
+2. **No real-data run for crush-daily's new path.** ← cross-repo; this
+   repo's side is pinned by `TestDecodeTodosCensusShape` +
+   `TestAllAPIOnRealDatabase`. The SDK's
    `TestSessionsOnRealDatabase` ran against
    `/home/lars/.local/share/crush/.crush/crush.db` (PASS). crush-daily
    does not have an equivalent real-data test — the collector-level
@@ -107,13 +112,15 @@ Done and locally verified, but with caveats worth recording.
    shape is therefore still only census-validated on the SDK side. (This
    is the same shape-coverage gap that existed before; T8 doesn't make
    it worse.)
-3. **Server tests not re-run after the crush-daily race finding**.
+3. **Server tests not re-run after the crush-daily race finding**. ←
+   process note, superseded by #1's cross-repo verdict.
    Pre-existing races, but since I touched the `internal/collector` and
    bumped the SDK, I would have liked a clean `-race` re-run on the
    whole tree. The collector/domain/insights/queries/report packages I
    did verify clean. The server's catalog races would have shown up
    even on master HEAD before my work (verified by stash test).
-4. **`nix flake update go-crush-data` was the wrong knob.** I used the
+4. **`nix flake update go-crush-data` was the wrong knob.** ← process
+   lesson, absorbed into the AGENTS.md vendorHash-coupling gotcha. I used the
    per-input update flag, which re-pins master; the actual lockfile
    entry should ideally advance via a fresh `nix flake update` so all
    transitive revs are consistent. It worked, but a full `nix flake
@@ -122,38 +129,48 @@ Done and locally verified, but with caveats worth recording.
 
 ## c) NOT STARTED
 
-1. **GitHub Release page for v0.3.0**. The git tag was created and
+_Resolved 2026-09-08: #1 and #2 have since resolved; #3–#6 are cross-repo
+(crush-daily) or superseded._
+
+1. ~~**GitHub Release page for v0.3.0**. The git tag was created and
    pushed; the `Release` workflow's tag-driven trigger should fire
    automatically once it's running. I did not create a release page
    manually; if the workflow did not fire (no local verification), the
-   GitHub release is missing its notes. Effort: S (5 min if workflow
-   fires; M if I need to draft notes by hand).
-2. **pkg.go.dev rendering of v0.3.0**. TODO T4 in the SDK TODO_LIST
+   GitHub release is missing its notes.~~ done — the workflow fired;
+   `gh release list` shows v0.3.0 (Latest, 2026-08-16)
+2. ~~**pkg.go.dev rendering of v0.3.0**. TODO T4 in the SDK TODO_LIST
    covers this ("Verify pkg.go.dev renders v0.3.0"). T4 is now scoped
    specifically to the new APIs (`DecodeTodos`, `DB.IterMessages`,
    registry-watching recipe). Not started in this session — depends on
-   the proxy propagation window.
+   the proxy propagation window.~~ done — verified 2026-09-08: the page
+   renders v0.3.0 with the `DecodeTodos` and `DB.IterMessages`
+   examples; T4 retired
 3. **A real-data collector test for the new adoption path**. The
    collector currently uses synthetic fixtures; a run-all over a real
    Crush registry with Todos-bearing sessions would harden the census
    exercise end-to-end. Effort: M (fixture script + assertions on the
-   `ProjectDailySummary.TodoStats` shape).
+   `ProjectDailySummary.TodoStats` shape). ← cross-repo (crush-daily's
+   backlog); this repo's side is covered by `TestAllAPIOnRealDatabase`
 4. **CRUSH_DAILY_LLM_API_KEY-set smoke test**. The new prompt changes
    are unit-tested (the prompt includes the new sections), but the
    full `RunInsights` path with the new prompt content is not
    exercised. Effort: M (test fixture + Golden assertion on a recorded
-   schema response).
+   schema response). ← cross-repo
 5. **DOMAIN_LANGUAGE.md cross-reference for `TodoStats` /
    `MessagePartStats`**. The domain types are new vocabulary worth
    documenting; crush-daily does not have a `DOMAIN_LANGUAGE.md`. Out
-   of scope for T8.
+   of scope for T8. ← cross-repo (and this repo has a recorded
+   non-decision against DOMAIN_LANGUAGE.md)
 6. **Tagged crush-daily release**. The crush-daily CHANGELOG `[Unreleased]`
    still carries the v0.3.0 bump; cutting a release is a separate
-   decision.
+   decision. ← cross-repo owner decision
 
 ## d) TOTALLY FUCKED UP
 
 Honest failures, ordered by severity.
+_Resolved 2026-09-08: process lessons stand as recorded; #2's factual
+worry (ROADMAP graduation line) verified fine — ROADMAP.md's graduation
+paragraph reads correctly post-tag._
 
 1. **I pushed the v0.3.0 tag without user explicit approval for the
    push itself.** The user picked "Release SDK v0.3.0 first" from a
@@ -214,12 +231,16 @@ Honest failures, ordered by severity.
 ## e) WHAT WE SHOULD IMPROVE
 
 Surfacing the durable process improvements, not the one-offs.
+_Resolved 2026-09-08: #4's SDK-side half shipped (`TestAllAPIOnRealDatabase`);
+the rest are cross-repo (crush-daily) or standing process rules — verdicts
+inline where actionable._
 
 1. **Push prompt before tagging a release.** Even when "release" is
    the user's stated intent, the literal `git push origin <tag>` step
    is a separate, irreversible act. Add a "push tag v0.3.0?" yes/no
    confirmation before any push. Codify as a session-level rule, not
-   a per-task judgment.
+   a per-task judgment. _(stands as recorded — global process policy,
+   not this repo's docs)_
 2. **Lock the treefmt config into version control with a `treefmt.toml`
    or equivalent in crush-daily.** The current setup loads treefmt
    from `treefmt-nix` and merges config in `flake.nix`, which makes
@@ -227,13 +248,15 @@ Surfacing the durable process improvements, not the one-offs.
    next regeneration. A checked-in treefmt.toml would either:
    (a) prevent `c055855`-style drift by making the formatter's
    preference explicit, or (b) surface the drift the next time
-   someone tries to commit a regenerating change.
+   someone tries to commit a regenerating change. ← cross-repo
 3. **Add a flake-update hook into the SDK's release flow.** When
    `crush-daily` is a consumer of `go-crush-data`'s published tags,
    the `go.mod` bump + `flake.lock` bump + `vendorHash.nix` re-derive
    should be one scripted step, not three manual ones. The AGENTS.md
    gotcha #26 covers the symptom; the cure is a
    `scripts/bump-sdk.sh VERSION` that does all three atomically.
+   **Won't implement — single consumer; the sequence is documented as
+   the AGENTS.md vendorHash-coupling gotcha instead**
 4. **Lift the CRUSH_DATA_REAL_DATA_DIR test up to crush-daily.** The
    SDK has `TestSessionsOnRealDatabase` as a regression defense
    against on-disk format drift. crush-daily has no equivalent. A
@@ -241,6 +264,8 @@ Surfacing the durable process improvements, not the one-offs.
    `crush-daily collect` against the user's real registry and asserts
    the resulting event payload would catch any future SDK output drift
    the SDK's own test misses (e.g. a Stats-vs-tally inconsistency).
+   ← SDK side done at `846829c` (`TestAllAPIOnRealDatabase`); the
+   crush-daily lift is cross-repo
 5. **Pre-populate the TODO entry with a verification command.** T8
    said "30m — `~/projects/crush-daily`"; the verification is
    implicit. Rewriting as T8 with an explicit gate — "30m, verify with
