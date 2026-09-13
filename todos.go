@@ -1,7 +1,8 @@
 package crushdata
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"strings"
 )
@@ -44,7 +45,7 @@ type Todo struct {
 // slice leaves the slice nil. Input that is not a JSON array of objects
 // fails with an error; the caller still holds the raw bytes and can decode
 // them its own way.
-func DecodeTodos(raw json.RawMessage) ([]Todo, error) {
+func DecodeTodos(raw jsontext.Value) ([]Todo, error) {
 	trimmed := strings.TrimSpace(string(raw))
 	if trimmed == "" || trimmed == "[]" {
 		return nil, nil

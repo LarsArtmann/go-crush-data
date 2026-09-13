@@ -3,7 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/jsontext"
 	"path/filepath"
 	"testing"
 )
@@ -57,9 +57,9 @@ func TestDecodeTodos(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			var raw json.RawMessage
+			var raw jsontext.Value
 			if tt.raw != "" {
-				raw = json.RawMessage(tt.raw)
+				raw = jsontext.Value(tt.raw)
 			}
 
 			got, err := DecodeTodos(raw)
@@ -94,7 +94,7 @@ func TestDecodeTodos(t *testing.T) {
 func TestDecodeTodosCensusShape(t *testing.T) {
 	t.Parallel()
 
-	raw := json.RawMessage(`[` +
+	raw := jsontext.Value(`[` +
 		`{"content":"Fix memory path: remove fake picoclaw path, adapt to how Crush actually works","status":"completed","active_form":"Fixing memory path"},` +
 		`{"content":"Audit all Nix configs for errors","status":"in_progress","active_form":"Auditing all Nix configs for errors"},` +
 		`{"content":"Verify all builds pass","status":"pending","active_form":"Verifying all builds pass"}` +

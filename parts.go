@@ -1,7 +1,8 @@
 package crushdata
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"strings"
 )
@@ -76,7 +77,7 @@ type ShellCommandPart struct {
 // forward compatibility.
 type UnknownPart struct {
 	Type string
-	Data json.RawMessage
+	Data jsontext.Value
 }
 
 func (TextPart) isPart()         {}
@@ -107,8 +108,8 @@ const jsonNull = "null"
 
 // rawPart is the on-disk shape of every parts array entry.
 type rawPart struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
+	Type string         `json:"type"`
+	Data jsontext.Value `json:"data"`
 }
 
 // DecodeParts parses one message's parts JSON, preserving declaration

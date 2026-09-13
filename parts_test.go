@@ -1,7 +1,7 @@
 package crushdata
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
 	"testing"
 )
 
@@ -211,7 +211,7 @@ func TestPartSetIsSealed(t *testing.T) {
 	)
 
 	// UnknownPart must round-trip its payload as valid JSON.
-	if !json.Valid([]byte(`{"type":"x"}`)) {
+	if !jsontext.Value([]byte(`{"type":"x"}`)).IsValid() {
 		t.Fatal("sanity: raw JSON fixture invalid")
 	}
 }

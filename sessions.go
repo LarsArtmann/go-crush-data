@@ -3,7 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/jsontext"
 	"fmt"
 	"strings"
 	"time"
@@ -201,7 +201,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 	session.SummaryMessageID = summaryMessageID.String
 
 	if todos.Valid {
-		session.Todos = json.RawMessage(todos.String)
+		session.Todos = jsontext.Value(todos.String)
 	}
 
 	return session, nil

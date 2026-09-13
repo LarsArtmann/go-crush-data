@@ -3,7 +3,7 @@ package crushdata
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/jsontext"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -403,7 +403,7 @@ func ExampleDB_ReadFiles() {
 
 // ExampleDecodeTodos turns a session's raw Todos column into typed values.
 func ExampleDecodeTodos() {
-	raw := json.RawMessage(
+	raw := jsontext.Value(
 		`[{"content":"Ship v0.3","status":"completed","active_form":"Shipping v0.3"},{"content":"Update the docs","status":"in_progress","active_form":"Updating the docs"}]`,
 	)
 

@@ -1,7 +1,7 @@
 package crushdata
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
 	"time"
 )
 
@@ -37,7 +37,7 @@ type Session struct {
 	CostUSD          float64
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
-	Todos            json.RawMessage
+	Todos            jsontext.Value
 
 	// SummaryMessageID identifies the message that carries this session's
 	// context summary (written when Crush compacts a session); "" when the
