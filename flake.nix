@@ -55,7 +55,7 @@
             pname = "go-crush-data";
             version = self.rev or self.dirtyRev or "dev";
             src = ./.;
-            vendorHash = "sha256-iv414dgk04m9LAyn4ZNktyMKFVDBOiIHzWEmti9wqpE=";
+            vendorHash = "sha256-1CHiiZkn/fmUVhuhSiZIvfKr8SWjS6r6D0UdbX6EIEQ=";
 
             meta = with lib; {
               description = "Typed, read-only Go access to Crush local session data";
