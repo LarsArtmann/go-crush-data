@@ -2,7 +2,7 @@ module github.com/LarsArtmann/go-crush-data
 
 go 1.26.7
 
-require modernc.org/sqlite v1.58.0
+require modernc.org/sqlite v1.59.0
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.4.0 // indirect
