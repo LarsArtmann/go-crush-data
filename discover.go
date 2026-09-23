@@ -142,6 +142,15 @@ func loadRegistry(globalDir string) ([]Project, error) {
 		return nil, fmt.Errorf("%w: read %s: %w", ErrRegistryNotFound, path, err)
 	}
 
+	// A 0-byte registry is an empty registry: crush can leave the file behind
+	// empty (e.g. an interrupted first write), and failing to parse it would
+	// both error Discover and poison the CLI fallback (crush exits 1 on the
+	// same file). Same semantics as ParseProjectsOutput: zero registered
+	// projects, nil error.
+	if len(data) == 0 {
+		return nil, nil
+	}
+
 	var file registryFile
 	if err := json.Unmarshal(data, &file); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)

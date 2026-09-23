@@ -196,6 +196,26 @@ func TestDiscoverProjectsRegistryMalformed(t *testing.T) {
 	}
 }
 
+// A 0-byte registry is an empty registry, not a parse error: crush can leave
+// an empty projects.json behind, and failing on it errors Discover AND
+// poisons the CLI fallback (crush exits 1 parsing the same file). Mirrors
+// ParseProjectsOutput's empty-input semantics.
+func TestDiscoverProjectsRegistryEmpty(t *testing.T) {
+	t.Parallel()
+
+	globalDir := t.TempDir()
+	writeRegistry(t, globalDir, "")
+
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{GlobalDataDir: globalDir})
+	if err != nil {
+		t.Fatalf("DiscoverProjects: %v", err)
+	}
+
+	if len(projects) != 0 {
+		t.Fatalf("projects = %d, want 0", len(projects))
+	}
+}
+
 // fakeCLIEnv marks the process as a fake-CLI child (set by fakeCLI in the
 // parent); the payload and exit code travel in sibling variables.
 const (
