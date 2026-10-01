@@ -2,7 +2,7 @@ module github.com/LarsArtmann/go-crush-data
 
 go 1.26.0
 
-require modernc.org/sqlite v1.60.0
+require modernc.org/sqlite v1.60.1
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.4.0 // indirect
@@ -144,7 +144,7 @@ require (
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
-	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.24.0 // indirect
