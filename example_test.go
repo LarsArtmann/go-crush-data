@@ -237,6 +237,59 @@ func ExampleDB_IterMessages() {
 	// [user] m1
 }
 
+// ExampleDB_MessagesSince reads a session incrementally: the whole history
+// from cursor 0, then only what a later poll appended past the newest rowid.
+// This is the tail pattern — persist the last RowID you handled and resume
+// from it.
+func ExampleDB_MessagesSince() {
+	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{
+		GlobalDataDir: setupExampleData(),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := Open(projects[0].DataDir)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	// Cursor 0 reads the session from the start.
+	history, err := db.MessagesSince(context.Background(), "s1", 0)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%d message(s) of history\n", len(history))
+
+	// A poller that starts now holds the newest rowid instead of replaying
+	// the history, then streams whatever Crush appends past it.
+	cursor, err := db.LastMessageRowID(context.Background(), "s1")
+	if err != nil {
+		panic(err)
+	}
+
+	polled := 0
+
+	for message, err := range db.IterMessagesSince(context.Background(), "s1", cursor) {
+		if err != nil {
+			panic(err)
+		}
+
+		polled++
+
+		cursor = message.RowID // persist this: where the next poll resumes
+	}
+
+	fmt.Printf("%d row(s) appended, cursor now %d\n", polled, cursor)
+
+	// Output:
+	// 1 message(s) of history
+	// 0 row(s) appended, cursor now 1
+}
+
 // ExampleDB_Stats aggregates one calendar day of activity.
 func ExampleDB_Stats() {
 	projects, err := DiscoverProjects(context.Background(), DiscoverOptions{

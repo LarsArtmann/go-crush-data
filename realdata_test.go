@@ -230,6 +230,8 @@ func sweepRealSession(t *testing.T, db *DB, session Session, totals *sweepTotals
 		)
 	}
 
+	sweepIncremental(t, db, session, rows)
+
 	graph, err := db.AgentGraph(ctx, session.ID)
 	if err != nil {
 		t.Fatalf("AgentGraph(%s): %v", session.ID, err)
