@@ -38,7 +38,7 @@ import (
 // stopped and continue with [DB.MessagesSince] instead of re-reading the
 // session.
 func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error) {
-	return db.readMessages(ctx, sessionID, db.buildMessagesQuery(), sessionID)
+	return db.readMessages(ctx, sessionID, db.buildMessagesQuery())
 }
 
 // IterMessages returns the same messages as [DB.Messages], in the same
@@ -59,7 +59,7 @@ func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error)
 // over the returned sequence runs the query anew, so storing it and
 // ranging twice reads the session twice.
 func (db *DB) IterMessages(ctx context.Context, sessionID string) iter.Seq2[Message, error] {
-	return db.streamMessages(ctx, sessionID, db.buildMessagesQuery(), sessionID)
+	return db.streamMessages(ctx, sessionID, db.buildMessagesQuery())
 }
 
 // MessagesSince returns the session's messages inserted after afterRowID, in
@@ -88,7 +88,7 @@ func (db *DB) IterMessages(ctx context.Context, sessionID string) iter.Seq2[Mess
 // Parts decoding, summary-message handling, and tolerance toward malformed
 // rows are exactly as documented on [DB.Messages].
 func (db *DB) MessagesSince(ctx context.Context, sessionID string, afterRowID MessageRowID) ([]Message, error) {
-	return db.readMessages(ctx, sessionID, db.buildMessagesSinceQuery(), sessionID, afterRowID)
+	return db.readMessages(ctx, sessionID, db.buildMessagesSinceQuery(), afterRowID)
 }
 
 // IterMessagesSince returns the same rows as [DB.MessagesSince], in the same
@@ -109,7 +109,7 @@ func (db *DB) IterMessagesSince(
 	sessionID string,
 	afterRowID MessageRowID,
 ) iter.Seq2[Message, error] {
-	return db.streamMessages(ctx, sessionID, db.buildMessagesSinceQuery(), sessionID, afterRowID)
+	return db.streamMessages(ctx, sessionID, db.buildMessagesSinceQuery(), afterRowID)
 }
 
 // LastMessageRowID returns the rowid of the session's newest message — the
@@ -143,15 +143,15 @@ func (db *DB) LastMessageRowID(ctx context.Context, sessionID string) (MessageRo
 }
 
 // readMessages runs one messages query and lifts every row into a Message;
-// sessionID attributes the rows and names them in the error. The query and
-// its bind arguments always travel together, so a page's WHERE can never
-// drift from the args it was built for.
+// sessionID attributes the rows, names them in the error, and binds to the
+// query's leading `session_id = ?`, so the row set and the attribution can
+// never disagree. extraArgs are the page's remaining bind values.
 func (db *DB) readMessages(
 	ctx context.Context,
 	sessionID, query string,
-	args ...any,
+	extraArgs ...any,
 ) ([]Message, error) {
-	rows, err := db.handle.QueryContext(ctx, query, args...)
+	rows, err := db.handle.QueryContext(ctx, query, append([]any{sessionID}, extraArgs...)...)
 	if err != nil {
 		return nil, fmt.Errorf("read messages of session %s from %s: %w", sessionID, db.path, err)
 	}
@@ -166,10 +166,10 @@ func (db *DB) readMessages(
 func (db *DB) streamMessages(
 	ctx context.Context,
 	sessionID, query string,
-	args ...any,
+	extraArgs ...any,
 ) iter.Seq2[Message, error] {
 	return func(yield func(Message, error) bool) {
-		rows, err := db.handle.QueryContext(ctx, query, args...)
+		rows, err := db.handle.QueryContext(ctx, query, append([]any{sessionID}, extraArgs...)...)
 		if err != nil {
 			//nolint:exhaustruct // error yield: the message is intentionally zero
 			yield(Message{}, fmt.Errorf("read messages of session %s from %s: %w", sessionID, db.path, err))
@@ -250,7 +250,8 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 }
 
 // buildMessagesQuery constructs the messages SELECT, substituting NULL for
-// columns the database predates.
+// columns the database predates. `session_id = ?` must stay its first
+// placeholder — readMessages and streamMessages bind the session ID to it.
 func (db *DB) buildMessagesQuery() string {
 	return "SELECT " + db.messageColumns() + " FROM messages WHERE session_id = ? ORDER BY rowid"
 }

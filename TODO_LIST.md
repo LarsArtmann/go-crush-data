@@ -37,16 +37,17 @@ renumbered, and deleting an item retires its ID for good.
       PRs still open). Run Phase G (adoption suggestions, drafts in the
       campaign plan) once both fix PRs merge — `docs/upstream-filings.md`
       is the ledger.
-- [ ] **T36** Re-open stump-wtf/agent-trace#22 now that the increment
-      precondition is met: `MessagesSince`/`IterMessagesSince`/
-      `LastMessageRowID`/`MessageRowID` shipped (CHANGELOG `[Unreleased]`,
-      2026-10-15), which is exactly what the maintainer named as the reason
-      to reconsider adopting this library. Their mirror is bot-managed since
-      2026-10-13 ("copied to the project's canonical tracker"), so the note
-      belongs on the canonical tracker, not the mirror. Also open there: the
-      standing invitation to patch the adapter's silent `continue` (surface
-      unreadable databases via its existing `Diagnostics()`). Needs a user
-      go-ahead before posting. 15m — `docs/upstream-filings.md`
+- [ ] **T36** Re-open stump-wtf/agent-trace#22 now that its stated
+      precondition is met: an incremental read
+      (`MessagesSince`/`IterMessagesSince`/`LastMessageRowID`/`MessageRowID`,
+      CHANGELOG `[Unreleased]`, 2026-10-15) is what the maintainer named as
+      the reason to reconsider adopting this library. Their mirror is
+      bot-managed since 2026-10-13 ("copied to the project's canonical
+      tracker"), so the note belongs on the canonical tracker, not the
+      mirror. Also open there: the standing invitation to patch the
+      adapter's silent `continue` (surface unreadable databases via its
+      existing `Diagnostics()`). Needs a user go-ahead before posting. 15m —
+      `docs/upstream-filings.md`
 
 ## Parked (plan-level, tracked in the ecosystem plan — not this repo)
 

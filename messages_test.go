@@ -809,6 +809,15 @@ func TestMessagesSinceOnLegacySchema(t *testing.T) {
 	if rest[0].Model != "" || rest[0].Provider != "" || !rest[0].FinishedAt.IsZero() {
 		t.Fatalf("message %s = %+v, want zero values for the absent columns", rest[0].ID, rest[0])
 	}
+
+	watermark, err := db.LastMessageRowID(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("LastMessageRowID on legacy schema: %v", err)
+	}
+
+	if watermark != full[len(full)-1].RowID {
+		t.Fatalf("LastMessageRowID = %d, want the newest row's %d", watermark, full[len(full)-1].RowID)
+	}
 }
 
 // TestLastMessageRowID pins the watermark: it is the newest row's rowid, so
