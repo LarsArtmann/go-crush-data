@@ -35,13 +35,17 @@
           ...
         }:
         let
-          goPkg = pkgs.go_1_26;
+          # go.mod's floor is 1.27 while nixpkgs' default go is 1.26.8, so the
+          # toolchain has to be pinned here — for the package build (and its
+          # go-modules layer) as much as for the devShell and the apps, because
+          # the sandbox runs with GOTOOLCHAIN=local and will not download one.
+          goPkg = pkgs.go_1_27;
         in
         {
           devShells.default = pkgs.mkShellNoCC {
             packages = builtins.attrValues {
               inherit (pkgs)
-                go_1_26
+                go_1_27
                 golangci-lint
                 govulncheck
                 golines
@@ -54,11 +58,11 @@
             GOTOOLCHAIN = "local";
           };
 
-          packages.default = pkgs.buildGoModule {
+          packages.default = (pkgs.buildGoModule.override { go = pkgs.go_1_27; }) {
             pname = "go-crush-data";
             version = self.rev or self.dirtyRev or "dev";
             src = ./.;
-            vendorHash = "sha256-uGfTGNBT+q8Jk0TWeHodklL2XfSLW8ah8E4Nz7wG1u4=";
+            vendorHash = "sha256-195155AMjIJzhEfZW8GLF+yAV+nIoQmEHxV1+0TAmxI=";
 
             meta = with lib; {
               description = "Typed, read-only Go access to Crush local session data";

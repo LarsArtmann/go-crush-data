@@ -91,7 +91,7 @@ documentation rots silently.
 | sessions.go | SessionFilter{ByID, Day, ParentID, RootOnly, Limit} + capability-substituted SQL                                                                                                                                                                                                                                                                                                                    |
 | parts.go    | sealed Part interface: Text/Reasoning/ToolCall/ToolResult/Finish/ShellCommand/Unknown; strict `DecodeParts` vs tolerant `decodeParts` (bad entry → UnknownPart)                                                                                                                                                                                                                                     |
 | rows.go     | `collectRows[T]` generic: iterate rows, scan each into T, collect, verify `rows.Err()` — the one row-collection path every query uses                                                                                                                                                                                                                                                               |
-| messages.go | Messages(sessionID) ordered by insertion (`rowid` — NOT `created_at, id`: message IDs are UUIDv4 random, so id order is arbitrary within a same-second created_at tie; verified inversion-free against created_at on real DBs); tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; ReadFiles |
+| messages.go | Messages(sessionID) ordered by insertion (`rowid` — NOT `created_at, id`: message IDs are UUIDv4 random, so id order is arbitrary within a same-second created_at tie; verified inversion-free against created_at on real DBs); tolerant part decode (bad entry → UnknownPart, unparseable array → nil Parts); IterMessages (iter.Seq2) streams the same rows via the shared scanMessage; `MessagesSince`/`IterMessagesSince` are the same read as a keyset page (`rowid > cursor`), `LastMessageRowID` hands out the watermark (covering-index MAX, verified with EXPLAIN QUERY PLAN), and every row carries `Message.RowID`; ReadFiles |
 | agents.go   | AgentGraph: ONE `WITH RECURSIVE` query per subtree (CTE generates rows through depth 65 so the cap still errors) + in-memory preorder; depth cap 64; flat fallback pre-column                                                                                                                                                                                                                       |
 | stats.go    | day aggregates; model-breakdown CTE has the double-count trap — see comment there                                                                                                                                                                                                                                                                                                                   |
 | todos.go    | Todo/TodoStatus + DecodeTodos: decodes Session.Todos raw JSON; shape pinned by a real-data census                                                                                                                                                                                                                                                                                                   |
@@ -154,6 +154,17 @@ fmt.Print calls, and never put `package main` files in the repo root
   QueryContext shape shared by fillTitlesAndHistogram/fillHourHistogram —
   the shared logic already lives in `dayArgs`, and unifying the two distinct
   queries would take more parameters than the duplicated lines.
+- **The incremental cursor is `messages.rowid`, never a timestamp**
+  (`MessagesSince`/`IterMessagesSince`/`LastMessageRowID`, `MessageRowID`).
+  `created_at` holds whole seconds, so a `created_at > cursor` filter drops
+  every message written in the cursor's own second — permanently, since the
+  cursor only moves forward. Cursor 0 reads the whole session; a consumer
+  that withholds rows resumes from the last row it released, so withheld
+  rows come back rather than vanishing. The distinct `MessageRowID` type
+  exists so a timestamp cannot be passed where a rowid belongs — the bug
+  class stump-wtf/agent-trace#22 hit in its own adapter, where the fix was
+  this same column. Added 2026-10-15 on that thread's ask (their
+  maintainer's stated condition for reconsidering adoption of this library).
 
 ## Process rules (truth discipline)
 
@@ -198,6 +209,29 @@ fmt.Print calls, and never put `package main` files in the repo root
   ADVISORY in CI (`BASE_REV` arg): the range heuristic fires on real
   drift AND on vendor-set-neutral go.mod edits, so only the nix flake CI
   job proves it.
+- **The flake pins the Go toolchain explicitly (`pkgs.go_1_27`), and it has
+  to**: `nixpkgs`' default `go` is 1.26.8 while go.mod's floor is `go 1.27`,
+  and every nix surface runs with `GOTOOLCHAIN=local`, so a missing pin fails
+  hard ("go.mod requires go >= 1.27") rather than downloading a toolchain.
+  The pin covers the devShell, the `test`/`lint` apps, AND
+  `buildGoModule` (via `.override { go = ... }`) — the package build has its
+  own go-modules layer. Symptom history: a 2026-10-01 daemon commit raised
+  the go directive alone and broke `nix flake check`, `nix develop`,
+  `nix run .#test` and `nix run .#lint` for two weeks unnoticed; BuildFlow's
+  `go-version-auto-configure` provider detects exactly this drift
+  (`buildflow -s go-version-auto-configure`, may be run in this
+  non-BuildFlow-covered repo) and its suggestion was the fix applied on
+  2026-10-15. Whenever `go.mod`'s floor moves, move the flake pins with it in
+  the same commit, then repair `vendorHash`.
+- **`github.com/gobwas/glob` must stay at v0.2.3** — and nothing imports it:
+  it is in go.mod only because `go tool golangci-lint` builds from this
+  module's own dependency graph, and the linters golangci-lint pins
+  (`depguard` v2.2.1, through golangci-lint v2.14.0) use the `glob.Glob`
+  interface that glob v1.0.0 removed. Bumping it to v1.0.0 makes
+  `go tool golangci-lint` fail to compile ("undefined: glob.Glob") — a red
+  lint leg with no hint in our own code. Seen 2026-10-05 → 2026-10-15; the
+  commit message described it as a harmless indirect bump because `go build`
+  never compiles the tool.
 - **CI's coverage gate measures the library package only** (`-coverpkg=.`
   in ci.yml): Go ≥1.22 emits no-test-file packages (our `scripts/`
   scratch tooling) into `-coverprofile` at 0%, dragging the merged total
