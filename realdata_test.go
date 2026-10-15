@@ -258,10 +258,87 @@ func sweepRealSession(t *testing.T, db *DB, session Session, totals *sweepTotals
 	}
 }
 
+// sweepIncremental checks the incremental path against the full read that
+// just ran: resuming from a row returns that row's successors, in insertion
+// order, through both the slice and the iterator API. A live Crush writer can
+// append rows between the two reads, so the comparison is a prefix check with
+// lower bounds — never equality.
+func sweepIncremental(t *testing.T, db *DB, session Session, rows []Message) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	if len(rows) == 0 {
+		cursor, err := db.LastMessageRowID(ctx, session.ID)
+		if err != nil {
+			t.Fatalf("LastMessageRowID(%s): %v", session.ID, err)
+		}
+
+		if cursor != 0 {
+			t.Fatalf("LastMessageRowID(%s) = %d, want 0 for a session with no messages", session.ID, cursor)
+		}
+
+		return
+	}
+
+	newest := rows[len(rows)-1].RowID
+
+	cursor, err := db.LastMessageRowID(ctx, session.ID)
+	if err != nil {
+		t.Fatalf("LastMessageRowID(%s): %v", session.ID, err)
+	}
+
+	if cursor < newest {
+		t.Fatalf("LastMessageRowID(%s) = %d, behind the newest row just read (%d)", session.ID, cursor, newest)
+	}
+
+	resume := rows[0].RowID
+
+	rest, err := db.MessagesSince(ctx, session.ID, resume)
+	if err != nil {
+		t.Fatalf("MessagesSince(%s, %d): %v", session.ID, resume, err)
+	}
+
+	if len(rest) < len(rows)-1 {
+		t.Fatalf(
+			"MessagesSince(%s, %d) returned %d messages, want at least %d",
+			session.ID, resume, len(rest), len(rows)-1,
+		)
+	}
+
+	for i, message := range rest {
+		if i >= len(rows)-1 {
+			break // appended by a live writer after the full read
+		}
+
+		if message.RowID != rows[i+1].RowID || message.ID != rows[i+1].ID {
+			t.Fatalf(
+				"MessagesSince(%s, %d)[%d] = %s@%d, want %s@%d — incremental and full reads disagree",
+				session.ID, resume, i, message.ID, message.RowID, rows[i+1].ID, rows[i+1].RowID,
+			)
+		}
+	}
+
+	streamed := 0
+
+	for _, err := range db.IterMessagesSince(ctx, session.ID, resume) {
+		if err != nil {
+			t.Fatalf("IterMessagesSince(%s, %d): %v", session.ID, resume, err)
+		}
+
+		streamed++
+	}
+
+	if streamed < len(rows)-1 {
+		t.Fatalf("IterMessagesSince(%s, %d) yielded %d messages, want at least %d", session.ID, resume, streamed, len(rows)-1)
+	}
+}
+
 // TestAllAPIOnRealDatabase sweeps every public read API across a real
-// database when one is present, proving Messages, IterMessages, Stats,
-// AgentGraph, ReadFiles, and todos decoding against live data instead of
-// fixtures — the ad-hoc verification sweep that verification sessions kept
+// database when one is present, proving Messages, IterMessages, the
+// incremental reads (MessagesSince, IterMessagesSince, LastMessageRowID),
+// Stats, AgentGraph, ReadFiles, and todos decoding against live data instead
+// of fixtures — the ad-hoc verification sweep that verification sessions kept
 // rebuilding by hand. Skipped when no local database exists (set
 // CRUSH_DATA_REAL_DATA_DIR to point at one) and under -short.
 //
@@ -564,4 +641,186 @@ func TestPartDiscriminatorsCensusDetectsUnknown(t *testing.T) {
 	if len(unknown) != 1 || unknown[0] != "hologram" {
 		t.Fatalf("unknownKinds() = %v, want [hologram]", unknown)
 	}
+}
+
+// realIncrementalWindow bounds the deep-cursor check in
+// TestMessagesSinceAgainstRealDatabase: the sampled cursor sits this many rows
+// before the session's newest row, so the read stays a bounded tail even on a
+// session holding hundreds of thousands of messages.
+const realIncrementalWindow = 2000
+
+// TestMessagesSinceAgainstRealDatabase verifies the incremental cursor on live
+// data: the rowids come from the table itself, the cursor is placed deep into
+// the largest session in the database, and the rows read back must be exactly
+// the table's own tail, in order, with no created_at inversion. This is the
+// property the adapter bug in stump-wtf/agent-trace#22 violated — a cursor
+// that is not the sort key reorders, skips, or drops rows.
+//
+// Skipped without real data and under -short. A live Crush writer can append
+// rows during the read, so every comparison is a lower bound or a prefix: the
+// writer may extend the tail, it may not change it.
+func TestMessagesSinceAgainstRealDatabase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("real-data sweep (slow) in -short mode")
+	}
+
+	t.Parallel()
+
+	dataDir, ok := realDataDir(t)
+	if !ok {
+		t.Skip("no real data dir (set CRUSH_DATA_REAL_DATA_DIR to run against one)")
+	}
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatalf("Open real database: %v", err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	ctx := context.Background()
+
+	sessions, err := db.Sessions(ctx, SessionFilter{})
+	if err != nil {
+		t.Fatalf("Sessions: %v", err)
+	}
+
+	target, ok := sessionWithMostMessages(sessions)
+	if !ok {
+		t.Skip("real database holds no sessions — nothing to verify")
+	}
+
+	rowIDs, err := collectMessageRowIDs(t, db, target.ID)
+	if err != nil {
+		t.Fatalf("read rowids of %s: %v", target.ID, err)
+	}
+
+	if len(rowIDs) < 2 {
+		t.Skipf("session %s holds %d message(s) — too few to page", target.ID, len(rowIDs))
+	}
+
+	newest, err := db.LastMessageRowID(ctx, target.ID)
+	if err != nil {
+		t.Fatalf("LastMessageRowID(%s): %v", target.ID, err)
+	}
+
+	if newest < MessageRowID(rowIDs[len(rowIDs)-1]) {
+		t.Fatalf(
+			"LastMessageRowID(%s) = %d, behind the table's newest rowid %d",
+			target.ID, newest, rowIDs[len(rowIDs)-1],
+		)
+	}
+
+	window := min(realIncrementalWindow, len(rowIDs)-1)
+
+	// The cursor is the row immediately before the window, so the read covers
+	// exactly the window's rows — a genuinely deep cursor without reading a
+	// production-sized session in full.
+	cursor := MessageRowID(rowIDs[len(rowIDs)-window-1])
+
+	tail, err := db.MessagesSince(ctx, target.ID, cursor)
+	if err != nil {
+		t.Fatalf("MessagesSince(%s, %d): %v", target.ID, cursor, err)
+	}
+
+	if len(tail) < window {
+		t.Fatalf("MessagesSince(%s, %d) returned %d messages, want at least %d", target.ID, cursor, len(tail), window)
+	}
+
+	inversions := 0
+
+	for i, message := range tail {
+		if i > 0 {
+			if message.RowID <= tail[i-1].RowID {
+				t.Fatalf(
+					"MessagesSince(%s, %d)[%d] rowid %d does not follow %d — the cursor is not the sort key",
+					target.ID, cursor, i, message.RowID, tail[i-1].RowID,
+				)
+			}
+
+			if message.CreatedAt.Before(tail[i-1].CreatedAt) {
+				inversions++
+			}
+		}
+
+		if i < window && message.RowID != MessageRowID(rowIDs[len(rowIDs)-window+i]) {
+			t.Fatalf(
+				"MessagesSince(%s, %d)[%d] rowid = %d, want the table's %d — the page skipped or repeated rows",
+				target.ID, cursor, i, message.RowID, rowIDs[len(rowIDs)-window+i],
+			)
+		}
+	}
+
+	// Resuming from the page's last row returns only what follows it.
+	resumed, err := db.MessagesSince(ctx, target.ID, tail[window-1].RowID)
+	if err != nil {
+		t.Fatalf("MessagesSince(%s, %d): %v", target.ID, tail[window-1].RowID, err)
+	}
+
+	if len(resumed) != len(tail)-window {
+		t.Fatalf(
+			"resuming from the page's last row returned %d messages, want %d (the tail past the window)",
+			len(resumed), len(tail)-window,
+		)
+	}
+
+	t.Logf(
+		"incremental read at %s: session %s, %d messages, cursor %d, page %d rows, %d created_at inversions across the page",
+		dataDir, target.ID, len(rowIDs), cursor, window, inversions,
+	)
+}
+
+// sessionWithMostMessages picks the session with the largest message_count,
+// the hardest case for a rowid cursor (deepest rowids, densest same-second
+// groups). It reports false when there is no session at all.
+func sessionWithMostMessages(sessions []Session) (Session, bool) {
+	if len(sessions) == 0 {
+		return Session{}, false
+	}
+
+	largest := sessions[0]
+
+	for _, session := range sessions[1:] {
+		if session.MessageCount > largest.MessageCount {
+			largest = session
+		}
+	}
+
+	return largest, true
+}
+
+// collectMessageRowIDs reads one session's rowids straight from the table, in
+// order — the raw keyset an incremental read has to reproduce. Selecting only
+// rowid keeps it an index-only scan, so it stays cheap on a production-sized
+// session.
+func collectMessageRowIDs(t *testing.T, db *DB, sessionID string) ([]int64, error) {
+	t.Helper()
+
+	rows, err := db.handle.QueryContext(
+		context.Background(),
+		"SELECT rowid FROM messages WHERE session_id = ? ORDER BY rowid",
+		sessionID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("select rowids of %s: %w", sessionID, err)
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var rowIDs []int64
+
+	for rows.Next() {
+		var rowID int64
+		if err := rows.Scan(&rowID); err != nil {
+			return nil, fmt.Errorf("scan rowid of %s: %w", sessionID, err)
+		}
+
+		rowIDs = append(rowIDs, rowID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate rowids of %s: %w", sessionID, err)
+	}
+
+	return rowIDs, nil
 }
