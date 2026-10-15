@@ -32,7 +32,11 @@ import (
 // would break number parity with the collector SQL this library ports
 // verbatim. Their [Message.IsSummaryMessage] flag (and the session's
 // [Session.SummaryMessageID] pointer) lets consumers skip or specially
-// render them. Pinned by TestSummaryMessagesAreCounted.
+// renders them. Pinned by TestSummaryMessagesAreCounted.
+//
+// Every row carries its [Message.RowID], so a consumer can persist where it
+// stopped and continue with [DB.MessagesSince] instead of re-reading the
+// session.
 func (db *DB) Messages(ctx context.Context, sessionID string) ([]Message, error) {
 	return db.readMessages(ctx, sessionID, db.buildMessagesQuery(), sessionID)
 }
@@ -196,10 +200,11 @@ func (db *DB) streamMessages(
 	}
 }
 
-// scanMessage lifts one row into a Message, decoding its parts tolerantly
-// — the shared row logic of [DB.Messages] and [DB.IterMessages].
+// scanMessage lifts one row into a Message, decoding its parts tolerantly —
+// the shared row logic of every message read.
 func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	var (
+		rowID           int64
 		message         Message
 		parts           string
 		model, provider sql.NullString
@@ -210,6 +215,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	)
 
 	err := rows.Scan(
+		&rowID,
 		&message.ID,
 		&message.Role,
 		&parts,
@@ -224,6 +230,7 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		return Message{}, fmt.Errorf("scan message row: %w", err)
 	}
 
+	message.RowID = MessageRowID(rowID)
 	message.SessionID = sessionID
 	message.Model = model.String
 	message.Provider = provider.String
@@ -245,6 +252,23 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 // buildMessagesQuery constructs the messages SELECT, substituting NULL for
 // columns the database predates.
 func (db *DB) buildMessagesQuery() string {
+	return "SELECT " + db.messageColumns() + " FROM messages WHERE session_id = ? ORDER BY rowid"
+}
+
+// buildMessagesSinceQuery is [DB.buildMessagesQuery] as a keyset page: the
+// same columns, restricted to rows past the cursor. The WHERE and the ORDER BY
+// name the same column on purpose — a page boundary drawn on one column while
+// the order comes from another is how rows get skipped or repeated.
+func (db *DB) buildMessagesSinceQuery() string {
+	return "SELECT " + db.messageColumns() +
+		" FROM messages WHERE session_id = ? AND rowid > ? ORDER BY rowid"
+}
+
+// messageColumns is the SELECT list shared by every message read. rowid leads
+// it: it is both the insertion order and the incremental cursor, so every read
+// hands back the position it can be resumed from. Probe-gated columns
+// substitute a literal default instead.
+func (db *DB) messageColumns() string {
 	modelExpr := "NULL AS model"
 	if db.schema.MessagesModel {
 		modelExpr = "model"
@@ -266,13 +290,19 @@ func (db *DB) buildMessagesQuery() string {
 	}
 
 	return fmt.Sprintf(
-		"SELECT id, role, parts, %s, %s, created_at, updated_at, %s, %s FROM messages WHERE session_id = ? ORDER BY rowid",
+		"rowid, id, role, parts, %s, %s, created_at, updated_at, %s, %s",
 		modelExpr,
 		providerExpr,
 		finishedExpr,
 		isSummaryExpr,
 	)
 }
+
+// lastMessageRowIDQuery seeks the session's highest rowid. MAX over the
+// session_id index is a covering-index lookup (verified with EXPLAIN QUERY
+// PLAN), so a per-session cursor costs an index probe rather than a walk; the
+// COALESCE keeps a session with no messages at 0 instead of NULL.
+const lastMessageRowIDQuery = "SELECT COALESCE(MAX(rowid), 0) FROM messages WHERE session_id = ?"
 
 // ReadFiles returns the paths the agent actually opened during a session,
 // most recently read first — the same ordering upstream's read_files listing

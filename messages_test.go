@@ -625,3 +625,328 @@ func TestMessagesIsSummaryMessage(t *testing.T) {
 		}
 	}
 }
+
+// TestMessagesSinceMatchesFullRead pins the zero cursor as a full read: the
+// same rows in the same order with the same decoded fields as [DB.Messages],
+// so a consumer starting from scratch and one paging through agree row for
+// row.
+func TestMessagesSinceMatchesFullRead(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	db := openFixture(t, schemaCurrent)
+
+	full, err := db.Messages(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	if len(full) == 0 {
+		t.Fatal("fixture-root holds no messages — the comparison would be vacuous")
+	}
+
+	paged, err := db.MessagesSince(ctx, "fixture-root", 0)
+	if err != nil {
+		t.Fatalf("MessagesSince(0): %v", err)
+	}
+
+	if !reflect.DeepEqual(full, paged) {
+		t.Fatalf("MessagesSince(0) returned %+v, want the full read %+v", paged, full)
+	}
+}
+
+// TestMessagesSincePagesWithoutGapsOrRepeats walks the fixture one row per
+// read by resuming from the rowid of the single row it just handled: every
+// page is strictly past its cursor, no row is returned twice, and the walk
+// reproduces the full read exactly. The exclusive cursor is what lets a
+// consumer persist the rowid of the last message it finished.
+func TestMessagesSincePagesWithoutGapsOrRepeats(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	db := openFixture(t, schemaCurrent)
+
+	full, err := db.Messages(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	var (
+		cursor MessageRowID
+		walked []string
+	)
+
+	for range len(full) + 1 { // one bounded extra read proves the walk ends
+		page, err := db.MessagesSince(ctx, "fixture-root", cursor)
+		if err != nil {
+			t.Fatalf("MessagesSince(%d): %v", cursor, err)
+		}
+
+		if len(page) == 0 {
+			break
+		}
+
+		if page[0].RowID <= cursor {
+			t.Fatalf("page starts at rowid %d, not after the cursor %d", page[0].RowID, cursor)
+		}
+
+		walked = append(walked, page[0].ID)
+		cursor = page[0].RowID
+	}
+
+	if len(walked) != len(full) {
+		t.Fatalf("walked %d messages one row at a time, want %d", len(walked), len(full))
+	}
+
+	for i, message := range full {
+		if walked[i] != message.ID {
+			t.Fatalf("walk[%d] = %s, want %s", i, walked[i], message.ID)
+		}
+	}
+}
+
+// TestMessagesSinceResumesInsideASecond is the regression pin for the cursor
+// unit. Crush stores whole seconds and a live session writes several messages
+// per second, so a `created_at > cursor` filter excludes every message
+// stamped in the cursor's own second — permanently, because the cursor only
+// moves forward. The three rows below share one timestamp; resuming from the
+// first row's cursor must still deliver the other two.
+func TestMessagesSinceResumesInsideASecond(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	ids := []string{"m_one", "m_two", "m_three"}
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "s1", "", "Same second", len(ids), fixtureBase, fixtureBase)
+
+		for _, id := range ids {
+			insertMessage(t, db, id, "s1", "assistant", `[]`, "", "", fixtureBase)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	all, err := db.Messages(ctx, "s1")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	if len(all) != len(ids) {
+		t.Fatalf("messages = %d, want %d", len(all), len(ids))
+	}
+
+	rest, err := db.MessagesSince(ctx, "s1", all[0].RowID)
+	if err != nil {
+		t.Fatalf("MessagesSince: %v", err)
+	}
+
+	if len(rest) != len(ids)-1 {
+		t.Fatalf(
+			"resuming one row into a same-second group returned %d messages, want %d — a created_at cursor loses the rest of the second for good",
+			len(rest),
+			len(ids)-1,
+		)
+	}
+
+	for i, message := range rest {
+		if message.ID != ids[i+1] {
+			t.Fatalf("resumed[%d] = %s, want %s", i, message.ID, ids[i+1])
+		}
+	}
+
+	// A timestamp-shaped cursor compares against rowids and matches nothing.
+	// The rows are still on disk, but only a caller who forces the conversion
+	// can pass one — the silent-loss shape MessageRowID exists to prevent.
+	stale, err := db.MessagesSince(ctx, "s1", MessageRowID(fixtureBase))
+	if err != nil {
+		t.Fatalf("MessagesSince(timestamp-shaped cursor): %v", err)
+	}
+
+	if len(stale) != 0 {
+		t.Fatalf("MessagesSince(%d) returned %d messages, want none (the cursor is a rowid)", fixtureBase, len(stale))
+	}
+}
+
+// TestMessagesSinceOnLegacySchema pins the since path on the oldest schema:
+// the probe-gated columns degrade to zero values exactly as they do in
+// [DB.Messages], and the rowid cursor works unchanged — messages is an
+// ordinary rowid table in every Crush release.
+func TestMessagesSinceOnLegacySchema(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	db := openFixture(t, schemaLegacy)
+
+	full, err := db.Messages(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages on legacy schema: %v", err)
+	}
+
+	if len(full) != 2 {
+		t.Fatalf("messages = %d, want 2 in fixture-root", len(full))
+	}
+
+	rest, err := db.MessagesSince(ctx, "fixture-root", full[0].RowID)
+	if err != nil {
+		t.Fatalf("MessagesSince on legacy schema: %v", err)
+	}
+
+	if len(rest) != 1 || rest[0].ID != full[1].ID {
+		t.Fatalf("MessagesSince returned %d messages (%+v), want just %s", len(rest), rest, full[1].ID)
+	}
+
+	if rest[0].Model != "" || rest[0].Provider != "" || !rest[0].FinishedAt.IsZero() {
+		t.Fatalf("message %s = %+v, want zero values for the absent columns", rest[0].ID, rest[0])
+	}
+}
+
+// TestLastMessageRowID pins the watermark: it is the newest row's rowid, so
+// resuming from it reads nothing, and it is scoped to its own session — the
+// root's cursor never counts a child session's rows.
+func TestLastMessageRowID(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	db := openFixture(t, schemaCurrent)
+
+	full, err := db.Messages(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	want := full[len(full)-1].RowID
+
+	cursor, err := db.LastMessageRowID(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("LastMessageRowID: %v", err)
+	}
+
+	if cursor != want {
+		t.Fatalf("LastMessageRowID = %d, want the newest row's %d", cursor, want)
+	}
+
+	resumed, err := db.MessagesSince(ctx, "fixture-root", cursor)
+	if err != nil {
+		t.Fatalf("MessagesSince(watermark): %v", err)
+	}
+
+	if len(resumed) != 0 {
+		t.Fatalf("resuming from the watermark returned %d messages, want none", len(resumed))
+	}
+
+	child, err := db.LastMessageRowID(ctx, "m_assistant_1$$call_agent_1")
+	if err != nil {
+		t.Fatalf("LastMessageRowID (child): %v", err)
+	}
+
+	if child == 0 || child == cursor {
+		t.Fatalf("child watermark = %d, want the child session's own newest rowid (root's is %d)", child, cursor)
+	}
+}
+
+// TestLastMessageRowIDSessionWithoutMessages pins the zero cases: a session
+// that exists but holds no messages, and an ID that was never written, both
+// read 0 without an error — matching [DB.Messages], which returns an empty
+// slice for either.
+func TestLastMessageRowIDSessionWithoutMessages(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "empty", "", "No messages yet", 0, fixtureBase, fixtureBase)
+		insertSession(t, db, "written", "", "Has a message", 1, fixtureBase, fixtureBase)
+		insertMessage(t, db, "m1", "written", "user", `[]`, "", "", fixtureBase)
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	cursor, err := db.LastMessageRowID(ctx, "written")
+	if err != nil {
+		t.Fatalf("LastMessageRowID(written): %v", err)
+	}
+
+	if cursor == 0 {
+		t.Fatal("LastMessageRowID(written) = 0, want the message's rowid")
+	}
+
+	for _, sessionID := range []string{"empty", "never-written"} {
+		got, err := db.LastMessageRowID(ctx, sessionID)
+		if err != nil {
+			t.Fatalf("LastMessageRowID(%s): %v", sessionID, err)
+		}
+
+		if got != 0 {
+			t.Fatalf("LastMessageRowID(%s) = %d, want 0", sessionID, got)
+		}
+	}
+}
+
+// TestIterMessagesSinceMatchesMessagesSince pins the iterator against the
+// slice API on the since path: same rows, same order, same fields — and an
+// early break leaves no error behind.
+func TestIterMessagesSinceMatchesMessagesSince(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	db := openFixture(t, schemaCurrent)
+
+	all, err := db.Messages(ctx, "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages: %v", err)
+	}
+
+	materialized, err := db.MessagesSince(ctx, "fixture-root", all[0].RowID)
+	if err != nil {
+		t.Fatalf("MessagesSince: %v", err)
+	}
+
+	var streamed []Message
+
+	for message, err := range db.IterMessagesSince(ctx, "fixture-root", all[0].RowID) {
+		if err != nil {
+			t.Fatalf("IterMessagesSince: %v", err)
+		}
+
+		streamed = append(streamed, message)
+	}
+
+	if !reflect.DeepEqual(streamed, materialized) {
+		t.Fatalf("IterMessagesSince streamed %+v, MessagesSince returned %+v", streamed, materialized)
+	}
+
+	broken := 0
+
+	for _, err := range db.IterMessagesSince(ctx, "fixture-root", 0) {
+		if err != nil {
+			t.Fatalf("IterMessagesSince: %v", err)
+		}
+
+		broken++
+
+		break
+	}
+
+	if broken != 1 {
+		t.Fatalf("early break yielded %d messages, want 1", broken)
+	}
+}
