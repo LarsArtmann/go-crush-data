@@ -13,11 +13,43 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
-- Nothing yet.
+- `MessagesSince` and `IterMessagesSince` — the incremental read a tail-style
+  consumer polls with: a session's messages after a cursor, in insertion
+  order. The cursor is a `messages.rowid` (`MessageRowID`), never a
+  timestamp: `created_at` holds whole seconds, so a `created_at > cursor`
+  filter permanently loses every message written in the cursor's own second,
+  the common case while a session is live. A rowid cannot tie, so a strict
+  `rowid > cursor` neither skips nor repeats a row, and it is the same column
+  the ordering uses. Cursor 0 reads the whole session, identically to
+  `Messages`; resuming from the rowid of the last message handled returns only
+  what was appended since. Consumers that withhold rows (past an unresolved
+  tool call) resume from the last row they released, and the withheld rows
+  come back — re-read, never lost.
+- `LastMessageRowID` — the cursor meaning "everything so far is accounted
+  for", for a consumer that starts tailing a session without replaying its
+  history. A covering-index seek on `messages(session_id)` (verified with
+  `EXPLAIN QUERY PLAN`), 0 for a session with no messages or an unknown ID.
+  The newest row may still be one Crush is streaming: a consumer that must not
+  act on a partial turn holds its own cursor back, at no risk of a gap.
+- `Message.RowID` (type `MessageRowID`) — every message read (full or
+  incremental) now reports its rowid, the position it can be resumed from. The
+  distinct type keeps a cursor from being confused with the API's other
+  int64s: substituting a timestamp for a rowid compares against a column five
+  orders of magnitude larger and silently loses everything in between, which
+  is the failure the type makes a compile error.
+- Example `ExampleDB_MessagesSince` — the full-history read plus a poll that
+  streams only what was appended past the newest rowid.
 
 ### Fixed
 
-- Nothing yet.
+- `github.com/gobwas/glob` is pinned back to v0.2.3, the version the
+  golangci-lint linters are built against. The v1.0.0 bump (2026-10-05) turned
+  CI's lint leg red: `depguard` (v2.2.1 — still the version golangci-lint
+  requires through v2.14.0) uses the `glob.Glob` interface that v1.0.0
+  removed, so `go tool golangci-lint run` stopped compiling with "undefined:
+  glob.Glob". The tool is built from this module's own dependency set, so the
+  bump broke it here even though no library code imports glob; the pin only
+  has to satisfy the tool.
 
 ## [0.4.0] - 2026-09-08
 
