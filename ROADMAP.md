@@ -46,6 +46,19 @@ infrastructure that fails loudly before shipping.
 
 ## Recorded decisions
 
+- **Incremental reads are a keyset cursor over `rowid` (decided and shipped
+  2026-10-15).** `MessagesSince`/`IterMessagesSince` take a `MessageRowID` and
+  return the rows after it; `LastMessageRowID` hands out the watermark;
+  `Message.RowID` reports the position each row came from. The alternative on
+  the table was the `(created_at, id)` composite cursor inherited from the
+  adapter bug report that prompted this (stump-wtf/agent-trace#22): `id` is
+  UUIDv4, so it is deterministic but arbitrary within a second, and a
+  `created_at`-only cursor silently drops every message written in the
+  cursor's own second. A rowid needs no interface change in any consumer's
+  parser, is the same column the ordering uses, and cannot tie — and the
+  cursor's distinct type (`MessageRowID`, not `int64`) makes the
+  wrong-cursor mistake a compile error. Pure addition to the surface:
+  crush-daily and mindwalk are unaffected.
 - **Summary fields are public API (decided 2026-09-08, shipped same day).**
   `Session.SummaryMessageID` and `Message.IsSummaryMessage` are exposed
   probe-gated rather than keeping the surface minimal: the data is real but
@@ -71,7 +84,9 @@ new information.
   [recipes/registry-watching](docs/recipes/registry-watching.md).
   Decided 2026-08-16; the sub-module variant explicitly re-rejected same
   day after evaluating it. Revisit when a real consumer wants a live loop
-  (e.g. agent-trace adopting this library for tailing).
+  (e.g. agent-trace adopting this library for tailing). The data half of
+  that loop now exists as the incremental reads recorded above (2026-10-15);
+  the non-decision here is about *watching*, and it is unchanged.
 - **No DOMAIN_LANGUAGE.md.** The domain is small and fully captured in
   doc.go plus type doc comments; a separate glossary would drift from them.
   Revisit if the type count doubles.
