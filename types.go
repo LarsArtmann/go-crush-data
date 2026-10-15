@@ -58,6 +58,21 @@ const (
 	RoleTool      Role = "tool"
 )
 
+// MessageRowID is a message's cursor: its rowid in the messages table, the
+// position Crush appended the row at. It is unique within a database and
+// monotonic, which makes it both the tiebreak for insertion order (created_at
+// holds whole seconds and ties constantly) and the keyset [DB.MessagesSince]
+// reads pages from.
+//
+// It is a distinct type rather than a plain int64 so a cursor cannot be
+// confused with the other int64s in this API — a timestamp, a count, a
+// session's aggregates. Substituting a created_at value for a rowid is the
+// failure this type makes a compile error: such a cursor compares against a
+// column holding numbers five orders of magnitude larger, so every read
+// either skips everything or repeats everything, and until it is noticed the
+// rows in between are never read at all.
+type MessageRowID int64
+
 // Message is one row of the messages table with its parts JSON decoded into
 // typed [Part] values. Parts is nil when the stored JSON is empty or wholly
 // unparseable — a corrupted message never fails the read, mirroring how
@@ -72,6 +87,15 @@ type Message struct {
 	Parts     []Part
 	Model     string
 	Provider  string
+
+	// RowID is the row's position in the session's insertion order
+	// (messages.rowid): unique within a database, monotonic as Crush
+	// appends rows, and the cursor [DB.MessagesSince] resumes from. It is
+	// the value a consumer persists after handling a row, because every
+	// message read is ordered by this same column. Messages is an
+	// ordinary rowid table in every Crush release, so this is never
+	// absent, unlike the option-gated columns above.
+	RowID MessageRowID
 
 	// IsSummaryMessage marks rows Crush wrote when compacting a session's
 	// context into a replacement summary: rare (roughly 0.1% of message
