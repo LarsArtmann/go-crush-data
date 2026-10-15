@@ -773,7 +773,12 @@ func TestMessagesSinceAgainstRealDatabase(t *testing.T) {
 
 	t.Logf(
 		"incremental read at %s: session %s, %d messages, cursor %d, page %d rows, %d created_at inversions across the page",
-		dataDir, target.ID, len(rowIDs), cursor, window, inversions,
+		dataDir,
+		target.ID,
+		len(rowIDs),
+		cursor,
+		window,
+		inversions,
 	)
 }
 

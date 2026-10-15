@@ -28,6 +28,19 @@
 // reads are safe to run alongside a live Crush process. The library never
 // writes.
 //
+// # Incremental reads
+//
+// A tail-style consumer reads a session once and then polls for what is new.
+// The cursor for that is messages.rowid — the row's insertion position
+// ([MessageRowID]) — never created_at: timestamps hold whole seconds, so a
+// "created_at > cursor" filter permanently loses every message written in the
+// cursor's own second, which is the common case in a live session.
+// [DB.MessagesSince] takes such a cursor, [DB.LastMessageRowID] hands out the
+// cursor that means "everything so far", and every row reports its own resume
+// position in [Message.RowID]. Full reads ([DB.Messages]) are ordered by the
+// same column, so the first incremental page and a full read agree row for
+// row.
+//
 // # Timestamps
 //
 // Crush stores timestamps as Unix seconds. This library converts them to
