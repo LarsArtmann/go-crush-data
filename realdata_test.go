@@ -330,7 +330,10 @@ func sweepIncremental(t *testing.T, db *DB, session Session, rows []Message) {
 	}
 
 	if streamed < len(rows)-1 {
-		t.Fatalf("IterMessagesSince(%s, %d) yielded %d messages, want at least %d", session.ID, resume, streamed, len(rows)-1)
+		t.Fatalf(
+			"IterMessagesSince(%s, %d) yielded %d messages, want at least %d",
+			session.ID, resume, streamed, len(rows)-1,
+		)
 	}
 }
 
@@ -757,11 +760,15 @@ func TestMessagesSinceAgainstRealDatabase(t *testing.T) {
 		t.Fatalf("MessagesSince(%s, %d): %v", target.ID, tail[window-1].RowID, err)
 	}
 
-	if len(resumed) != len(tail)-window {
+	if len(resumed) < len(tail)-window {
 		t.Fatalf(
-			"resuming from the page's last row returned %d messages, want %d (the tail past the window)",
+			"resuming from the page's last row returned %d messages, want at least %d (the tail past the window)",
 			len(resumed), len(tail)-window,
 		)
+	}
+
+	if len(resumed) > len(tail)-window {
+		t.Logf("live writer appended %d row(s) between the two reads", len(resumed)-(len(tail)-window))
 	}
 
 	t.Logf(
