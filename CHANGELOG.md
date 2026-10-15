@@ -50,6 +50,13 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   glob.Glob". The tool is built from this module's own dependency set, so the
   bump broke it here even though no library code imports glob; the pin only
   has to satisfy the tool.
+- The flake pins its Go toolchain to `pkgs.go_1_27` — devShell, the `test`
+  and `lint` apps, and `buildGoModule` via `.override` — with `vendorHash`
+  brought along. nixpkgs' default `go` is 1.26.8 while go.mod's floor is
+  `go 1.27`, and every nix surface runs `GOTOOLCHAIN=local`, so the sandbox
+  refused to build rather than downloading a toolchain. `nix flake check`,
+  `nix develop`, `nix run .#test` and `nix run .#lint` had all been broken
+  since the go directive moved on 2026-10-01.
 
 ## [0.4.0] - 2026-09-08
 
