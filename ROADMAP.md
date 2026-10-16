@@ -86,7 +86,7 @@ new information.
   day after evaluating it. Revisit when a real consumer wants a live loop
   (e.g. agent-trace adopting this library for tailing). The data half of
   that loop now exists as the incremental reads recorded above (2026-10-15);
-  the non-decision here is about *watching*, and it is unchanged.
+  the non-decision here is about _watching_, and it is unchanged.
 - **No DOMAIN_LANGUAGE.md.** The domain is small and fully captured in
   doc.go plus type doc comments; a separate glossary would drift from them.
   Revisit if the type count doubles.

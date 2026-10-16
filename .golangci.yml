@@ -1,7 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.7
+  go: "1.27"
   build-tags:
     - goexperiment.arenas
     - goexperiment.goroutineleakprofile
@@ -58,6 +58,7 @@ linters:
     - godot
     - godox
     - goheader
+    - gohumanize
     - gomoddirectives
     - gomodguard_v2
     - goprintffuncname
@@ -73,6 +74,7 @@ linters:
     - intrange
     - iotamixing
     - ireturn
+    - lll
     - loggercheck
     - maintidx
     - makezero
@@ -149,21 +151,26 @@ linters:
         - (*strings.Builder).WriteString
         - (*bytes.Buffer).WriteString
     exhaustruct_v5:
-      # both types are constructed by field assignment (scanMessage), never
-      # literals; the partial literals that exist (zero-value error yields,
-      # focused filters) are intentional
       ignore-patterns:
-        - '.*/go-crush-data\.Message'
-        - '.*/go-crush-data\.SessionFilter'
+        - .*/go-crush-data\.Message
+        - .*/go-crush-data\.SessionFilter
     funlen:
       lines: 200
       statements: 100
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
+    gocognit:
+      min-complexity: 25
+    goconst:
+      ignore-tests: true
+      min-len: 4
+      min-occurrences: 5
     gocritic:
       disabled-checks:
         - ifElseChain
+    gocyclo:
+      min-complexity: 20
     gomoddirectives:
       replace-local: true
     gosec:
@@ -186,12 +193,25 @@ linters:
         - "1"
         - "2"
         - "100"
+    nestif:
+      min-complexity: 6
     revive:
       rules:
         - disabled: true
           name: exported
         - disabled: true
           name: package-comments
+    tagalign:
+      align: false
+      order:
+        - binding
+        - json
+        - yaml
+        - xml
+        - toml
+        - validate
+        - mapstructure
+      sort: true
     tagliatelle:
       case:
         rules:
@@ -247,12 +267,6 @@ linters:
         text: G701
         linters:
           - gosec
-      # G701 on the remaining query sites: every query is composed from
-      # hardcoded literals and schema-gated expressions with caller values
-      # passed as bound args (see the site comments). gosec's taint pass
-      # cannot see that and fires non-deterministically across runs and
-      # platforms (securego/gosec#1712), so these are excluded at config
-      # level, never as line nolints.
       - path: ^messages\.go$
         text: G701
         linters:
@@ -278,13 +292,17 @@ linters:
           - cyclop
           - goconst
           - gosec
+          - forcetypeassert
+          - errcheck
+          - wrapcheck
+          - ireturn
+          - recvcheck
+          - contextcheck
+          - exhaustive
       - path: _test\.go
         text: unused
         linters:
           - unused
-      # censusprobe is machine-local scratch tooling (T10 census canary):
-      # printing to stdout is its entire job and thresholds like the 2000-row
-      # window are one-off constants, so print/style rules don't apply.
       - path: ^scripts/censusprobe/
         linters:
           - forbidigo
@@ -294,7 +312,6 @@ linters:
           - noctx
           - sqlclosecheck
           - modernize
-      # reading a caller/env-supplied registry path is this probe's purpose
       - path: ^scripts/censusprobe/
         text: G703
         linters:
