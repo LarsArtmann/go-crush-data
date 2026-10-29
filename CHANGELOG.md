@@ -13,6 +13,16 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.5.0] - 2026-10-29
+
+### Added
+
 - `MessagesSince` and `IterMessagesSince` — the incremental read a tail-style
   consumer polls with: a session's messages after a cursor, in insertion
   order. The cursor is a `messages.rowid` (`MessageRowID`), never a
