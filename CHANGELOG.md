@@ -42,6 +42,14 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Fixed
 
+- A 0-byte `projects.json` registry reads as "zero registered projects"
+  instead of a parse error. Crush can leave the file behind empty (e.g. an
+  interrupted first write); failing to parse it both errored `DiscoverProjects`
+  and poisoned the CLI fallback — `crush projects --json` exits 1 on the same
+  file, so discovery had no working path at all. This is what silently killed
+  crush-daily's nightly collects from 2026-09-10 (registry-first discovery
+  failed, fallback failed, every collect discovered 0 projects). Same
+  semantics as `ParseProjectsOutput`: empty input, empty result, nil error.
 - `github.com/gobwas/glob` is pinned back to v0.2.3, the version the
   golangci-lint linters are built against. The v1.0.0 bump (2026-10-05) turned
   CI's lint leg red: `depguard` (v2.2.1 — still the version golangci-lint
