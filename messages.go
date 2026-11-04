@@ -313,9 +313,9 @@ func (db *DB) messageColumns() string {
 		prismModelNameExpr = "prism_model_name"
 	}
 
-	prismHypercreditExpr := "NULL AS prism_hypercredit_savings"
+	prismHyperExpr := "NULL AS prism_hypercredit_savings"
 	if db.schema.MessagesPrismHypercreditSavings {
-		prismHypercreditExpr = "prism_hypercredit_savings"
+		prismHyperExpr = "prism_hypercredit_savings"
 	}
 
 	prismDollarExpr := "NULL AS prism_dollar_savings"
@@ -331,7 +331,7 @@ func (db *DB) messageColumns() string {
 		isSummaryExpr,
 		prismModelIDExpr,
 		prismModelNameExpr,
-		prismHypercreditExpr,
+		prismHyperExpr,
 		prismDollarExpr,
 	)
 }

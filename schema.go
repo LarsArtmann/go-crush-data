@@ -70,58 +70,34 @@ type Schema struct {
 // stable order suitable for a user-facing warning ("upgrade Crush for full
 // coverage").
 func (s Schema) MissingColumns() []string {
+	// table-driven so a new capability is one row: the walk keeps the stable
+	// order and the function's complexity fixed no matter how many columns
+	// Crush adds.
+	columns := []struct {
+		name    string
+		present bool
+	}{
+		{"sessions.cost", s.SessionsCost},
+		{"sessions.parent_session_id", s.SessionsParentSessionID},
+		{"sessions.todos", s.SessionsTodos},
+		{"sessions.summary_message_id", s.SessionsSummaryMessageID},
+		{"sessions.channel", s.SessionsChannel},
+		{"messages.model", s.MessagesModel},
+		{"messages.provider", s.MessagesProvider},
+		{"messages.finished_at", s.MessagesFinishedAt},
+		{"messages.is_summary_message", s.MessagesIsSummaryMessage},
+		{"messages.prism_model_id", s.MessagesPrismModelID},
+		{"messages.prism_model_name", s.MessagesPrismModelName},
+		{"messages.prism_hypercredit_savings", s.MessagesPrismHypercreditSavings},
+		{"messages.prism_dollar_savings", s.MessagesPrismDollarSavings},
+	}
+
 	var missing []string
 
-	if !s.SessionsCost {
-		missing = append(missing, "sessions.cost")
-	}
-
-	if !s.SessionsParentSessionID {
-		missing = append(missing, "sessions.parent_session_id")
-	}
-
-	if !s.SessionsTodos {
-		missing = append(missing, "sessions.todos")
-	}
-
-	if !s.SessionsSummaryMessageID {
-		missing = append(missing, "sessions.summary_message_id")
-	}
-
-	if !s.SessionsChannel {
-		missing = append(missing, "sessions.channel")
-	}
-
-	if !s.MessagesModel {
-		missing = append(missing, "messages.model")
-	}
-
-	if !s.MessagesProvider {
-		missing = append(missing, "messages.provider")
-	}
-
-	if !s.MessagesFinishedAt {
-		missing = append(missing, "messages.finished_at")
-	}
-
-	if !s.MessagesIsSummaryMessage {
-		missing = append(missing, "messages.is_summary_message")
-	}
-
-	if !s.MessagesPrismModelID {
-		missing = append(missing, "messages.prism_model_id")
-	}
-
-	if !s.MessagesPrismModelName {
-		missing = append(missing, "messages.prism_model_name")
-	}
-
-	if !s.MessagesPrismHypercreditSavings {
-		missing = append(missing, "messages.prism_hypercredit_savings")
-	}
-
-	if !s.MessagesPrismDollarSavings {
-		missing = append(missing, "messages.prism_dollar_savings")
+	for _, column := range columns {
+		if !column.present {
+			missing = append(missing, column.name)
+		}
 	}
 
 	return missing

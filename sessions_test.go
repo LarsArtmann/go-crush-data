@@ -479,11 +479,19 @@ func TestSessionsDayFilterComposesWithLimit(t *testing.T) {
 	}
 }
 
-// TestSessionSummaryMessageID pins the summary_message_id read across all
-// three session query paths: the direct read, the agent-subtree CTE, and the
-// legacy-schema zero substitution.
-func TestSessionSummaryMessageID(t *testing.T) {
-	t.Parallel()
+// assertSessionColumnCapability pins one probe-gated sessions column across
+// all three session query paths: the direct read, the agent-subtree CTE, and
+// the legacy-schema zero substitution, plus NULL-to-empty semantics. The two
+// callers differ only in which column they exercise.
+func assertSessionColumnCapability(
+	t *testing.T,
+	capabilityLabel string,
+	schemaHas func(Schema) bool,
+	setChildSQL string,
+	want string,
+	read func(Session) string,
+) {
+	t.Helper()
 
 	dataDir := t.TempDir()
 
@@ -491,10 +499,7 @@ func TestSessionSummaryMessageID(t *testing.T) {
 		insertSession(t, db, "root", "", "Root", 1, fixtureBase, fixtureBase)
 		insertSession(t, db, "child", "root", "Child", 0, fixtureBase+1, fixtureBase+1)
 
-		if _, err := db.ExecContext(
-			context.Background(),
-			"UPDATE sessions SET summary_message_id = 'sum-1' WHERE id = 'child'",
-		); err != nil {
+		if _, err := db.ExecContext(context.Background(), setChildSQL); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -506,8 +511,8 @@ func TestSessionSummaryMessageID(t *testing.T) {
 
 	defer func() { _ = db.Close() }()
 
-	if !db.Schema().SessionsSummaryMessageID {
-		t.Fatal("Schema.SessionsSummaryMessageID = false, want true on the current schema")
+	if !schemaHas(db.Schema()) {
+		t.Fatalf("Schema %s = false, want true on the current schema", capabilityLabel)
 	}
 
 	root, err := db.Session(context.Background(), "root")
@@ -515,8 +520,8 @@ func TestSessionSummaryMessageID(t *testing.T) {
 		t.Fatalf("Session: %v", err)
 	}
 
-	if root.SummaryMessageID != "" {
-		t.Fatalf("root.SummaryMessageID = %q, want empty (NULL column)", root.SummaryMessageID)
+	if got := read(root); got != "" {
+		t.Fatalf("root %s = %q, want empty (NULL column)", capabilityLabel, got)
 	}
 
 	child, err := db.Session(context.Background(), "child")
@@ -524,8 +529,8 @@ func TestSessionSummaryMessageID(t *testing.T) {
 		t.Fatalf("Session: %v", err)
 	}
 
-	if child.SummaryMessageID != "sum-1" {
-		t.Fatalf("child.SummaryMessageID = %q, want sum-1", child.SummaryMessageID)
+	if got := read(child); got != want {
+		t.Fatalf("child %s = %q, want %s", capabilityLabel, got, want)
 	}
 
 	graph, err := db.AgentGraph(context.Background(), "root")
@@ -537,8 +542,8 @@ func TestSessionSummaryMessageID(t *testing.T) {
 		t.Fatalf("graph nodes = %+v, want root then child", graph.Nodes)
 	}
 
-	if got := graph.Nodes[1].Session.SummaryMessageID; got != "sum-1" {
-		t.Fatalf("AgentGraph child SummaryMessageID = %q, want sum-1 (CTE path)", got)
+	if got := read(graph.Nodes[1].Session); got != want {
+		t.Fatalf("AgentGraph child %s = %q, want %s (CTE path)", capabilityLabel, got, want)
 	}
 
 	legacy := openFixture(t, schemaLegacy)
@@ -548,9 +553,25 @@ func TestSessionSummaryMessageID(t *testing.T) {
 		t.Fatalf("Session (legacy): %v", err)
 	}
 
-	if legacySession.SummaryMessageID != "" {
-		t.Fatalf("legacy SummaryMessageID = %q, want empty (column absent)", legacySession.SummaryMessageID)
+	if got := read(legacySession); got != "" {
+		t.Fatalf("legacy %s = %q, want empty (column absent)", capabilityLabel, got)
 	}
+}
+
+// TestSessionSummaryMessageID pins the summary_message_id read across all
+// three session query paths: the direct read, the agent-subtree CTE, and the
+// legacy-schema zero substitution.
+func TestSessionSummaryMessageID(t *testing.T) {
+	t.Parallel()
+
+	assertSessionColumnCapability(
+		t,
+		"SessionsSummaryMessageID",
+		func(s Schema) bool { return s.SessionsSummaryMessageID },
+		"UPDATE sessions SET summary_message_id = 'sum-1' WHERE id = 'child'",
+		"sum-1",
+		func(s Session) string { return s.SummaryMessageID },
+	)
 }
 
 // TestSessionChannel pins the channel read across all three session query
@@ -559,70 +580,12 @@ func TestSessionSummaryMessageID(t *testing.T) {
 func TestSessionChannel(t *testing.T) {
 	t.Parallel()
 
-	dataDir := t.TempDir()
-
-	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
-		insertSession(t, db, "root", "", "Root", 1, fixtureBase, fixtureBase)
-		insertSession(t, db, "child", "root", "Child", 0, fixtureBase+1, fixtureBase+1)
-
-		if _, err := db.ExecContext(
-			context.Background(),
-			"UPDATE sessions SET channel = 'ide' WHERE id = 'child'",
-		); err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	db, err := Open(dataDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = db.Close() }()
-
-	if !db.Schema().SessionsChannel {
-		t.Fatal("Schema.SessionsChannel = false, want true on the current schema")
-	}
-
-	root, err := db.Session(context.Background(), "root")
-	if err != nil {
-		t.Fatalf("Session: %v", err)
-	}
-
-	if root.Channel != "" {
-		t.Fatalf("root.Channel = %q, want empty (NULL column)", root.Channel)
-	}
-
-	child, err := db.Session(context.Background(), "child")
-	if err != nil {
-		t.Fatalf("Session: %v", err)
-	}
-
-	if child.Channel != "ide" {
-		t.Fatalf("child.Channel = %q, want ide", child.Channel)
-	}
-
-	graph, err := db.AgentGraph(context.Background(), "root")
-	if err != nil {
-		t.Fatalf("AgentGraph: %v", err)
-	}
-
-	if len(graph.Nodes) != 2 || graph.Nodes[1].Session.ID != "child" {
-		t.Fatalf("graph nodes = %+v, want root then child", graph.Nodes)
-	}
-
-	if got := graph.Nodes[1].Session.Channel; got != "ide" {
-		t.Fatalf("AgentGraph child Channel = %q, want ide (CTE path)", got)
-	}
-
-	legacy := openFixture(t, schemaLegacy)
-
-	legacySession, err := legacy.Session(context.Background(), "fixture-root")
-	if err != nil {
-		t.Fatalf("Session (legacy): %v", err)
-	}
-
-	if legacySession.Channel != "" {
-		t.Fatalf("legacy Channel = %q, want empty (column absent)", legacySession.Channel)
-	}
+	assertSessionColumnCapability(
+		t,
+		"SessionsChannel",
+		func(s Schema) bool { return s.SessionsChannel },
+		"UPDATE sessions SET channel = 'ide' WHERE id = 'child'",
+		"ide",
+		func(s Session) string { return s.Channel },
+	)
 }

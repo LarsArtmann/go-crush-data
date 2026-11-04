@@ -689,7 +689,7 @@ func TestMessagePrismFields(t *testing.T) {
 
 		if _, err := db.ExecContext(
 			context.Background(),
-			"UPDATE messages SET prism_model_id = 'pm_123', prism_model_name = 'prism-claude', "+ //nolint:lll // one literal, two clauses
+			"UPDATE messages SET prism_model_id = 'pm_123', prism_model_name = 'prism-claude', "+
 				"prism_hypercredit_savings = 1.5, prism_dollar_savings = 0.25 WHERE id = 'm-prism'",
 		); err != nil {
 			t.Fatal(err)

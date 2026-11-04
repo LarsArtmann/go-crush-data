@@ -93,6 +93,52 @@ func (f SessionFilter) validate() error {
 	return nil
 }
 
+// sessionSelectExprs holds the probe-gated column expressions of the flat
+// sessions SELECT list, in the order the query embeds them.
+type sessionSelectExprs struct {
+	parent  string
+	cost    string
+	todos   string
+	summary string
+	channel string
+}
+
+// sessionExprs substitutes literal defaults for the capabilities the database
+// predates; stable identifiers need no substitution. The agent-subtree CTE
+// keeps its own qualified variants — unifying them would take more parameters
+// than the duplicated lines (accepted clone, see AGENTS.md).
+func (db *DB) sessionExprs() sessionSelectExprs {
+	exprs := sessionSelectExprs{
+		parent:  "NULL AS parent_session_id",
+		cost:    "0 AS " + costColumn,
+		todos:   "NULL AS " + todosColumn,
+		summary: "NULL AS " + summaryMessageIDColumn,
+		channel: "NULL AS " + channelColumn,
+	}
+
+	if db.schema.SessionsParentSessionID {
+		exprs.parent = "parent_session_id"
+	}
+
+	if db.schema.SessionsCost {
+		exprs.cost = costColumn
+	}
+
+	if db.schema.SessionsTodos {
+		exprs.todos = todosColumn
+	}
+
+	if db.schema.SessionsSummaryMessageID {
+		exprs.summary = summaryMessageIDColumn
+	}
+
+	if db.schema.SessionsChannel {
+		exprs.channel = channelColumn
+	}
+
+	return exprs
+}
+
 // buildSessionsQuery constructs the sessions SELECT together with its bind
 // arguments, so every condition and its placeholder are appended in the same
 // branch and can never drift apart. Column expressions substitute literal
@@ -100,38 +146,15 @@ func (f SessionFilter) validate() error {
 // from Crush's initial schema, and cost, parent_session_id, and todos arrived
 // in later migrations.
 func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
-	parentExpr := "NULL AS parent_session_id"
-	if db.schema.SessionsParentSessionID {
-		parentExpr = "parent_session_id"
-	}
-
-	costExpr := "0 AS cost"
-	if db.schema.SessionsCost {
-		costExpr = costColumn
-	}
-
-	todosExpr := "NULL AS todos"
-	if db.schema.SessionsTodos {
-		todosExpr = todosColumn
-	}
-
-	summaryExpr := "NULL AS summary_message_id"
-	if db.schema.SessionsSummaryMessageID {
-		summaryExpr = summaryMessageIDColumn
-	}
-
-	channelExpr := "NULL AS " + channelColumn
-	if db.schema.SessionsChannel {
-		channelExpr = channelColumn
-	}
+	exprs := db.sessionExprs()
 
 	query := fmt.Sprintf(
 		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s, %s, %s FROM sessions",
-		parentExpr,
-		costExpr,
-		todosExpr,
-		summaryExpr,
-		channelExpr,
+		exprs.parent,
+		exprs.cost,
+		exprs.todos,
+		exprs.summary,
+		exprs.channel,
 	)
 
 	var (
