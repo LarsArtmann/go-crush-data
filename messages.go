@@ -204,14 +204,19 @@ func (db *DB) streamMessages(
 // the shared row logic of every message read.
 func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	var (
-		rowID           int64
-		message         Message
-		parts           string
-		model, provider sql.NullString
-		createdAtUnix   int64
-		updatedAtUnix   int64
-		finishedAt      sql.NullInt64
-		isSummary       sql.NullInt64
+		rowID                   int64
+		message                 Message
+		parts                   string
+		model                   sql.NullString
+		provider                sql.NullString
+		prismModelID            sql.NullString
+		prismModelName          sql.NullString
+		prismHypercreditSavings sql.NullFloat64
+		prismDollarSavings      sql.NullFloat64
+		createdAtUnix           int64
+		updatedAtUnix           int64
+		finishedAt              sql.NullInt64
+		isSummary               sql.NullInt64
 	)
 
 	err := rows.Scan(
@@ -225,6 +230,10 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 		&updatedAtUnix,
 		&finishedAt,
 		&isSummary,
+		&prismModelID,
+		&prismModelName,
+		&prismHypercreditSavings,
+		&prismDollarSavings,
 	)
 	if err != nil {
 		return Message{}, fmt.Errorf("scan message row: %w", err)
@@ -238,6 +247,10 @@ func scanMessage(rows *sql.Rows, sessionID string) (Message, error) {
 	message.UpdatedAt = unixTime(updatedAtUnix)
 	message.FinishedAt = unixTime(finishedAt.Int64)
 	message.IsSummaryMessage = isSummary.Int64 != 0
+	message.PrismModelID = prismModelID.String
+	message.PrismModelName = prismModelName.String
+	message.PrismHypercreditSavings = prismHypercreditSavings.Float64
+	message.PrismDollarSavings = prismDollarSavings.Float64
 
 	decoded, err := decodeParts(parts, false)
 	if err != nil {
@@ -290,12 +303,36 @@ func (db *DB) messageColumns() string {
 		isSummaryExpr = "is_summary_message"
 	}
 
+	prismModelIDExpr := "NULL AS prism_model_id"
+	if db.schema.MessagesPrismModelID {
+		prismModelIDExpr = "prism_model_id"
+	}
+
+	prismModelNameExpr := "NULL AS prism_model_name"
+	if db.schema.MessagesPrismModelName {
+		prismModelNameExpr = "prism_model_name"
+	}
+
+	prismHypercreditExpr := "NULL AS prism_hypercredit_savings"
+	if db.schema.MessagesPrismHypercreditSavings {
+		prismHypercreditExpr = "prism_hypercredit_savings"
+	}
+
+	prismDollarExpr := "NULL AS prism_dollar_savings"
+	if db.schema.MessagesPrismDollarSavings {
+		prismDollarExpr = "prism_dollar_savings"
+	}
+
 	return fmt.Sprintf(
-		"rowid, id, role, parts, %s, %s, created_at, updated_at, %s, %s",
+		"rowid, id, role, parts, %s, %s, created_at, updated_at, %s, %s, %s, %s, %s, %s",
 		modelExpr,
 		providerExpr,
 		finishedExpr,
 		isSummaryExpr,
+		prismModelIDExpr,
+		prismModelNameExpr,
+		prismHypercreditExpr,
+		prismDollarExpr,
 	)
 }
 

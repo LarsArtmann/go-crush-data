@@ -120,12 +120,18 @@ func (db *DB) buildSessionsQuery(filter SessionFilter) (string, []any) {
 		summaryExpr = summaryMessageIDColumn
 	}
 
+	channelExpr := "NULL AS " + channelColumn
+	if db.schema.SessionsChannel {
+		channelExpr = channelColumn
+	}
+
 	query := fmt.Sprintf(
-		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s, %s FROM sessions",
+		"SELECT id, title, %s, message_count, prompt_tokens, completion_tokens, %s, updated_at, created_at, %s, %s, %s FROM sessions",
 		parentExpr,
 		costExpr,
 		todosExpr,
 		summaryExpr,
+		channelExpr,
 	)
 
 	var (
@@ -174,6 +180,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 		session          Session
 		parent, todos    sql.NullString
 		summaryMessageID sql.NullString
+		channel          sql.NullString
 		createdAtUnix    int64
 		updatedAtUnix    int64
 	)
@@ -190,6 +197,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 		&createdAtUnix,
 		&todos,
 		&summaryMessageID,
+		&channel,
 	)
 	if err != nil {
 		return Session{}, fmt.Errorf("scan session row: %w", err)
@@ -199,6 +207,7 @@ func scanSession(rows *sql.Rows) (Session, error) {
 	session.CreatedAt = unixTime(createdAtUnix)
 	session.UpdatedAt = unixTime(updatedAtUnix)
 	session.SummaryMessageID = summaryMessageID.String
+	session.Channel = channel.String
 
 	if todos.Valid {
 		session.Todos = jsontext.Value(todos.String)

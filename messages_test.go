@@ -71,7 +71,12 @@ func TestMessagesOrdersByInsertionOrder(t *testing.T) {
 
 	for i, id := range tieIDs {
 		if tied[i].ID != id {
-			t.Fatalf("same-second messages[%d].ID = %s, want %s (insertion order, not ID order)", i, tied[i].ID, id)
+			t.Fatalf(
+				"same-second messages[%d].ID = %s, want %s (insertion order, not ID order)",
+				i,
+				tied[i].ID,
+				id,
+			)
 		}
 	}
 }
@@ -194,7 +199,17 @@ func TestMessagesToleratesMalformedParts(t *testing.T) {
 	dataDir := t.TempDir()
 	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
 		insertSession(t, db, "s1", "", "Session", 2, fixtureBase, fixtureBase+2)
-		insertMessage(t, db, "m1", "s1", "assistant", `[{"type":"text","data":{"text":"ok"}}]`, "m", "p", fixtureBase)
+		insertMessage(
+			t,
+			db,
+			"m1",
+			"s1",
+			"assistant",
+			`[{"type":"text","data":{"text":"ok"}}]`,
+			"m",
+			"p",
+			fixtureBase,
+		)
 		insertMessage(t, db, "m2", "s1", "assistant", `{"broken"`, "m", "p", fixtureBase+1)
 	})
 
@@ -270,7 +285,8 @@ func TestMessagesKeepsSiblingsAroundCorruptedPart(t *testing.T) {
 		t.Fatalf("parts[1] = %#v, want UnknownPart{tool_call} with raw payload", parts[1])
 	}
 
-	if result, ok := parts[2].(ToolResultPart); !ok || result.ToolCallID != "c1" || result.Content != "ok" {
+	if result, ok := parts[2].(ToolResultPart); !ok || result.ToolCallID != "c1" ||
+		result.Content != "ok" {
 		t.Fatalf("parts[2] = %#v, want ToolResultPart{c1}", parts[2])
 	}
 }
@@ -300,11 +316,19 @@ func TestMessagesOnLegacySchema(t *testing.T) {
 
 	for _, message := range append(messages, childMessages...) {
 		if message.Model != "" || message.Provider != "" {
-			t.Fatalf("message %s = %+v, want empty model/provider (columns absent)", message.ID, message)
+			t.Fatalf(
+				"message %s = %+v, want empty model/provider (columns absent)",
+				message.ID,
+				message,
+			)
 		}
 
 		if !message.FinishedAt.IsZero() {
-			t.Fatalf("message %s FinishedAt = %v, want zero (column absent)", message.ID, message.FinishedAt)
+			t.Fatalf(
+				"message %s FinishedAt = %v, want zero (column absent)",
+				message.ID,
+				message.FinishedAt,
+			)
 		}
 	}
 }
@@ -364,7 +388,16 @@ func TestReadFilesFiltersEmptyPaths(t *testing.T) {
 	dataDir := t.TempDir()
 
 	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
-		insertSession(t, db, "session-with-empty-paths", "", "Has empty paths", 1, fixtureBase, fixtureBase)
+		insertSession(
+			t,
+			db,
+			"session-with-empty-paths",
+			"",
+			"Has empty paths",
+			1,
+			fixtureBase,
+			fixtureBase,
+		)
 
 		for _, row := range []struct {
 			path   string
@@ -431,7 +464,11 @@ func TestIterMessagesMatchesMessages(t *testing.T) {
 	}
 
 	if len(streamed) != len(materialized) {
-		t.Fatalf("IterMessages yielded %d messages, Messages returned %d", len(streamed), len(materialized))
+		t.Fatalf(
+			"IterMessages yielded %d messages, Messages returned %d",
+			len(streamed),
+			len(materialized),
+		)
 	}
 
 	for i := range materialized {
@@ -474,7 +511,12 @@ func TestIterMessagesEarlyBreak(t *testing.T) {
 
 	for i, id := range seen {
 		if id != materialized[i].ID {
-			t.Fatalf("seen[%d] = %s, want %s (iteration order must match Messages)", i, id, materialized[i].ID)
+			t.Fatalf(
+				"seen[%d] = %s, want %s (iteration order must match Messages)",
+				i,
+				id,
+				materialized[i].ID,
+			)
 		}
 	}
 }
@@ -600,7 +642,12 @@ func TestMessagesIsSummaryMessage(t *testing.T) {
 
 		want := message.ID == "m-summary"
 		if message.IsSummaryMessage != want {
-			t.Fatalf("%s IsSummaryMessage = %v, want %v", message.ID, message.IsSummaryMessage, want)
+			t.Fatalf(
+				"%s IsSummaryMessage = %v, want %v",
+				message.ID,
+				message.IsSummaryMessage,
+				want,
+			)
 		}
 
 		if want {
@@ -622,6 +669,98 @@ func TestMessagesIsSummaryMessage(t *testing.T) {
 	for _, message := range legacyMessages {
 		if message.IsSummaryMessage {
 			t.Fatalf("%s IsSummaryMessage = true on a schema without the column", message.ID)
+		}
+	}
+}
+
+// TestMessagePrismFields pins the prism read across both read shapes
+// (Messages and IterMessages share scanMessage): values set on a Prism
+// turn, NULL zero values on a plain turn, and the legacy-schema zero
+// substitution.
+func TestMessagePrismFields(t *testing.T) {
+	t.Parallel()
+
+	dataDir := t.TempDir()
+
+	createDBAt(t, filepath.Join(dataDir, DBName), schemaCurrent, func(db *sql.DB) {
+		insertSession(t, db, "s", "", "Session", 2, fixtureBase, fixtureBase+10)
+		insertMessage(t, db, "m-plain", "s", "user", "[]", "", "", fixtureBase+1)
+		insertMessage(t, db, "m-prism", "s", "assistant", "[]", fixtureModel, "", fixtureBase+2)
+
+		if _, err := db.ExecContext(
+			context.Background(),
+			"UPDATE messages SET prism_model_id = 'pm_123', prism_model_name = 'prism-claude', "+ //nolint:lll // one literal, two clauses
+				"prism_hypercredit_savings = 1.5, prism_dollar_savings = 0.25 WHERE id = 'm-prism'",
+		); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	db, err := Open(dataDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	if !db.Schema().MessagesPrismModelID || !db.Schema().MessagesPrismModelName ||
+		!db.Schema().MessagesPrismHypercreditSavings || !db.Schema().MessagesPrismDollarSavings {
+		t.Fatal("Schema prism capabilities = false, want true on the current schema")
+	}
+
+	byID := map[string]Message{}
+
+	messages, err := db.Messages(context.Background(), "s")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, message := range messages {
+		byID[message.ID] = message
+	}
+
+	plain := byID["m-plain"]
+	if plain.PrismModelID != "" || plain.PrismModelName != "" ||
+		plain.PrismHypercreditSavings != 0 || plain.PrismDollarSavings != 0 {
+		t.Fatalf("m-plain prism fields = %+v, want zero values (NULL columns)", plain)
+	}
+
+	prism := byID["m-prism"]
+	if prism.PrismModelID != "pm_123" || prism.PrismModelName != "prism-claude" ||
+		prism.PrismHypercreditSavings != 1.5 || prism.PrismDollarSavings != 0.25 {
+		t.Fatalf("m-prism prism fields = %+v, want the seeded values", prism)
+	}
+
+	for message, err := range db.IterMessages(context.Background(), "s") {
+		if err != nil {
+			t.Fatalf("IterMessages: %v", err)
+		}
+
+		wantSavings := 0.0
+		if message.ID == "m-prism" {
+			wantSavings = 0.25
+		}
+
+		if message.PrismDollarSavings != wantSavings {
+			t.Fatalf(
+				"%s PrismDollarSavings = %v, want %v (iter path)",
+				message.ID,
+				message.PrismDollarSavings,
+				wantSavings,
+			)
+		}
+	}
+
+	legacy := openFixture(t, schemaLegacy)
+
+	legacyMessages, err := legacy.Messages(context.Background(), "fixture-root")
+	if err != nil {
+		t.Fatalf("Messages (legacy): %v", err)
+	}
+
+	for _, message := range legacyMessages {
+		if message.PrismModelID != "" || message.PrismDollarSavings != 0 {
+			t.Fatalf("%s prism fields non-zero on a schema without the columns", message.ID)
 		}
 	}
 }
@@ -773,7 +912,11 @@ func TestMessagesSinceResumesInsideASecond(t *testing.T) {
 	}
 
 	if len(stale) != 0 {
-		t.Fatalf("MessagesSince(%d) returned %d messages, want none (the cursor is a rowid)", fixtureBase, len(stale))
+		t.Fatalf(
+			"MessagesSince(%d) returned %d messages, want none (the cursor is a rowid)",
+			fixtureBase,
+			len(stale),
+		)
 	}
 }
 
@@ -803,7 +946,12 @@ func TestMessagesSinceOnLegacySchema(t *testing.T) {
 	}
 
 	if len(rest) != 1 || rest[0].ID != full[1].ID {
-		t.Fatalf("MessagesSince returned %d messages (%+v), want just %s", len(rest), rest, full[1].ID)
+		t.Fatalf(
+			"MessagesSince returned %d messages (%+v), want just %s",
+			len(rest),
+			rest,
+			full[1].ID,
+		)
 	}
 
 	if rest[0].Model != "" || rest[0].Provider != "" || !rest[0].FinishedAt.IsZero() {
@@ -816,7 +964,11 @@ func TestMessagesSinceOnLegacySchema(t *testing.T) {
 	}
 
 	if watermark != full[len(full)-1].RowID {
-		t.Fatalf("LastMessageRowID = %d, want the newest row's %d", watermark, full[len(full)-1].RowID)
+		t.Fatalf(
+			"LastMessageRowID = %d, want the newest row's %d",
+			watermark,
+			full[len(full)-1].RowID,
+		)
 	}
 }
 
@@ -861,7 +1013,11 @@ func TestLastMessageRowID(t *testing.T) {
 	}
 
 	if child == 0 || child == cursor {
-		t.Fatalf("child watermark = %d, want the child session's own newest rowid (root's is %d)", child, cursor)
+		t.Fatalf(
+			"child watermark = %d, want the child session's own newest rowid (root's is %d)",
+			child,
+			cursor,
+		)
 	}
 }
 
@@ -940,7 +1096,11 @@ func TestIterMessagesSinceMatchesMessagesSince(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(streamed, materialized) {
-		t.Fatalf("IterMessagesSince streamed %+v, MessagesSince returned %+v", streamed, materialized)
+		t.Fatalf(
+			"IterMessagesSince streamed %+v, MessagesSince returned %+v",
+			streamed,
+			materialized,
+		)
 	}
 
 	broken := 0

@@ -68,8 +68,10 @@ func TestOpenLegacySchema(t *testing.T) {
 	db := openFixture(t, schemaLegacy)
 
 	schema := db.Schema()
-	if schema.SessionsCost || schema.SessionsParentSessionID || schema.MessagesModel ||
-		schema.MessagesProvider || schema.MessagesFinishedAt || schema.ReadFilesTable {
+	if schema.SessionsCost || schema.SessionsParentSessionID || schema.SessionsChannel ||
+		schema.MessagesPrismModelID || schema.MessagesPrismModelName ||
+		schema.MessagesPrismHypercreditSavings || schema.MessagesPrismDollarSavings ||
+		schema.MessagesModel || schema.MessagesProvider || schema.MessagesFinishedAt || schema.ReadFilesTable {
 		t.Fatalf("Schema = %+v, want all capabilities off on the legacy schema", schema)
 	}
 
@@ -77,10 +79,15 @@ func TestOpenLegacySchema(t *testing.T) {
 		"sessions.cost",
 		"sessions.parent_session_id",
 		"sessions.summary_message_id",
+		"sessions.channel",
 		"messages.model",
 		"messages.provider",
 		"messages.finished_at",
 		"messages.is_summary_message",
+		"messages.prism_model_id",
+		"messages.prism_model_name",
+		"messages.prism_hypercredit_savings",
+		"messages.prism_dollar_savings",
 	}
 	got := schema.MissingColumns()
 
@@ -106,15 +113,20 @@ func TestSchemaMissingCapabilities(t *testing.T) {
 	t.Parallel()
 
 	full := Schema{
-		SessionsCost:             true,
-		SessionsParentSessionID:  true,
-		SessionsTodos:            true,
-		SessionsSummaryMessageID: true,
-		MessagesModel:            true,
-		MessagesProvider:         true,
-		MessagesFinishedAt:       true,
-		MessagesIsSummaryMessage: true,
-		ReadFilesTable:           true,
+		SessionsCost:                    true,
+		SessionsParentSessionID:         true,
+		SessionsTodos:                   true,
+		SessionsSummaryMessageID:        true,
+		SessionsChannel:                 true,
+		MessagesModel:                   true,
+		MessagesProvider:                true,
+		MessagesFinishedAt:              true,
+		MessagesIsSummaryMessage:        true,
+		MessagesPrismModelID:            true,
+		MessagesPrismModelName:          true,
+		MessagesPrismHypercreditSavings: true,
+		MessagesPrismDollarSavings:      true,
+		ReadFilesTable:                  true,
 	}
 	if got := full.MissingCapabilities(); len(got) != 0 {
 		t.Fatalf("MissingCapabilities = %v, want none", got)
@@ -134,10 +146,15 @@ func TestSchemaMissingCapabilities(t *testing.T) {
 		"sessions.parent_session_id",
 		"sessions.todos",
 		"sessions.summary_message_id",
+		"sessions.channel",
 		"messages.model",
 		"messages.provider",
 		"messages.finished_at",
 		"messages.is_summary_message",
+		"messages.prism_model_id",
+		"messages.prism_model_name",
+		"messages.prism_hypercredit_savings",
+		"messages.prism_dollar_savings",
 		"read_files",
 	}
 	if got := empty.MissingCapabilities(); !slices.Equal(got, wantAll) {

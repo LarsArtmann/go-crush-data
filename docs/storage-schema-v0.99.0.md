@@ -16,8 +16,8 @@ Regenerate this document and the snapshot on every verified release (see
 AGENTS.md cadence).
 
 Drift since the previous snapshot (v0.92.0): two new MCP config tables,
-four `prism_*` columns and a `channel` column (all unread here, guarded as
-exempt), one messages index, and the initial migration's timestamp comments
+four `prism_*` columns and a `channel` column (all read here via probed
+capabilities), one messages index, and the initial migration's timestamp comments
 corrected from "milliseconds" to "seconds" — the upstream fix for our
 [crush#3576](https://github.com/charmbracelet/crush/pull/3576) (merged
 2026-09-08) first shipped in v0.93.1. The values were always seconds; only
@@ -38,7 +38,7 @@ the lying comments changed.
 | created_at         | INTEGER | initial                      | reads                                                               |
 | summary_message_id | TEXT    | 2025-05-15 migration         | probed capability — reads (`Session.SummaryMessageID`; absent → "") |
 | todos              | TEXT    | 2025-08-12 migration         | reads as raw JSON (`Session.Todos`)                                 |
-| channel            | TEXT    | 2026-09-21 migration         | unread (exempt in the guard list)                                   |
+| channel            | TEXT    | 2026-09-21 migration         | probed capability — reads (`Session.Channel`; absent/NULL → "")     |
 
 `parent_session_id` and `todos` ride the initial `CREATE TABLE` in the
 pinned source but were added by later migrations historically; the probe
@@ -58,10 +58,10 @@ covers databases frozen before those migrations landed.
 | finished_at              | INTEGER | probed capability             | reads (absent → zero time)                                             |
 | provider                 | TEXT    | 2025-06-27 migration          | reads (absent → "")                                                    |
 | is_summary_message       | INTEGER | 2025-08-10 migration          | probed capability — reads (`Message.IsSummaryMessage`; absent → false) |
-| prism_model_id           | TEXT    | 2026-09-02 migration          | unread (exempt)                                                        |
-| prism_model_name         | TEXT    | 2026-09-02 migration          | unread (exempt)                                                        |
-| prism_hypercredit_savings | REAL   | 2026-09-02 migration          | unread (exempt)                                                        |
-| prism_dollar_savings     | REAL    | 2026-09-02 migration          | unread (exempt)                                                        |
+| prism_model_id           | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelID`; absent/NULL → "")   |
+| prism_model_name         | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelName`; absent/NULL → "") |
+| prism_hypercredit_savings | REAL   | 2026-09-02 migration          | probed capability — reads (`Message.PrismHypercreditSavings`; absent/NULL → 0) |
+| prism_dollar_savings     | REAL    | 2026-09-02 migration          | probed capability — reads (`Message.PrismDollarSavings`; absent/NULL → 0) |
 
 Message IDs are `uuid.New()` (UUIDv4): random, so insertion order is
 `rowid`, never `(created_at, id)` — this library orders by `rowid`.
