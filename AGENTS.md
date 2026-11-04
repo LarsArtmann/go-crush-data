@@ -62,7 +62,7 @@ memory.
 Last verified: **v0.99.0 @ e38655a** (2026-11-04, cadence run for issues
 #2/#4/#5/#6/#8/#10/#11 — pin jumped v0.92.0 → v0.99.0 in one pass). Drift
 found and handled: 4 prism columns + sessions.channel (promoted to probed,
-read API: `Message.Prism*`, `Session.Channel` — CHANGELOG [Unreleased]), 2
+read API: `Message.Prism*`, `Session.Channel` — the CHANGELOG's Unreleased section), 2
 MCP config tables (document-exempt, unread), 1 index-only migration
 (invisible to the extractor by design), and the initial migration's
 timestamp comments CORRECTED upstream in v0.93.1 — exactly our crush#3576
