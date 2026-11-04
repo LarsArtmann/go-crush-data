@@ -26,17 +26,14 @@ renumbered, and deleting an item retires its ID for good.
 
 - [ ] **T1** Install/enable the Renovate app (config validates; inert until
       the GitHub App is installed). 5m — `renovate.json`
-- [ ] **T34** Observe the first SCHEDULED upstream-drift run
-      (Mondays 03:47 UTC; first = 2026-09-14) — the workflow_dispatch
-      run on 2026-09-08 was green (5s). 5m —
-      `.github/workflows/upstream-drift.yml`
 - [ ] **T35** Monitor upstream responses to the 2026-09-08 filing
       campaign — daily pass is now one command:
       `scripts/check-upstream-status.sh` (thread states + G1/G2 verdict;
-      2026-09-08: crush#3576 MERGED, #3740 has 1 third-party comment, fix
-      PRs still open). Run Phase G (adoption suggestions, drafts in the
-      campaign plan) once both fix PRs merge — `docs/upstream-filings.md`
-      is the ledger.
+      2026-11-04: crush#3576 MERGED, openusage#357 MERGED (G1 gate
+      UNBLOCKED — Phase G adoption suggestion for openusage can be drafted,
+      needs user go-ahead), mnemo#22 still open (G2 gate), #3740 has 1
+      third-party comment, crush#3580/#3581 still open). Run Phase G once
+      mnemo merges too — `docs/upstream-filings.md` is the ledger.
 - [ ] **T36** Re-open stump-wtf/agent-trace#22 now that its stated
       precondition is met: an incremental read
       (`MessagesSince`/`IterMessagesSince`/`LastMessageRowID`/`MessageRowID`,
