@@ -54,7 +54,7 @@
 // A message's content is stored as a JSON array in the messages.parts
 // column. Each entry is an envelope of the shape {"type": ..., "data": {...}}
 // where type selects the part kind and data carries its payload. Crush
-// v0.92.0 writes eight discriminators:
+// v0.99.0 writes eight discriminators:
 //
 //	text          → [TextPart]
 //	reasoning     → [ReasoningPart]

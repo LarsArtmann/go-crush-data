@@ -148,7 +148,7 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   `TestFixtureSchemaMatchesUpstreamSnapshot` requires the fixture DDL to
   cover every table and column of it (the fixture gains the previously
   missing `files` table). Human-readable companion:
-  `docs/storage-schema-v0.92.0.md`.
+  `docs/storage-schema-v0.99.0.md`.
 - CI hardening against known failure classes: a root-`package main` guard
   (`scripts/check-root-package-main.sh`, ubuntu CI leg) fails fast on the
   build-breaker that kept CI and the benchmark trend red for hours on
@@ -407,7 +407,8 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.0...v0.2.1

@@ -59,15 +59,19 @@ script, and its `release-notice` job opens a tracking issue automatically
 when a new stable release lands — the cadence has a trigger, not just a
 memory.
 
-Last verified: **v0.92.0 @ 559ec80** (2026-09-07, todos probe + guard + drift
-script added; upstream stats command read — its GetUsageByModel only counts
-message rows per model/provider and never sums session-level fields per
-model, so our model-breakdown CTE comment stands unchanged; files table
-confirmed still written by v0.92.0 via internal/history). The weekly CI job
-also self-tests the guard (`--self-test`) and diffs the generated schema
-snapshot. Note: our crush#3576 comment fix merged 2026-09-08 but AFTER the
-v0.92.0 cut — the corrected millis comments first ship in the next release
-(evidence: `docs/upstream-filings.md`).
+Last verified: **v0.99.0 @ e38655a** (2026-11-04, cadence run for issues
+#2/#4/#5/#6/#8/#10/#11 — pin jumped v0.92.0 → v0.99.0 in one pass). Drift
+found and handled: 4 prism columns + sessions.channel (promoted to probed,
+read API: `Message.Prism*`, `Session.Channel` — CHANGELOG [Unreleased]), 2
+MCP config tables (document-exempt, unread), 1 index-only migration
+(invisible to the extractor by design), and the initial migration's
+timestamp comments CORRECTED upstream in v0.93.1 — exactly our crush#3576
+fix shipping (diff v0.92.0..v0.93.1 is comment-only; the initial migration
+is otherwise stable since project start, so one pin covers every DB version
+in between). Parts envelope re-verified in source at e38655a: same 8
+discriminators; todos shape unchanged (content/status/active_form). The
+weekly CI job also self-tests the guard (`--self-test`) and diffs the
+generated schema snapshot.
 
 Optional: `CRUSH_DATA_REAL_DATA_DIR=<dir> go test -run 'TestAllAPIOnRealDatabase|TestStatsParityWithCrushDailySQLOnRealDatabase|TestPartDiscriminatorsCensusShape'` opens a real crush.db read-only (`TestAllAPIOnRealDatabase` sweeps every read API; its Stats is day-filtered by design — all-time Stats DISTINCTs the whole messages table and starves on production-sized DBs under a live writer; skipped under `-short`). Or run everything at once via `scripts/verify-all.sh`. Re-run after ANY source change — not just scan/probe code (a stats.go ORDER BY once changed real-read behavior).
 
@@ -109,7 +113,7 @@ flake-update, upstream-drift — all tagged to pinned action SHAs),
 `docs/benchmarks/baseline-benchmarks.txt`
 (benchstat baseline for the bench.yml trend; regenerate via
 `go test -bench . -count=6 | tee …`), `example_test.go` (runnable examples),
-`docs/storage-schema-v0.92.0.md` + `.sql` (per-release verified schema
+`docs/storage-schema-v0.99.0.md` + `.sql` (per-release verified schema
 snapshot; guarded by `TestFixtureSchemaMatchesUpstreamSnapshot`),
 `docs/upstream-filings.md` (ledger of everything filed on other repos),
 `docs/ecosystem-implementation-review.md` (source-verified comparison of
@@ -289,16 +293,17 @@ fmt.Print calls, and never put `package main` files in the repo root
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 
-**Verified against charmbracelet/crush v0.92.0 (commit 559ec80, checked
-2026-09-07) by reading upstream source**: every fact below matches the
+**Verified against charmbracelet/crush v0.99.0 (commit e38655a, checked
+2026-11-04) by reading upstream source**: every fact below matches the
 upstream internal/db/migrations, internal/projects/projects.go,
 internal/config/load.go (GlobalConfigData), internal/session/session.go
 (Todo/TodoStatus/CreateAgentToolSessionID), and internal/message/message.go
-(marshalParts/unmarshalParts). Upstream now pins its schema in-source via
-goose migrations + sqlc (sqlc.yaml under internal/db), which supersedes
-migration-comment archaeology — the comments still claim milliseconds while
-the update_sessions_updated_at trigger writes strftime('%s','now') (seconds)
-and the CLI renders time.Unix(CreatedAt, 0).
+(marshalParts/unmarshalParts). Upstream pins its schema in-source via goose
+migrations + sqlc (sqlc.yaml under internal/db), which supersedes
+migration-comment archaeology — and since v0.93.1 the initial migration's
+comments correctly say seconds (our crush#3576 fix), matching the
+update_sessions_updated_at trigger's strftime('%s','now') and the CLI's
+time.Unix(CreatedAt, 0).
 
 - Registry: `<global>/projects.json` — `{projects: [{path, data_dir,
   last_accessed}]}` (RFC3339Nano timestamps); global dir =
@@ -307,11 +312,15 @@ and the CLI renders time.Unix(CreatedAt, 0).
 - DB: `<data_dir>/crush.db`, tables sessions/messages/read_files **plus
   `files`** (initial migration: id, session_id, path, content, version,
   created_at, updated_at — file snapshots, intentionally not exposed here;
-  the fixture DDL now declares it, guarded against the generated snapshot).
-  Sessions also carry `summary_message_id`; messages carry
-  `is_summary_message` — both READ here since 2026-09-08 as probe-gated
-  `Session.SummaryMessageID` / `Message.IsSummaryMessage` (absent → "" /
-  false; ~0.1% of messages, ~3.6–4.1% of sessions on real data).
+  the fixture DDL now declares it, guarded against the generated snapshot),
+  **plus `mcp_disabled_servers`/`mcp_enabled_servers`** (v0.97.0,
+  single-column config tables; document-exempt, unread).
+  Sessions also carry `summary_message_id` + `channel` (v0.97.0); messages
+  carry `is_summary_message` + 4 `prism_*` columns (v0.93.1) — all READ here
+  as probe-gated fields (`Session.SummaryMessageID`, `Session.Channel`,
+  `Message.IsSummaryMessage`, `Message.PrismModelID/PrismModelName/
+  PrismHypercreditSavings/PrismDollarSavings`; absent → zero values;
+  summary share: ~0.1% of messages, ~3.6–4.1% of sessions on real data).
 - Parts envelope: `[{"type":..., "data":{...}}]` with 8 upstream
   discriminators: reasoning, text, image_url, binary, tool_call,
   tool_result, finish, shell_command. image_url/binary pass through as
