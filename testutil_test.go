@@ -26,7 +26,7 @@ const (
 
 const currentSchemaDDL = `
 	-- mirrors the schema of the pinned upstream release; guarded against the
-	-- generated snapshot docs/storage-schema-v0.92.0.sql by
+	-- generated snapshot docs/storage-schema-v0.99.0.sql by
 	-- TestFixtureSchemaMatchesUpstreamSnapshot (column sets must match;
 	-- indexes/triggers/CHECK constraints are intentionally omitted — fixtures
 	-- control their own timestamps, so upstream's update triggers must not fire)
@@ -41,7 +41,8 @@ const currentSchemaDDL = `
 		updated_at INTEGER NOT NULL,
 		created_at INTEGER NOT NULL,
 		todos TEXT,
-		summary_message_id TEXT
+		summary_message_id TEXT,
+		channel TEXT
 	);
 	CREATE TABLE messages (
 		id TEXT PRIMARY KEY,
@@ -53,7 +54,11 @@ const currentSchemaDDL = `
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL,
 		finished_at INTEGER,
-		is_summary_message INTEGER DEFAULT 0 NOT NULL
+		is_summary_message INTEGER DEFAULT 0 NOT NULL,
+		prism_model_id TEXT,
+		prism_model_name TEXT,
+		prism_hypercredit_savings REAL,
+		prism_dollar_savings REAL
 	);
 	CREATE TABLE read_files (
 		session_id TEXT NOT NULL,
@@ -68,6 +73,12 @@ const currentSchemaDDL = `
 		version INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
+	);
+	CREATE TABLE mcp_disabled_servers (
+		name TEXT PRIMARY KEY
+	);
+	CREATE TABLE mcp_enabled_servers (
+		name TEXT PRIMARY KEY
 	);
 `
 

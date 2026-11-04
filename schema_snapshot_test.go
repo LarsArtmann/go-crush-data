@@ -10,18 +10,18 @@ import (
 // The fixture schema (currentSchemaDDL in testutil_test.go) used to be a
 // hand-maintained approximation of the real crush.db schema and drifted at
 // least once (the files table was missing entirely). The snapshot
-// docs/storage-schema-v0.92.0.sql is GENERATED from the pinned upstream
+// docs/storage-schema-v0.99.0.sql is GENERATED from the pinned upstream
 // migrations by scripts/genschema, and this guard requires the fixture to
 // declare every table and column of that snapshot — the fixture-drift
 // analogue of the migration-drift guard in schema_drift_test.go. Regenerate
 // the snapshot after bumping the upstream pin:
 //
 //	go run ./scripts/genschema -migrations <clone>/internal/db/migrations \
-//	  > docs/storage-schema-v0.92.0.sql
+//	  > docs/storage-schema-v0.99.0.sql
 
 // snapshotPath is the generated schema snapshot (exactly one file; the
 // version in the name moves with the upstream pin).
-const snapshotPath = "docs/storage-schema-v0.92.0.sql"
+const snapshotPath = "docs/storage-schema-v0.99.0.sql"
 
 // tableColumns parses CREATE TABLE statements out of a blob of DDL and maps
 // table name → sorted column names. Fragments are split on top-level commas
