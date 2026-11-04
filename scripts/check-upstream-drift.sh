@@ -44,8 +44,8 @@ cd "$repo_root"
 
 # Pinned upstream verification point. Bump together, then re-run this
 # script and the guard test.
-crush_ref=v0.92.0
-crush_sha=559ec80922fecf3baa0b7599230f4c91067440de
+crush_ref=v0.99.0
+crush_sha=e38655aac84ab3704a1a96928017e1d9ef1d0043
 
 initial_migration=20250424200609_initial.sql
 guard_test=schema_drift_test.go

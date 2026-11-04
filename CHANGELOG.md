@@ -13,7 +13,34 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
-- Nothing yet.
+- `Session.Channel` — which surface the session was created through (the
+  `sessions.channel` column Crush added in v0.97.0, e.g. `"ide"`); `""` when
+  the database predates the column or the row leaves it NULL. Read through a
+  probed capability like `SummaryMessageID`, so old databases keep working
+  unchanged.
+- `Message.PrismModelID`, `Message.PrismModelName`,
+  `Message.PrismHypercreditSavings`, and `Message.PrismDollarSavings` — the
+  Prism attribution and savings columns Crush added in v0.93.1 (set on Hyper
+  turns served through a Prism model, from the X-Prism-* response headers).
+  Every other message leaves them NULL, and all four read as the zero value
+  there, matching the `Model`/`Provider`/`FinishedAt` convention. Both read
+  paths (`Messages` and `IterMessages`) carry the fields, and `AgentGraph`
+  nodes carry `Session.Channel`.
+- `Schema` gains the matching capability flags (`SessionsChannel`,
+  `MessagesPrismModelID`, `MessagesPrismModelName`,
+  `MessagesPrismHypercreditSavings`, `MessagesPrismDollarSavings`), and
+  `MissingColumns`/`MissingCapabilities` report them in the stable order.
+
+### Changed
+
+- Upstream verification pin moved from v0.92.0 to **v0.99.0** (commit
+  `e38655a`): the drift guard list now covers every migration that landed
+  between them (two MCP config tables, the prism and channel columns, a
+  messages index), and the generated schema snapshot is
+  `docs/storage-schema-v0.99.0.sql`. Databases created by any Crush release
+  from the 2025-04-24 initial schema through v0.99.0 read identically —
+  verified by the capability guard, which drops each migration's columns and
+  exercises every read path.
 
 ### Fixed
 

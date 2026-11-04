@@ -31,6 +31,10 @@ type Schema struct {
 	// Session.SummaryMessageID is always "".
 	SessionsSummaryMessageID bool
 
+	// SessionsChannel reports whether sessions.channel exists (added
+	// upstream in v0.97.0). Absent: Session.Channel is always "".
+	SessionsChannel bool
+
 	// MessagesModel reports whether messages.model exists. Absent: message
 	// and stats model fields are empty.
 	MessagesModel bool
@@ -48,6 +52,15 @@ type Schema struct {
 	// Message.IsSummaryMessage is always false.
 	MessagesIsSummaryMessage bool
 
+	// MessagesPrismModelID, MessagesPrismModelName,
+	// MessagesPrismHypercreditSavings, and MessagesPrismDollarSavings
+	// report whether the messages prism columns exist (added upstream in
+	// v0.93.1). Absent: the corresponding Message fields are always zero.
+	MessagesPrismModelID            bool
+	MessagesPrismModelName          bool
+	MessagesPrismHypercreditSavings bool
+	MessagesPrismDollarSavings      bool
+
 	// ReadFilesTable reports whether the read_files table exists. Absent:
 	// [DB.ReadFiles] returns an empty slice.
 	ReadFilesTable bool
@@ -57,38 +70,34 @@ type Schema struct {
 // stable order suitable for a user-facing warning ("upgrade Crush for full
 // coverage").
 func (s Schema) MissingColumns() []string {
+	// table-driven so a new capability is one row: the walk keeps the stable
+	// order and the function's complexity fixed no matter how many columns
+	// Crush adds.
+	columns := []struct {
+		name    string
+		present bool
+	}{
+		{"sessions.cost", s.SessionsCost},
+		{"sessions.parent_session_id", s.SessionsParentSessionID},
+		{"sessions.todos", s.SessionsTodos},
+		{"sessions.summary_message_id", s.SessionsSummaryMessageID},
+		{"sessions.channel", s.SessionsChannel},
+		{"messages.model", s.MessagesModel},
+		{"messages.provider", s.MessagesProvider},
+		{"messages.finished_at", s.MessagesFinishedAt},
+		{"messages.is_summary_message", s.MessagesIsSummaryMessage},
+		{"messages.prism_model_id", s.MessagesPrismModelID},
+		{"messages.prism_model_name", s.MessagesPrismModelName},
+		{"messages.prism_hypercredit_savings", s.MessagesPrismHypercreditSavings},
+		{"messages.prism_dollar_savings", s.MessagesPrismDollarSavings},
+	}
+
 	var missing []string
 
-	if !s.SessionsCost {
-		missing = append(missing, "sessions.cost")
-	}
-
-	if !s.SessionsParentSessionID {
-		missing = append(missing, "sessions.parent_session_id")
-	}
-
-	if !s.SessionsTodos {
-		missing = append(missing, "sessions.todos")
-	}
-
-	if !s.SessionsSummaryMessageID {
-		missing = append(missing, "sessions.summary_message_id")
-	}
-
-	if !s.MessagesModel {
-		missing = append(missing, "messages.model")
-	}
-
-	if !s.MessagesProvider {
-		missing = append(missing, "messages.provider")
-	}
-
-	if !s.MessagesFinishedAt {
-		missing = append(missing, "messages.finished_at")
-	}
-
-	if !s.MessagesIsSummaryMessage {
-		missing = append(missing, "messages.is_summary_message")
+	for _, column := range columns {
+		if !column.present {
+			missing = append(missing, column.name)
+		}
 	}
 
 	return missing
@@ -129,6 +138,11 @@ const todosColumn = "todos"
 // the sessions and agent-subtree queries.
 const summaryMessageIDColumn = "summary_message_id"
 
+// channelColumn names the sessions channel column shared by the schema probe
+// and the capability-substituted channel expressions of the sessions and
+// agent-subtree queries.
+const channelColumn = "channel"
+
 // messagesTable names the messages table shared by the required-table
 // check and the message-column probes.
 const messagesTable = "messages"
@@ -150,13 +164,50 @@ type columnProbe struct {
 //nolint:gochecknoglobals // a slice cannot be a constant and this one is definitionally fixed
 var columnProbes = []columnProbe{
 	{sessionsTable, costColumn, func(s *Schema, present bool) { s.SessionsCost = present }},
-	{sessionsTable, "parent_session_id", func(s *Schema, present bool) { s.SessionsParentSessionID = present }},
+	{
+		sessionsTable,
+		"parent_session_id",
+		func(s *Schema, present bool) { s.SessionsParentSessionID = present },
+	},
 	{sessionsTable, todosColumn, func(s *Schema, present bool) { s.SessionsTodos = present }},
-	{sessionsTable, summaryMessageIDColumn, func(s *Schema, present bool) { s.SessionsSummaryMessageID = present }},
+	{
+		sessionsTable,
+		summaryMessageIDColumn,
+		func(s *Schema, present bool) { s.SessionsSummaryMessageID = present },
+	},
+	{sessionsTable, channelColumn, func(s *Schema, present bool) { s.SessionsChannel = present }},
 	{messagesTable, "model", func(s *Schema, present bool) { s.MessagesModel = present }},
 	{messagesTable, "provider", func(s *Schema, present bool) { s.MessagesProvider = present }},
-	{messagesTable, "finished_at", func(s *Schema, present bool) { s.MessagesFinishedAt = present }},
-	{messagesTable, "is_summary_message", func(s *Schema, present bool) { s.MessagesIsSummaryMessage = present }},
+	{
+		messagesTable,
+		"finished_at",
+		func(s *Schema, present bool) { s.MessagesFinishedAt = present },
+	},
+	{
+		messagesTable,
+		"is_summary_message",
+		func(s *Schema, present bool) { s.MessagesIsSummaryMessage = present },
+	},
+	{
+		messagesTable,
+		"prism_model_id",
+		func(s *Schema, present bool) { s.MessagesPrismModelID = present },
+	},
+	{
+		messagesTable,
+		"prism_model_name",
+		func(s *Schema, present bool) { s.MessagesPrismModelName = present },
+	},
+	{
+		messagesTable,
+		"prism_hypercredit_savings",
+		func(s *Schema, present bool) { s.MessagesPrismHypercreditSavings = present },
+	},
+	{
+		messagesTable,
+		"prism_dollar_savings",
+		func(s *Schema, present bool) { s.MessagesPrismDollarSavings = present },
+	},
 }
 
 // probeSchema inspects an open database and returns its capabilities.

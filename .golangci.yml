@@ -16,7 +16,6 @@ output:
   formats: {}
 linters:
   enable:
-    - arangolint
     - asasalint
     - asciicheck
     - bidichk
@@ -288,6 +287,8 @@ linters:
           - gochecknoglobals
           - funlen
           - cyclop
+          - gocognit
+          - gocyclo
           - goconst
           - gosec
           - forcetypeassert

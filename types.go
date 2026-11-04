@@ -44,6 +44,12 @@ type Session struct {
 	// session has no summary or the database predates the column. That
 	// message is a normal messages row with [Message.IsSummaryMessage] set.
 	SummaryMessageID string
+
+	// Channel records which surface the session was created through (the
+	// sessions.channel column Crush added in v0.97.0, e.g. "cli"); "" when
+	// the database predates the column or the row leaves it NULL. Upstream
+	// treats NULL as its implicit default surface.
+	Channel string
 }
 
 // Role is the author of a message. Crush currently writes "user",
@@ -103,6 +109,19 @@ type Message struct {
 	// and model attribution. Databases that predate the column report
 	// false. They are returned like any other row; see [DB.Messages].
 	IsSummaryMessage bool
+
+	// PrismModelID and PrismModelName identify the Prism model that served
+	// this message, and PrismHypercreditSavings / PrismDollarSavings the
+	// savings it reported. Upstream (v0.93.1+) sets them on Hyper turns
+	// served through a Prism model, from the X-Prism-* response headers;
+	// every other message leaves all four NULL. The database predating the
+	// columns, an absent column value, and a genuine zero all read as the
+	// zero value — the codebase convention for nullable columns, matching
+	// Model/Provider/FinishedAt.
+	PrismModelID            string
+	PrismModelName          string
+	PrismHypercreditSavings float64
+	PrismDollarSavings      float64
 
 	// CreatedAt and UpdatedAt are the row's creation and last-write times;
 	// both ride the initial messages schema, so every database has them.

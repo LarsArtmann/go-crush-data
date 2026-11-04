@@ -160,7 +160,7 @@ func TestPreTodosSchemaDegradesGracefully(t *testing.T) {
 // adding a probe fails exactly here).
 //
 // The list is derived from the pinned upstream migration set
-// (charmbracelet/crush v0.92.0, commit 559ec80); refresh it — and check for
+// (charmbracelet/crush v0.99.0, commit e38655a); refresh it — and check for
 // upstream drift — with scripts/check-upstream-drift.sh. Columns of the
 // initial migration (20250424200609) are deliberately absent: they are the
 // stable identifiers every read requires, and dropping one SHOULD break
@@ -209,6 +209,46 @@ func TestUpstreamMigrationColumnsAreProbedOrExempt(t *testing.T) {
 			table:  "read_files",
 			file:   "20260127000000_add_read_files_table.sql",
 			probed: true,
+		},
+		{
+			table:  "messages",
+			column: "prism_model_id",
+			file:   "20260902000000_add_prism_model_to_messages.sql",
+			probed: true,
+		},
+		{
+			table:  "messages",
+			column: "prism_model_name",
+			file:   "20260902000000_add_prism_model_to_messages.sql",
+			probed: true,
+		},
+		{
+			table:  "messages",
+			column: "prism_hypercredit_savings",
+			file:   "20260902000000_add_prism_model_to_messages.sql",
+			probed: true,
+		},
+		{
+			table:  "messages",
+			column: "prism_dollar_savings",
+			file:   "20260902000000_add_prism_model_to_messages.sql",
+			probed: true,
+		},
+		{
+			table:  "sessions",
+			column: "channel",
+			file:   "20260921000000_add_channel_to_sessions.sql",
+			probed: true,
+		},
+		{
+			table:  "mcp_disabled_servers",
+			file:   "20260928000000_add_mcp_disabled_servers.sql",
+			probed: false,
+		},
+		{
+			table:  "mcp_enabled_servers",
+			file:   "20260928000001_add_mcp_enabled_servers.sql",
+			probed: false,
 		},
 	}
 

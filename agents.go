@@ -123,21 +123,29 @@ func (db *DB) descendantSessions(ctx context.Context, rootID string) ([]Session,
 		recursiveSummaryExpr = nullLiteral
 	}
 
+	channelExpr := channelColumn
+	recursiveChannelExpr := "s." + channelColumn
+
+	if !db.schema.SessionsChannel {
+		channelExpr = nullLiteral
+		recursiveChannelExpr = nullLiteral
+	}
+
 	// query is composed from hardcoded literals and schema-gated expressions; every caller value arrives via parameterized args
 	query := fmt.Sprintf(`
 		WITH RECURSIVE subtree AS (
-			SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, %s AS cost, updated_at, created_at, %s AS todos, %s AS summary_message_id, 1 AS depth
+			SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, %s AS cost, updated_at, created_at, %s AS todos, %s AS summary_message_id, %s AS channel, 1 AS depth
 			FROM sessions
 			WHERE parent_session_id = ?
 			UNION ALL
-			SELECT s.id, s.title, s.parent_session_id, s.message_count, s.prompt_tokens, s.completion_tokens, %s AS cost, s.updated_at, s.created_at, %s AS todos, %s AS summary_message_id, subtree.depth + 1
+			SELECT s.id, s.title, s.parent_session_id, s.message_count, s.prompt_tokens, s.completion_tokens, %s AS cost, s.updated_at, s.created_at, %s AS todos, %s AS summary_message_id, %s AS channel, subtree.depth + 1
 			FROM sessions s
 			JOIN subtree ON s.parent_session_id = subtree.id
 			WHERE subtree.depth < ?
 		)
-		SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at, todos, summary_message_id
+		SELECT id, title, parent_session_id, message_count, prompt_tokens, completion_tokens, cost, updated_at, created_at, todos, summary_message_id, channel
 		FROM subtree
-	`, costExpr, todosExpr, summaryExpr, recursiveCostExpr, recursiveTodosExpr, recursiveSummaryExpr)
+	`, costExpr, todosExpr, summaryExpr, channelExpr, recursiveCostExpr, recursiveTodosExpr, recursiveSummaryExpr, recursiveChannelExpr)
 
 	rows, err := db.handle.QueryContext(ctx, query, rootID, maxAgentDepth+1)
 	if err != nil {

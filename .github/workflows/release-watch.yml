@@ -28,13 +28,13 @@ jobs:
 
           echo "upstream latest stable: $tag"
 
-          existing="$(gh issue list --state open --search "in:title \"crush $tag released\"" --json number --jq 'length')"
+          existing="$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"crush $tag released\"" --json number --jq 'length')"
           if [ "$existing" -ne 0 ]; then
             echo "cadence issue for $tag already open — nothing to do"
             exit 0
           fi
 
-          gh issue create \
+          gh issue create -R "$GITHUB_REPOSITORY" \
             --title "crush $tag released — run the upstream verification cadence" \
             --body "$(cat <<EOF
           Upstream [charmbracelet/crush](https://github.com/charmbracelet/crush) shipped stable release \`$tag\`.
