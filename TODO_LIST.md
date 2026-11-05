@@ -37,7 +37,7 @@ renumbered, and deleting an item retires its ID for good.
 - [ ] **T36** Re-open stump-wtf/agent-trace#22 now that its stated
       precondition is met: an incremental read
       (`MessagesSince`/`IterMessagesSince`/`LastMessageRowID`/`MessageRowID`,
-      CHANGELOG `[Unreleased]`, 2026-10-15) is what the maintainer named as
+      CHANGELOG `[0.5.0]`, shipped 2026-10-29) is what the maintainer named as
       the reason to reconsider adopting this library. Their mirror is
       bot-managed since 2026-10-13 ("copied to the project's canonical
       tracker"), so the note belongs on the canonical tracker, not the

@@ -42,7 +42,7 @@ infrastructure that fails loudly before shipping.
 ## Open questions (need a product-scope call)
 
 - None open. (The summary-fields question below was decided 2026-09-08 and
-  shipped; see CHANGELOG `[Unreleased]`.)
+  shipped; see CHANGELOG `[0.4.0]`.)
 
 ## Recorded decisions
 

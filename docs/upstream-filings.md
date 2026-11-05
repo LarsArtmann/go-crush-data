@@ -31,7 +31,7 @@ agent-trace#22 follow-up (state 2026-10-15): the maintainer's stated
 precondition for reconsidering adoption — "genuinely open to revisiting if
 `MessagesSince` lands" — is now met on this side; `MessagesSince` /
 `IterMessagesSince` / `LastMessageRowID` / `MessageRowID` shipped in
-CHANGELOG `[Unreleased]` (TODO_LIST T36 tracks re-opening the conversation,
+CHANGELOG `[0.5.0]` (TODO_LIST T36 tracks re-opening the conversation,
 and the thread's mirror is bot-managed since 2026-10-13, so any comment goes
 to the canonical tracker). Two items from that thread remain open and are
 NOT filed:
