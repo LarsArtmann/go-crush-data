@@ -20,7 +20,7 @@ verification exposed → docs + ledger + TODO updates → this self-review.
 - `go build ./...`, `go vet ./...`, `go test -race -shuffle=on -count=2 ./...`
   (47.5s, green) — run twice, before and after the final refactor.
 - `go tool golangci-lint run --timeout=5m ./...` — **0 issues** (only green
-  *after* the glob pin repair; with glob v1.0.0 the tool did not compile).
+  _after_ the glob pin repair; with glob v1.0.0 the tool did not compile).
 - `nix flake check` — **all checks passed** (only green after the `go_1_27`
   flake pins + `vendorHash` repair; before, the sandbox refused: "go.mod
   requires go >= 1.27 (running go 1.26.8)").
@@ -121,7 +121,7 @@ messages.go:90 / types.go:80 on the current tree.
    `nix-hash-fix`, but the scratch-tree hash derivation was hand-done
    first. The skill's decision checklist ("fleet-wide → extend BuildFlow")
    was applied for the go-floor guard (documented: `buildflow -s
-   go-version-auto-configure` detects the drift) but nothing was *filed*
+   go-version-auto-configure` detects the drift) but nothing was _filed_
    upstream in BuildFlow.
 2. **Ledger upkeep**: `docs/upstream-filings.md` rows for agent-trace#22
    are recorded with `State (last observed)` from what I read, but
@@ -131,7 +131,7 @@ messages.go:90 / types.go:80 on the current tree.
    current tree (grep-level) but did not re-run the gate on the November
    tree myself; I rely on the 01:48 session's verify-all citation.
 4. **Test robustness against a live writer**: appends are handled
-   (lower-bound/prefix style), *deletes* are not — `rowids` are collected
+   (lower-bound/prefix style), _deletes_ are not — `rowids` are collected
    once and trusted for the window comparison; a concurrent delete could
    produce a spurious failure (not a false pass). Documented nowhere.
 
@@ -158,7 +158,7 @@ messages.go:90 / types.go:80 on the current tree.
    flake lint `"$@"` passthrough; per TODO_LIST rules a deleted item
    retires its ID "for good". I minted T36 for the agent-trace note
    without grepping the status history first. The 2026-11-05 session then
-   cited *my* T36, so a renumber now has cross-doc cost — but the rule
+   cited _my_ T36, so a renumber now has cross-doc cost — but the rule
    was violated at mint time. Sloppy.
 2. **README forgotten.** An API addition without touching the sales page
    is an incomplete feature delivery by this repo's own definition
@@ -183,7 +183,7 @@ messages.go:90 / types.go:80 on the current tree.
    AGENTS.md warns about (one "file modified since read" race included).
 8. **Date discipline.** The env header said 11/5/2026 while the session
    ran 10/15; I stamped docs with 2026-10-15 based on file mtimes. In the
-   end the stamps are *correct for the work*, but I never ran `date` to
+   end the stamps are _correct for the work_, but I never ran `date` to
    reconcile — this report's first command does. (The user instruction to
    run `date` exists precisely for this.)
 

@@ -290,6 +290,19 @@ fmt.Print calls, and never put `package main` files in the repo root
   finding turns its `//nolint:gosec` "unused" (nolintlint → red leg).
   Config-level file+rule-ID exclusions are platform-stable; keep the
   rationale as a plain comment at the site.
+- **Never `git commit --amend` in this repo** — HEAD is frequently a daemon
+  commit that is ALREADY PUSHED (daemon + concurrent sessions share the
+  branch). Seen 2026-11-05: a `&&` chain died at the doc-links guard (the
+  `git add` never ran), the follow-up `git commit --amend` silently adopted
+  the daemon's pushed commit and rewrote remote history locally until a
+  `git reset --soft origin/master` + recommit healed it. Always create new
+  commits, and check `git log -1` (Daemon trailer? pushed?) before any
+  history-modifying command.
+- **Don't chain `git add`/`commit` behind a guard command in `&&`**: when
+  `scripts/check-doc-links.sh` fails first, the staging silently never
+  happens and later edits look committed when they are not. Run the guard as
+  its own step, then stage and commit as verified separate steps (the guard
+  reads the working tree, so running it before staging is fine).
 
 ## Storage facts (reverse-engineered, upstream has no docs)
 
