@@ -13,6 +13,20 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.6.0] - 2026-11-05
+
+### Added
+
 - `Session.Channel` — which surface the session was created through (the
   `sessions.channel` column Crush added in v0.97.0, e.g. `"ide"`); `""` when
   the database predates the column or the row leaves it NULL. Read through a
@@ -41,10 +55,6 @@ API, behavior, packaging, and CI-visible contracts. Doc-only edits
   from the 2025-04-24 initial schema through v0.99.0 read identically —
   verified by the capability guard, which drops each migration's columns and
   exercises every read path.
-
-### Fixed
-
-- Nothing yet.
 
 ## [0.5.0] - 2026-10-29
 
@@ -407,7 +417,8 @@ mindwalk fork.
   for the parts decoder, volume stress tests, race detector, 85% coverage
   gate in CI, govulncheck.
 
-[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-crush-data/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LarsArtmann/go-crush-data/compare/v0.2.1...v0.3.0
