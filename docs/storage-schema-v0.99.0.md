@@ -46,22 +46,22 @@ covers databases frozen before those migrations landed.
 
 ## messages
 
-| column                   | type    | added in                      | this library                                                           |
-| ------------------------ | ------- | ----------------------------- | ---------------------------------------------------------------------- |
-| id                       | TEXT PK | initial (UUIDv4 — random!)    | reads                                                                  |
-| session_id               | TEXT    | initial (FK, indexed)         | reads                                                                  |
-| role                     | TEXT    | initial                       | reads                                                                  |
-| parts                    | TEXT    | initial                       | reads (the `{type,data}` envelope)                                     |
-| model                    | TEXT    | probed capability             | reads (absent → "")                                                    |
-| created_at               | INTEGER | initial (indexed since 06-24) | reads                                                                  |
-| updated_at               | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)                                            |
-| finished_at              | INTEGER | probed capability             | reads (absent → zero time)                                             |
-| provider                 | TEXT    | 2025-06-27 migration          | reads (absent → "")                                                    |
-| is_summary_message       | INTEGER | 2025-08-10 migration          | probed capability — reads (`Message.IsSummaryMessage`; absent → false) |
-| prism_model_id           | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelID`; absent/NULL → "")   |
-| prism_model_name         | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelName`; absent/NULL → "") |
-| prism_hypercredit_savings | REAL   | 2026-09-02 migration          | probed capability — reads (`Message.PrismHypercreditSavings`; absent/NULL → 0) |
-| prism_dollar_savings     | REAL    | 2026-09-02 migration          | probed capability — reads (`Message.PrismDollarSavings`; absent/NULL → 0) |
+| column                    | type    | added in                      | this library                                                                   |
+| ------------------------- | ------- | ----------------------------- | ------------------------------------------------------------------------------ |
+| id                        | TEXT PK | initial (UUIDv4 — random!)    | reads                                                                          |
+| session_id                | TEXT    | initial (FK, indexed)         | reads                                                                          |
+| role                      | TEXT    | initial                       | reads                                                                          |
+| parts                     | TEXT    | initial                       | reads (the `{type,data}` envelope)                                             |
+| model                     | TEXT    | probed capability             | reads (absent → "")                                                            |
+| created_at                | INTEGER | initial (indexed since 06-24) | reads                                                                          |
+| updated_at                | INTEGER | initial (trigger-maintained)  | reads (`Message.UpdatedAt`)                                                    |
+| finished_at               | INTEGER | probed capability             | reads (absent → zero time)                                                     |
+| provider                  | TEXT    | 2025-06-27 migration          | reads (absent → "")                                                            |
+| is_summary_message        | INTEGER | 2025-08-10 migration          | probed capability — reads (`Message.IsSummaryMessage`; absent → false)         |
+| prism_model_id            | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelID`; absent/NULL → "")           |
+| prism_model_name          | TEXT    | 2026-09-02 migration          | probed capability — reads (`Message.PrismModelName`; absent/NULL → "")         |
+| prism_hypercredit_savings | REAL    | 2026-09-02 migration          | probed capability — reads (`Message.PrismHypercreditSavings`; absent/NULL → 0) |
+| prism_dollar_savings      | REAL    | 2026-09-02 migration          | probed capability — reads (`Message.PrismDollarSavings`; absent/NULL → 0)      |
 
 Message IDs are `uuid.New()` (UUIDv4): random, so insertion order is
 `rowid`, never `(created_at, id)` — this library orders by `rowid`.
